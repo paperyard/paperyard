@@ -1,0 +1,38 @@
+server {
+    listen 80;
+    server_name
+    #windows  docker-toolbox
+    192.168.99.100
+    192.168.98.100
+    #Unix, Linux, Docker for windows with hyper-V
+    localhost;
+    root /var/www;
+    index index.php;
+    error_log /root/error.log;
+    access_log /root/access.log;
+    disable_symlinks off;
+
+    location /static/ {
+       autoindex off;
+       root /var/www/html/public;
+    }
+
+    location / {
+       try_files $uri /html/public/index.php$is_args$args;
+    }
+
+    location /phpmyadmin {
+       alias /var/www/phpmyadmin;
+       try_files $uri $uri/ /index.php?args;
+    }
+
+    location ~ \.php {
+        try_files $uri =404;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param SCRIPT_NAME $fastcgi_script_name;
+        fastcgi_index index.php;
+        fastcgi_pass unix:/run/php/php7.1-fpm.sock;
+    }
+}
