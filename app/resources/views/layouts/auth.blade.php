@@ -66,60 +66,60 @@
 </head>
 <body class="authbdy">
 
-    <!-- Page Loader -->
-    <div class="page-loader-wrapper">
-        <div class="loader">
-            <div class="preloader">
-                <div class="spinner-layer pl-light-blue">
-                    <div class="circle-clipper left">
-                        <div class="circle"></div>
-                    </div>
-                    <div class="circle-clipper right">
-                        <div class="circle"></div>
-                    </div>
-                </div>
-            </div>
-            <p>PAPERYARD</p>
-        </div>
-    </div>
-
-    <div id="app" >
-         <!-- Top Bar -->
-        <nav class="navbar cstm_nav">
-            <div class="container-fluid nav_h">
-                <div class="navbar-header">
-                        <img src="{{ asset('static/img/paperyard_logo.png') }}" class="img-responsive cmp_logo">
-                </div>
-                <div class="navbar-btn main_color">
-                    <h4 class="text-center hidden-xs hidden-sm ppyrd_txt" style="">Paperyard</h4>
-                    <p class="text-center align-middle pw_p visible-xs">Paperyard</p>
-                </div>
-            </div>
-        </nav>
-        <main class="container">
-            @yield('content')
-        </main>
-        <div class="footer">
-          <div class="container">
-            <ul class="list-inline center-block">
-              <li>
-                <p>@lang("auth.select_lang_tx")</p>
-              </li>
-              <li>
-                <label class="lang_tx" onclick="window.location='{{ url('language/ge') }}'">German</label>
-              </li>
-              <li>
-                <label class="lang_tx" onclick="window.location='{{ url('language/en') }}'">English</label>
-              </li>
-            </ul>
+  <!-- Page Loader -->
+  <div class="page-loader-wrapper">
+    <div class="loader">
+      <div class="preloader">
+        <div class="spinner-layer pl-light-blue">
+          <div class="circle-clipper left">
+            <div class="circle"></div>
           </div>
-          <p>@lang('auth.footer_txt')</p>
+          <div class="circle-clipper right">
+            <div class="circle"></div>
+          </div>
         </div>
+      </div>
+      <p>PAPERYARD</p>
     </div>
+  </div>
 
-     <!-- Scripts -->
+  <div id="app" >
+    <!-- Top Bar -->
+    <nav class="navbar cstm_nav">
+      <div class="container-fluid nav_h">
+        <div class="navbar-header">
+          <img src="{{ asset('static/img/paperyard_logo.png') }}" class="img-responsive cmp_logo">
+        </div>
+        <div class="navbar-btn main_color">
+          <h4 class="text-center hidden-xs hidden-sm ppyrd_txt" style="">Paperyard</h4>
+          <p class="text-center align-middle pw_p visible-xs">Paperyard</p>
+        </div>
+      </div>
+    </nav>
+    <main class="container">
+      @yield('content')
+    </main>
+    <div class="footer">
+      <div class="container">
+        <ul class="list-inline center-block">
+          <li>
+            <p>@lang("auth.select_lang_tx")</p>
+          </li>
+          <li>
+            <label class="lang_tx" onclick="window.location='{{ url('language/ge') }}'">German</label>
+          </li>
+          <li>
+            <label class="lang_tx" onclick="window.location='{{ url('language/en') }}'">English</label>
+          </li>
+        </ul>
+      </div>
+      <p>@lang('auth.footer_txt')</p>
+    </div>
+  </div>
 
-     <script src="{{ asset('static/js/core_mix.js') }}" defer></script>
+  <!-- Scripts -->
+
+  <script src="{{ asset('static/js/core_mix.js') }}" defer></script>
 
 </body>
 </html>

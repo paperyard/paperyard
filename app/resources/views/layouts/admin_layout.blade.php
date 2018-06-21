@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <!-- Styles -->
     <link href="{{ asset('static/css/core_mix.css') }}" rel="stylesheet">
+    <script src="//mozilla.github.io/pdf.js/build/pdf.js"></script>
 
     <style type="text/css" media="screen">
     .ln_mg {
@@ -64,12 +65,12 @@
         height:17px;
         cursor: pointer;
     }
+
 </style>
 @yield('custom_style')
-
 </head>
 
-<body style="background-color:#fff">
+<body style="background-color:#fff" id="dashboard_bd">
     <div id="app">
         <!-- Page Loader -->
         <div class="page-loader-wrapper">
@@ -87,9 +88,8 @@
                 <p>PAPERYARD</p>
             </div>
         </div>
-        <!-- #END# Page Loader -->
+        <!-- Overlay For Sidebars -->
         <div class="overlay"></div>
-        <!-- #END# Overlay For Sidebars -->
         <!-- Top Bar -->
         <nav class="navbar cstm_nav navbar-fixed-top">
             <div class="container-fluid">
@@ -116,36 +116,6 @@
             <!-- Menu -->
             <div class="menu" style="margin-top:10px">
                 <ul class="list cstm_lst">
-                    <li>
-                        <a href="dashboard" class="waves-effect waves-blue @yield('active_dashboard')">
-                            <span class="fa fa-dashboard router_link_icon"></span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="search" class="waves-effect waves-blue @yield('active_search')">
-                            <span class="fa fa-search router_link_icon" ></span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="notifications" class="waves-effect waves-blue @yield('active_notification')">
-                            <span class="fa fa-bell router_link_icon" ></span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="folders" class="waves-effect waves-blue @yield('active_folder')">
-                            <span class="fa fa-folder-open router_link_icon" ></span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="share" class="waves-effect waves-blue @yield('active_share')">
-                            <span class="fa fa-share-alt router_link_icon" ></span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="settings" class="waves-effect waves-blue @yield('active_settings')">
-                            <span class="fa fa-gears router_link_icon"></span>
-                        </a>
-                    </li>
 
                 </ul>
             </div>
@@ -154,16 +124,19 @@
         </section>
         <!-- #END# Left Sidebar -->
         <section class="content x_1" style="margin-left:120px" >
-            <div class="pull-right">
-                <a href="{{ route('logout') }}"
-                onclick="event.preventDefault();
-                document.getElementById('logout-form').submit();">
-                {{ __('Logout') }}
-            </a>
 
-            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                @csrf
-            </form>
+            <div class="col-md-12">
+                <div class="pull-right">
+                    <a href="{{ route('logout') }}"
+                    onclick="event.preventDefault();
+                    document.getElementById('logout-form').submit();">
+                    {{ __('Logout') }}
+                </a>
+
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                    @csrf
+                </form>
+            </div>
         </div>
         <div class="container-fluid">
             <div class="row" style="margin-bottom:10px">

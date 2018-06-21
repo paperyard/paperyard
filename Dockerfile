@@ -1,7 +1,6 @@
 # download base image ubuntu 17.10
 FROM ubuntu:17.10
 
-
 # update Ubuntu Software repository
 RUN apt-get update
 
@@ -25,6 +24,20 @@ RUN apt-get -y install mariadb-server mariadb-client
 RUN apt-get -y install nano
 RUN apt-get -y install curl
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# install nodejs
+# RUN curl -sL https://deb.nodesource.com/setup_8.x | bash -
+# RUN apt-get install -y nodejs
+
+# instsall OCRMYPDF
+RUN apt-get -y install ocrmypdf
+
+# install img2pdf. convert image to pdf
+RUN apt-get -y install img2pdf
+
+# install language german.
+RUN apt-get -y install tesseract-ocr-deu
+
 
 # set working directory
 WORKDIR /

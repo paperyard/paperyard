@@ -124,7 +124,7 @@
 			<!-- VIEW - TILE LIST VIEW -->
 			<div role="tabpanel" class="tab-pane fade" id="messages_only_icon_title">
 				<div class="row">
-                    @for($i = 0; $i < 4; $i++)
+					@for($i = 0; $i < 4; $i++)
 					<div class="col-md-6">
 						<div class="card view3_container">
 							<table clas="table-responsive">
@@ -153,74 +153,69 @@
 							</table>
 						</div>
 					</div>
-                    @endfor
+					@endfor
 				</div>
 			</div>
 			<!-- VIEW - TABLE VIEW -->
 			<div role="tabpanel" class="tab-pane fade" id="settings_only_icon_title">
-                <div class="row">
+				<div class="row">
 					<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-		                    <div class="body table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Kontakt</th>
-                                        <th>Empfänger</th>
-                                        <th>KategorieKategorie</th>
-                                        <th>Tags</th>
-                                        <th>Größe</th>
-                                        <th class="text-right">empfangen am</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>consider it GmbH</td>
-                                        <td>Jannik Kramer</td>
-                                        <td>Gehaltsabrechnung</td>
-                                        <td>Arbeit, Steuern 2017</td>
-                                        <td>2,8 mb</td>
-                                        <td class="text-right">03.03.17</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Saturn</td>
-                                        <td>Jannik Kramer</td>
-                                        <td>Rechnung</td>
-                                        <td>Steuern 2017, iPhone</td>
-                                        <td>334 kb</td>
-                                        <td class="text-right">27.12.16</td>
-                                    </tr>
-                                     <tr>
-                                        <td>consider it GmbH</td>
-                                        <td>Jannik Kramer</td>
-                                        <td>Gehaltsabrechnung</td>
-                                        <td>Arbeit, Steuern 2017</td>
-                                        <td>738 kb</td>
-                                        <td class="text-right">02.04.17</td>
-                                    </tr>
-                                     <tr>
-                                        <td>Butjer</td>
-                                        <td>Jannik Kramer</td>
-                                        <td>Rechnung</td>
-                                        <td>neues Bad, Steuern 2017, …</td>
-                                        <td>0,9 mb</td>
-                                        <td class="text-right">22.03.17</td>
-                                    </tr>
-
-
-                                </tbody>
-                            </table>
-                        </div>
-
-
+						<div class="body table-responsive">
+							<table class="table table-striped table-hover">
+								<thead>
+									<tr>
+										<th>Kontakt</th>
+										<th>Empfänger</th>
+										<th>KategorieKategorie</th>
+										<th>Tags</th>
+										<th>Größe</th>
+										<th class="text-right">empfangen am</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td>consider it GmbH</td>
+										<td>Jannik Kramer</td>
+										<td>Gehaltsabrechnung</td>
+										<td>Arbeit, Steuern 2017</td>
+										<td>2,8 mb</td>
+										<td class="text-right">03.03.17</td>
+									</tr>
+									<tr>
+										<td>Saturn</td>
+										<td>Jannik Kramer</td>
+										<td>Rechnung</td>
+										<td>Steuern 2017, iPhone</td>
+										<td>334 kb</td>
+										<td class="text-right">27.12.16</td>
+									</tr>
+									<tr>
+										<td>consider it GmbH</td>
+										<td>Jannik Kramer</td>
+										<td>Gehaltsabrechnung</td>
+										<td>Arbeit, Steuern 2017</td>
+										<td>738 kb</td>
+										<td class="text-right">02.04.17</td>
+									</tr>
+									<tr>
+										<td>Butjer</td>
+										<td>Jannik Kramer</td>
+										<td>Rechnung</td>
+										<td>neues Bad, Steuern 2017, …</td>
+										<td>0,9 mb</td>
+										<td class="text-right">22.03.17</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
 					</div>
 					<!-- end able -->
-			  </div>
+				</div>
+			</div>
 		</div>
+	</div> <!-- // end row -->
+	@endsection
 
-	</div>
-</div> <!-- // end row -->
-@endsection
+	@section('scripts')
 
-@section('scripts')
-
-@endsection
+	@endsection

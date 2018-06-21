@@ -64,6 +64,12 @@ return [
             'url' => env('AWS_URL'),
         ],
 
+        'documents' => [
+            'driver' => 'local',
+            'root'   => public_path() . '/static',
+            'visibility' => 'public',
+        ],
+
     ],
 
 ];

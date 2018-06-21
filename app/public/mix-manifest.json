@@ -1,7 +1,8 @@
 {
-    "/js/app.js": "/js/app.js",
-    "/css/core_mix.css": "/css/core_mix.css",
-    "/css/dashboard.css": "/css/dashboard.css",
-    "/js/dashboard.js": "/js/dashboard.js",
-    "/js/core_mix.js": "/js/core_mix.js"
+    "/static/js/app.js": "/static/js/app.js",
+    "/static/css/core_mix.css": "/static/css/core_mix.css",
+    "/static/js/dashboard.js": "/static/js/dashboard.js",
+    "/static/css/admin_dashboard.css": "/static/css/admin_dashboard.css",
+    "/static/js/admin_dashboard.js": "/static/js/admin_dashboard.js",
+    "/static/js/core_mix.js": "/static/js/core_mix.js"
 }
