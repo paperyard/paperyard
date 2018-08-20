@@ -37,9 +37,14 @@
     <div class="body" >
       <form id="sign_in" method="POST" action="{{ route('login') }}"><br>
         @csrf
-        @if ($errors->has('email'))
-        <div class="invalid-feedback error_crid">
-          <p class="text-center align-middle">@lang('auth.failed')</p>
+
+        @if (count($errors) > 0)
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
         @endif
         <div class="form-group">
@@ -63,7 +68,7 @@
           </div>
           <div class="col-xs-6 align-right">
             <!--  <a href="{{ route('password.request') }}">Passwort vergessen?</a> -->
-            <a href="#">@lang('auth.change_password_txt')</a>
+            <a href="{{ route('password.request') }}">@lang('auth.change_password_txt')</a>
           </div>
         </div>
       </form>

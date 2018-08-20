@@ -19,6 +19,14 @@
     },
     "dependencies": {
         "adminbsb-materialdesign": "^1.0.5",
+        "angular-datatables": "^0.6.2",
+        "angular-ui-bootstrap": "^2.5.6",
+        "chart.js": "^2.7.2",
+        "fine-uploader": "^5.16.2",
+        "hover.css": "^2.3.2",
+        "ng-material-floating-button": "^0.6.2",
+        "slick-carousel": "^1.8.1",
+        "uppy": "^0.25.5",
         "yarn": "^1.6.0"
     }
 }

@@ -26,6 +26,7 @@
     .sidebar {
         margin-right: -200px;
         margin-top:-10px;
+        height: 100%;
     }
     @media screen and (max-width:500px) {
         .x_1 { margin-left: 0px !important; }

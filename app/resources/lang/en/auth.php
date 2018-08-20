@@ -32,7 +32,7 @@ return [
     'reg_repassword_p_holder' => 'Confirm password',
     'cbox_t1' => 'I read and agree to the',
     'cbox_t2' => 'terms of usage',
-    'reg_btn_tx' => 'Regsiter',
+    'reg_btn_tx' => 'Register',
     'membership_tx' => 'Do you already have a membership?',
 
 

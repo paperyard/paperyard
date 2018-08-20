@@ -11,6 +11,8 @@ server {
     error_log /root/error.log;
     access_log /root/access.log;
     disable_symlinks off;
+    #max post size
+    client_max_body_size 100M;
 
     location /static/ {
        autoindex off;

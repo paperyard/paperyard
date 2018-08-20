@@ -19,6 +19,9 @@ class CreateUsersTable extends Migration
             $table->string('email')->unique();
             $table->string('password');
             $table->string('privilege');
+            $table->string('user_timezone')->default('Europe/Paris');
+            $table->tinyInteger('verified')->default(0); // this column will be a TINYINT with a default value of 0 , [0 for false & 1 for true i.e. verified]
+            $table->string('email_token')->nullable(); // this column will be a VARCHAR with no default value and will also BE NULLABLE
             $table->rememberToken();
             $table->timestamps();
         });

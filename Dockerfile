@@ -23,6 +23,7 @@ RUN apt-get -y install mariadb-server mariadb-client
 # install tools
 RUN apt-get -y install nano
 RUN apt-get -y install curl
+RUN apt-get -y install cron
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # install nodejs
@@ -38,6 +39,8 @@ RUN apt-get -y install img2pdf
 # install language german.
 RUN apt-get -y install tesseract-ocr-deu
 
+# install pdftk -> for removing and rotating pdf pages.
+RUN apt-get -y install pdftk
 
 # set working directory
 WORKDIR /

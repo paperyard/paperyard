@@ -1,0 +1,152 @@
+Method 1: Injecting modules as dependencies of the root app
+
+The idea here is to define only one top level ng-app in a root element like in <html> or <body>, define other two as modules and inject them as dependencies of the root app.
+<!DOCTYPE html>
+
+<html>
+<head>
+       <title>Injecting modules as dependencies of the root app </title>
+</head>
+
+<body ng-app="rootApp">
+
+<div id="firstApp">
+       <div ng-controller="FirstController">
+              <p>1# {{ name }}</p>
+       </div>
+</div>
+
+<div id="secondApp">
+       <div ng-controller="SecondController">
+              <p>2# {{ name }}</p>
+       </div>
+</div>
+
+<script src="angular.js"></script>
+<script type="text/javascript">
+
+    // passing the two modules as dependencies of the root module
+    var rootApp = angular.module('rootApp', ['firstApp','secondApp']);
+
+    var firstApp = angular.module('firstApp', []);
+         firstApp.controller('FirstController', function ($scope) {
+         $scope.name = "I'm the first app.";
+    });
+
+    var secondApp = angular.module('secondApp', []);
+    secondApp.controller('SecondController', function ($scope) {
+         $scope.name = "I'm the second app.";
+    });
+
+</script>
+</body>
+</html>
+This will give the desired result:
+
+1# I'm the first app.
+2# I'm the second app.
+
+====================================================================================================================================================================================
+
+Method 2: Manual bootstrapping the second module
+
+In this method, we are going to leave the first ng-app as it is so that it is auto-bootstrapped by Angular. Whereas for the second ng-app, we're going to a manual bootstrapping method.
+<!DOCTYPE html>
+
+<html>
+<head>
+      <title>Manual bootstrapping the second module</title>
+</head>
+
+<body>
+       <div ng-app="firstApp">
+              <div ng-controller="FirstController">
+                     <p>1# {{ name }}</p>
+              </div>
+       </div>
+
+       <!-- using id attribute instead of ng-app -->
+       <div id="secondApp">
+              <div ng-controller="SecondController">
+                     <p>2# {{ name }}</p>
+              </div>
+       </div>
+
+<script src="angular.js"></script>
+<script type="text/javascript">
+
+       var firstApp = angular.module('firstApp', []);
+       firstApp.controller('FirstController', function($scope) {
+
+              $scope.name = "I'm the first app.";
+       });
+
+       var secondApp = angular.module('secondApp', []);
+       secondApp.controller('SecondController', function($scope) {
+
+              $scope.name = "I'm the second app.";
+       });
+
+       // manually boostrapping the second app
+       var secondDiv = document.getElementById('secondApp');
+
+       angular.element(document).ready(function() {
+              angular.bootstrap(secondDiv, [ 'secondApp' ]);
+       });
+</script>
+</body>
+</html>
+
+==========================================================================================================================================================================================
+
+
+Method 3: Manual bootstrapping both modules
+
+As I already mentioned, this method is similar to the previous one. Here, we don't rely on Angular's auto-bootstrapping to initialize the modules. We'll use manual bootstrapping method to initialize both modules as depicted in the example below:
+<!DOCTYPE html>
+
+<html>
+<head>
+      <title>Manual boostrapping both modules</title>
+</head>
+
+<body>
+       <!-- using id attribute instead of ng-app -->
+       <div id="firstApp">
+              <div ng-controller="FirstController">
+                     <p>1# {{ name }}</p>
+              </div>
+       </div>
+
+       <!-- using id attribute instead of ng-app -->
+       <div id="secondApp">
+              <div ng-controller="SecondController">
+                     <p>2# {{ name }}</p>
+              </div>
+       </div>
+
+<script src="angular.js"></script>
+<script type="text/javascript">
+       var firstApp = angular.module('firstApp', []);
+       firstApp.controller('FirstController', function($scope) {
+
+              $scope.name = "I'm the first app.";
+       });
+
+       var secondApp = angular.module('secondApp', []);
+       secondApp.controller('SecondController', function($scope) {
+
+              $scope.name = "I'm the second app.";
+       });
+
+       var firstDiv = document.getElementById('firstApp');
+       var secondDiv = document.getElementById('secondApp');
+
+       // manually boostrapping the second app
+       angular.element(document).ready(function() {
+              angular.bootstrap(firstDiv, [ 'firstApp' ]);
+              angular.bootstrap(secondDiv, [ 'secondApp' ]);
+       });
+</script>
+</body>
+</html>

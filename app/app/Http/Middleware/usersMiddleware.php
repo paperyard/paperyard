@@ -21,7 +21,8 @@ class usersMiddleware
         }
         else
         {
-           return redirect()->back();
+           return redirect('error_404');
         }
+        return $next($request);
     }
 }

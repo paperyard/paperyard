@@ -37,6 +37,15 @@
         <div class="body">
             <form id="sign_up" method="POST" action="{{ route('register') }}">
                 @csrf
+                @if (count($errors) > 0)
+                <div class="alert alert-danger">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
                 <div class="input-group">
                     <div class="form-line">
                         <input id="name" type="text" class="customInputStyle form-control{{ $errors->has('name') ? ' is-invalid' : '' }}"  placeholder="@lang('auth.reg_name_p_holder')" name="name" value="{{ old('name') }}" required autofocus>
@@ -46,21 +55,11 @@
                     <div class="form-line">
                         <input id="email" type="email" class="customInputStyle form-control{{ $errors->has('email') ? ' is-invalid' : '' }}" placeholder="@lang('auth.reg_email_p_holder')" name="email" value="{{ old('email') }}" required>
                     </div>
-                    @if ($errors->has('email'))
-                    <span class="invalid-feedback">
-                        <strong class="error_crid">{{ $errors->first('email') }}</strong>
-                    </span>
-                    @endif
                 </div>
                 <div class="input-group">
                     <div class="form-line">
                         <input id="password" type="password" class="customInputStyle form-control{{ $errors->has('password') ? ' is-invalid' : '' }}" placeholder="@lang('auth.reg_password_p_holder')" name="password" required>
                     </div>
-                    @if ($errors->has('password'))
-                    <span class="invalid-feedback">
-                        <strong class="error_crid">{{ $errors->first('password') }}</strong>
-                    </span>
-                    @endif
                 </div>
                 <div class="input-group">
                     <div class="form-line">

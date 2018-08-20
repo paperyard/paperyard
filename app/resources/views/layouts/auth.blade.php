@@ -61,6 +61,12 @@
           .customInputStyle:-ms-input-placeholder {
              font-style: italic;
           }
+          .imprint {
+            cursor: pointer;
+          }
+          .lang_tx {
+            cursor: pointer;
+          }
           @yield('style')
     </style>
 </head>
@@ -113,13 +119,20 @@
           </li>
         </ul>
       </div>
-      <p>@lang('auth.footer_txt')</p>
+      <p><a href="http://www.consider-it.de/impressum" class="imprint">@lang('auth.footer_txt')</a></p>
     </div>
   </div>
 
   <!-- Scripts -->
-
-  <script src="{{ asset('static/js/core_mix.js') }}" defer></script>
+  <script src="{{ asset('static/js/core_mix.js') }}" ></script>
+  <script type="text/javascript">
+      $.ajaxSetup({
+          headers: {
+              'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+          }
+      });
+  </script>
+  @yield('scripts')
 
 </body>
 </html>
