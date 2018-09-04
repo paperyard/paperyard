@@ -96,7 +96,7 @@
         <div class="col-md-6">
           <div class="form-group form-group-lg form-g-label">
             <div class="form-line frm-input">
-              <input name="doc_sender" type="text" class="form-control" placeholder="" value="{{$doc->sender}}" required>
+              <input name="doc_sender" type="text" class="form-control" placeholder="" value="{{$doc->sender}}">
             </div>
             <span>Sender</span>
           </div>
@@ -105,7 +105,7 @@
         <div class="col-md-6">
           <div class="form-group form-group-lg form-g-label">
             <div class="form-line frm-input">
-              <input name="doc_receiver" type="text" class="form-control" placeholder="" value="{{$doc->receiver}}" required>
+              <input name="doc_receiver" type="text" class="form-control" placeholder="" value="{{$doc->receiver}}">
             </div>
             <span>Receiver</span>
           </div>
@@ -116,7 +116,7 @@
         <div class="col-md-6">
           <div class="form-group form-group-lg form-g-label masked-input">
             <div class="form-line frm-input">
-              <input name="doc_date" type="text" class="form-control date" placeholder="Ex: 24.01.2018" value="{{$doc->date}}" required>
+              <input name="doc_date" type="text" class="form-control date" placeholder="Ex: 24.01.2018" value="{{$doc->date}}" >
             </div>
             <span>Date</span>
           </div>
@@ -125,9 +125,9 @@
         <div class="col-md-6">
           <div class="form-group form-group-lg form-g-label" style="margin-top:15px">
             <div class="form-line frm-input">
-              <input name="doc_tags" type="text" class="form-control"  data-role="tagsinput" placeholder="" value="{{$doc->tags}}">
+              <input name="doc_tags" type="text" class="form-control"  data-role="tagsinput" placeholder="" value="{{$doc->tags}}" required>
             </div>
-            <p>Tags</p>
+            <p>Tags*</p>
           </div>
         </div>
       </div>
@@ -138,14 +138,14 @@
             <div class="form-line frm-input">
               <input name="doc_category" type="text" class="form-control" placeholder="" value="{{$doc->category}}" required>
             </div>
-            <span>Category</span>
+            <span>Category*</span>
           </div>
         </div>
 
         <div class="col-md-6">
           <div class="form-group form-group-lg form-g-label">
             <div class="form-line frm-input">
-              <input name="doc_memory" type="text" class="form-control" placeholder="" value="{{$doc->memory}}" required>
+              <input name="doc_memory" type="text" class="form-control" placeholder="" value="{{$doc->memory}}">
             </div>
             <span>Memory</span>
           </div>
@@ -172,7 +172,7 @@
         <div class="col-md-12">
           <div class="form-group form-group-lg form-g-label">
             <div class="form-line frm-input">
-              <input name="doc_notes" type="text" class="form-control" placeholder="Notes" value="{{$doc->note}}" required>
+              <input name="doc_notes" type="text" class="form-control" placeholder="Notes*" value="{{$doc->note}}" required>
             </div>
           </div>
         </div>

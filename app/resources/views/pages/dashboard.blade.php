@@ -53,13 +53,16 @@
 .prev_viewd_doc_div_img {
   height:120px !important; border:1px solid #b1d5ff;
 }
+.prev_viewd_doc_div_img:hover {
+  border:1px solid #017cff;;
+}
 
 .prev_viewed_docs {
   border: 1px solid #b1d5ff; padding:0px; width:58px; margin:3px
 }
 
-.prev_viewd_docs img {
-  height:85px;
+.prev_viewed_docs img:hover {
+  border: 1px solid #017cff;
 }
 
 .prev_viewed_docs_m {
@@ -141,137 +144,174 @@
 }
 /*---------------------------------------------------*/
 
+/* --------- autocomplete ---------------------------*/
+.th-t {
+  background-color: #4ddb9f;
+}
+.th-f {
+  background-color: #ef5c8f;
+}
+.th-ft {
+  background-color: #fade45;
+}
+/*---------------------------------------------------*/
 </style>
-@endsection
-
-@section('show_localization')
-
 @endsection
 
 @section('content')
 <div class="row" ng-app="dashboard_app" ng-controller="dashboard_controller" ng-click="clear_autocomplete()">
 
-  <div>
-    <div class="col-md-6  col-md-offset-3">
-      <input type="text" class="form-control search_inp text-center" placeholder="@lang('dashboard.input_search_p_holder')" ng-change="onChangeInput()" ng-model="doc_name" ng-keydown="searchKeyPress($event)">
-      <div class="row cleafix">
-          <div class="col-md-12 col-sm-12 col-xs-12 col-lg-12 list-group-autocomplete " >
-              <div class="list-group ">
-                 <a  ng-click="searchSpecificDocument(doc.doc_id,doc.doc_ocr)" class="list-group-item d_ac_list" ng-repeat="doc in ac_doc_names track by $index" ng-show="ac_doc_names!=null && ac_doc_names.length>0">
-                      <# doc.doc_ocr #>
-                </a>
-                 <a  class="list-group-item d_ac_list ng-hide" ng-show="no_result_found">
-                      No result found...
-                </a>
-             </div>
-          </div>
+  <!-- preloader for search autocomplete -->
+  <div class="preloader pl-size-xs" ng-show="searchAutoCompLoader" style="position:absolute; top:102px; right:33px">
+    <div class="spinner-layer pl-blue">
+      <div class="circle-clipper left">
+        <div class="circle"></div>
+      </div>
+      <div class="circle-clipper right">
+        <div class="circle"></div>
       </div>
     </div>
   </div>
 
+  <!-- Search bar -->
+  <div>
+    <div class="col-md-6  col-md-offset-3">
+      <input type="text" class="form-control search_inp text-center" placeholder="@lang('dashboard.input_search_p_holder')"  ng-model-options='{ debounce: 1000 }' ng-change="onChangeInput()" ng-model="doc_keyword" ng-keydown="searchKeyPress($event)">
+      <div class="row cleafix">
+        <div class="col-md-12 col-sm-12 col-xs-12 col-lg-12 list-group-autocomplete " >
+          <div class="list-group ">
+            <!-- AUTCOMPLETE TAGS -->
+            <a ng-click="selectSearchDoc(tag,'tag')" class="list-group-item th-t" ng-repeat="tag in ac_tags track by $index" ng-show="ac_tags!='not_found' && ac_tags!=null">
+              <# tag #>
+            </a>
+            <!-- AUTCOMPLETE FOLDERS  -->
+            <a ng-click="selectSearchDoc(folder.folder_name,'folder')" class="list-group-item  th-f" ng-repeat="folder in ac_folders track by $index" ng-show="ac_folders!='not_found' && ac_folders!=null">
+              <# folder.folder_name #>
+            </a>
+            <!-- AUTCOMPLETE FULLTEXT -->
+            <a ng-click="selectSearchDoc(fulltext,'fulltext')" class="list-group-item  th-ft" ng-repeat="fulltext in ac_fulltext track by $index" ng-show="ac_fulltext!='not_found' && ac_fulltext!=null">
+              <# fulltext #>
+            </a>
+            <!-- NO RESULT FOUND -->
+            <a  class="list-group-item  ng-hide" ng-show="no_result_found">
+              No result found...
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- /Search bar -->
+
+  <!-- Space -->
   <div class="col-md-12">
      <br>
   </div>
 
+  <!-- Dashboard Cards -->
   <div ng-show="dashboard_grid">
+
           <!-- DOCUMENTS TO EDIT / ARCHIVED -->
           <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
             <div class="card dashboard_card">
               <div class="body ">
                 <ul class="list-group" >
-
-                  <a ng-href="/new_documents" style="text-decoration: none !important">
+                  <a ng-href="/document/<#oldest_doc.doc_id#>" style="text-decoration: none !important">
                     <button type="button" class="list-group-item cstm_list_g waves-effect waves-blue">@lang('dashboard.to_edit_tx')
-                          <span class="badge bg-light-blue doc_num_stat ng-hide" ng-show="num_to_edit"><# num_edit #></span>
-                          <div class="preloader ng-hide pull-right pl-size-xs preload_custm_loc" ng-show="to_edit_preloader">
-                              <div class="spinner-layer pl-blue">
-                                  <div class="circle-clipper left">
-                                      <div class="circle"></div>
-                                  </div>
-                                  <div class="circle-clipper right">
-                                      <div class="circle"></div>
-                                  </div>
-                              </div>
+                      <span class="badge bg-light-blue doc_num_stat ng-hide" ng-show="num_to_edit"><# num_edit #></span>
+                      <div class="preloader ng-hide pull-right pl-size-xs preload_custm_loc" ng-show="to_edit_preloader">
+                        <div class="spinner-layer pl-blue">
+                          <div class="circle-clipper left">
+                            <div class="circle"></div>
                           </div>
+                          <div class="circle-clipper right">
+                            <div class="circle"></div>
+                          </div>
+                        </div>
+                      </div>
                     </button>
                   </a>
-
                   <a ng-href="/archives" style="text-decoration: none !important">
                     <button type="button" class="list-group-item cstm_list_g waves-effect waves-blue">@lang('dashboard.This_whole_week_tx')
-                         <span class="badge bg-light-blue doc_num_stat ng-hide" ng-show="num_to_archive"><# archive #></span>
-                         <div class="preloader ng-hide pull-right pl-size-xs preload_custm_loc" ng-show="archive_preloader">
-                              <div class="spinner-layer pl-blue">
-                                  <div class="circle-clipper left">
-                                      <div class="circle"></div>
-                                  </div>
-                                  <div class="circle-clipper right">
-                                      <div class="circle"></div>
-                                  </div>
-                              </div>
+                      <span class="badge bg-light-blue doc_num_stat ng-hide" ng-show="num_to_archive"><# archive #></span>
+                      <div class="preloader ng-hide pull-right pl-size-xs preload_custm_loc" ng-show="archive_preloader">
+                        <div class="spinner-layer pl-blue">
+                          <div class="circle-clipper left">
+                            <div class="circle"></div>
                           </div>
+                          <div class="circle-clipper right">
+                            <div class="circle"></div>
+                          </div>
+                        </div>
+                      </div>
                     </button>
                   </a>
-
                 </ul>
               </div>
             </div>
           </div>
+          <!-- ./DOCUMENTS TO EDIT / ARCHIVED -->
 
-            <!-- EMPTY -->
-            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-               <a ng-href="/merge_pdf" style="text-decoration: none !important">
-                      <div class="card dashboard_card">
-                           <div class="container-fluid " style="padding-top:10px">
-                              <div style="width:100%">
-                                    <table style="width:100% !important; border:0px">
-                                       <tr>
-                                          <th colspan="3">
-                                             <span style="float:right; top:0; color:#000">Merge documents </span>
-                                          </th>
-                                       </tr>
-                                       <tr>
-                                           <td>
-                                             <i class="fa fa-file-text-o mg-icon_1" style="margin-right:10px"></i>
-                                             <i class="fa fa-file-text-o mg-icon_2 hidden-xs hidden-sm"></i>
-
-                                           </td>
-                                           <td>
-                                              <i class="fa fa-chevron-left merge_sm_chevron" style="font-size:50px !important; color:#ccc"></i>
-                                           </td>
-                                           <td>
-                                             <span style="float:right; top:0">
-                                               <i class="fa fa-file-text-o mg-icon_1 hidden-xs hidden-sm" ></i>
-                                               <i class="fa fa-file-text-o mg-icon_2" style="margin-left:10px"></i>
-                                             </span>
-                                           </td>
-                                       </tr>
-                                    </table>
-                              </div>
+          <!-- DOCUMENTS TO EDIT / ARCHIVED -->
+          <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+            <div class="card dashboard_card">
+              <div class="body ">
+                <ul class="list-group" >
+                  <a ng-href="" style="text-decoration: none !important">
+                    <button type="button" class="list-group-item cstm_list_g waves-effect waves-blue">Documents being processed
+                      <span class="badge bg-light-blue doc_num_stat ng-hide" ng-show="num_to_edit"><# queueDocs #></span>
+                      <div class="preloader ng-hide pull-right pl-size-xs preload_custm_loc" ng-show="to_edit_preloader">
+                        <div class="spinner-layer pl-blue">
+                          <div class="circle-clipper left">
+                            <div class="circle"></div>
                           </div>
+                          <div class="circle-clipper right">
+                            <div class="circle"></div>
+                          </div>
+                        </div>
                       </div>
+                    </button>
                   </a>
+                  <a ng-href="" style="text-decoration: none !important">
+                    <button type="button" class="list-group-item cstm_list_g waves-effect waves-blue">Failed OCRED documents
+                      <span class="badge bg-light-blue doc_num_stat ng-hide" ng-show="num_to_archive"><# failedDocs#></span>
+                      <div class="preloader ng-hide pull-right pl-size-xs preload_custm_loc" ng-show="archive_preloader">
+                        <div class="spinner-layer pl-blue">
+                          <div class="circle-clipper left">
+                            <div class="circle"></div>
+                          </div>
+                          <div class="circle-clipper right">
+                            <div class="circle"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  </a>
+                </ul>
+              </div>
             </div>
+          </div>
+          <!-- ./DOCUMENTS TO EDIT / ARCHIVED -->
 
-            <!-- THIS WEEK EDITED KNOB-BARCHART -->
+            <!-- THIS WEEK DOCUMENTS / KNOB-BARCHART -->
             <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
               <div class="card dashboard_card">
                 <div class="container-fluid " style="padding-top:10px">
-                      <div style="width:100%">
-                       <table style="width:100% !important; border:0px">
-                        <tr>
-                          <th rowspan="2">
-                                <input type="text" class="knob cstm_knob_div" data-linecap="round" value="80" data-width="130" data-height="130" data-thickness="0.25" data-angleoffset="-180"
-                                data-fgColor="#017cff" data-bgColor="#b1d5ff" >
-                          </th>
-                          <th height="5"><label class="pull-right">diese Woche</label></th>
-                        </tr>
-                        <tr>
-                          <td>
-                              <canvas id="myChart" style="width:100% !important; height:78px; padding:0px !important"></canvas>
-                          </td>
-                        </tr>
-                      </table>
-                     </div>
+                  <div style="width:100%">
+                    <table style="width:100% !important; border:0px">
+                      <tr>
+                        <th rowspan="2">
+                          <input type="text" class="knob cstm_knob_div" data-linecap="round" value="{{$knob}}" data-min="0" data-max="200" data-width="130" data-height="130" data-thickness="0.25" data-angleoffset="-180" data-fgColor="#017cff" data-bgColor="#b1d5ff" readonly>
+                        </th>
+                        <th height="5"><label class="pull-right">diese Woche</label></th>
+                      </tr>
+                      <tr>
+                        <td>
+                          <canvas id="myChart" style="width:100% !important; height:78px; padding:0px !important"></canvas>
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
@@ -281,53 +321,86 @@
               <div class="card dashboard_card">
                 <div style="padding:17px">
 
-                     @if(count($latest_opened)>=1)
-                      <div class="col-xs-5 col-sm-3 " style="padding-left:0px;">
-                        <div class="prev_viewed_doc_div">
-                          <img src="{{ asset('static/documents_images/') .'/'. $latest_opened->thumbnail }}" class="img-responsive prev_viewd_doc_div_img">
-                        </div>
-                      </div>
-                     @endif
-
-                    <!-- Last opened desktop  -->
-                    <div class="col-xs-7 col-sm-9 hidden-xs hidden-sm hidden-md">
-                       @if(count($last_opened)>=1)
-                          <div class="row" >
-                            <label class="pull-right">@lang('dashboard.last_opened_tx')</label>
-                          </div>
-                          <div class="row pull-right" style="margin-top:4px">
-                                @foreach($last_opened as $doc)
-                                <div class="col-xs-2 col-sm-1 prev_viewed_docs">
-                                  <img src="{{ asset('static/documents_images/') .'/'. $doc->thumbnail }}" class="img-responsive">
-                                </div>
-                                @endforeach
-                          </div>
-                        @endif
+                  @if(count($latest_opened)>=1)
+                  <div class="col-xs-5 col-sm-3 " style="padding-left:0px;">
+                    <div class="prev_viewed_doc_div" onclick="window.location='{{ url('document/'.$latest_opened->view_doc_id) }}'">
+                      <img src="{{ asset('static/documents_images/') .'/'. $latest_opened->thumbnail }}" class="img-responsive prev_viewd_doc_div_img">
                     </div>
+                  </div>
+                  @endif
 
-                    <!-- Last opened mobile  -->
-                    <div class="col-xs-7 col-sm-9 visible-xs visible-sm">
-                      <div class="row" >
-                        <label class="pull-right">zuletzt geöffnet</label>
-                      </div>
-                      <div class="row pull-right" style="margin-top:24px">
-
-                        <div class="col-xs-2 col-sm-1 prev_viewed_docs_m">
-                          <img src="{{ asset('static/img/docs/doc1.png') }}" class="img-responsive">
-                        </div>
-                        <div class="col-xs-2 col-sm-1 prev_viewed_docs_m">
-                          <img src="{{ asset('static/img/docs/doc2.png') }}" class="img-responsive">
-                        </div>
-                        <div class="col-xs-2 col-sm-1 prev_viewed_docs_m">
-                          <img src="{{ asset('static/img/docs/doc3.png') }}" class="img-responsive">
-                        </div>
-                      </div>
+                  <!-- Last opened desktop  -->
+                  <div class="col-xs-7 col-sm-9 hidden-xs hidden-sm hidden-md">
+                    @if(count($last_opened)>=1)
+                    <div class="row" >
+                      <label class="pull-right">@lang('dashboard.last_opened_tx')</label>
                     </div>
+                    <div class="row pull-right" style="margin-top:4px">
+                      @foreach($last_opened as $doc)
+                      <div class="col-xs-2 col-sm-1 prev_viewed_docs"  onclick="window.location='{{ url('document/'.$doc->view_doc_id) }}'">
+                        <img src="{{ asset('static/documents_images/') .'/'. $doc->thumbnail }}" class="img-responsive">
+                      </div>
+                      @endforeach
+                    </div>
+                    @endif
+                  </div>
+                  <!-- Last opened mobile  -->
+                  <div class="col-xs-7 col-sm-9 visible-xs visible-sm">
+                    @if(count($last_opened)>=1)
+                    <div class="row" >
+                      <label class="pull-right">zuletzt geöffnet</label>
+                    </div>
+                    <div class="row pull-right" style="margin-top:24px">
+                      @foreach($last_opened->slice(0, 3) as $docs)
+                      <div class="col-xs-2 col-sm-1 prev_viewed_docs_m" onclick="window.location='{{ url('document/'.$docs->view_doc_id) }}'">
+                        <img src="{{ asset('static/documents_images/') .'/'. $docs->thumbnail }}" class="img-responsive">
+                      </div>
+                      @endforeach
+                    </div>
+                    @endif
+                  </div>
 
                 </div>
               </div>
             </div>
 
+            <!-- Merge documents -->
+            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+              <a ng-href="/merge_pdf" style="text-decoration: none !important">
+                <div class="card dashboard_card">
+                  <div class="container-fluid " style="padding-top:10px">
+                    <div style="width:100%">
+                      <table style="width:100% !important; border:0px">
+                        <tr>
+                          <th colspan="3">
+                            <span style="float:right; top:0; color:#000">Merge documents </span>
+                          </th>
+                        </tr>
+                        <tr>
+                          <td>
+                            <i class="fa fa-file-text-o mg-icon_1" style="margin-right:10px"></i>
+                            <i class="fa fa-file-text-o mg-icon_2 hidden-xs hidden-sm"></i>
+
+                          </td>
+                          <td>
+                            <i class="fa fa-chevron-left merge_sm_chevron" style="font-size:50px !important; color:#ccc"></i>
+                          </td>
+                          <td>
+                            <span style="float:right; top:0">
+                              <i class="fa fa-file-text-o mg-icon_1 hidden-xs hidden-sm" ></i>
+                              <i class="fa fa-file-text-o mg-icon_2" style="margin-left:10px"></i>
+                            </span>
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </a>
+            </div>
+            <!--/Merge documents -->
+
+            <!-- EMPTY -->
             <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
               <div class="card dashboard_card">
                 <div class="body">
@@ -335,83 +408,71 @@
               </div>
             </div>
 
-
-            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-              <div class="card dashboard_card">
-                <div class="body">
-                </div>
-              </div>
-            </div>
     </div> <!-- grid row-->
 
+    <!-- Documents table search result -->
     <div class="col-md-12" ng-click="clear_autocomplete()">
-       <table class="table table-hover ng-hide" ng-show="documents_table">
-           <thead style="background-color:#ebedf8; color:#000; font-size:13px; ">
-               <th>#</th>
-               <th>Document name</th>
-               <th>Status</th>
-               <th>Actions</th>
-           </thead>
-           <tbody style="font-size:11px;">
-             <tr ng-repeat="data in documents track by $index">
-                 <td><#$index+1#></td>
-                 <td><#data.doc_ocr#></td>
-                 <td ng-bind-html="data.process_status | ocred_status"></td>
-                 <td style="width:300px">
-                    <span ng-if="data.process_status=='ocred_final'">
-                        <!-- Edit document -->
-                        <a ng-href="/document/<#data.doc_id#>" style="text-decoration: none">
-                          <button type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="Edit document" tooltip-top>
-                              <i class="material-icons cstm_icon_btn_ico">edit</i>
-                          </button>
-                        </a>
-                        <!-- Download ocred document -->
-                        <a ng-href="/static/documents_ocred/<#data.doc_ocr#>" style="text-decoration: none" download>
-                          <button type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="View document" tooltip-top>
-                              <i class="material-icons cstm_icon_btn_ico">remove_red_eye</i>
-                          </button>
-                        </a>
-
-                                <span ng-if="data.approved==0">
-                                <!-- Download original document. -->
-                                  <a ng-href="/static/documents_new/<#data.doc_org#>" style="text-decoration: none" download>
-                                    <button type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="Download original file" tooltip-top>
-                                        <i class="material-icons cstm_icon_btn_ico">file_download</i>
-                                    </button>
-                                  </a>
-                                  <!-- Approved document. delete original -->
-                                  <button ng-click="approveDocument(data.doc_id,data.doc_org)" type="button" class="btn btn-default waves-effect cstm_icon_btn doc-upd-btn" data-toggle="tooltip" title="" data-original-title="Approve document" tooltip-top id="deleteDocBtn<#doc.doc_id#>">
-                                      <i class="material-icons cstm_icon_btn_ico">check</i>
-                                  </button>
-                                </span>
-                                 <!-- customize document -->
-                                <button type="button" class="btn btn-default waves-effect cstm_icon_btn doc-upd-btn" data-toggle="tooltip" title="" data-original-title="Customize document" tooltip-top>
-                                    <i class="material-icons cstm_icon_btn_ico">build</i>
-                                </button>
-                    </span>
-
-                    <button ng-click="deleteDocument(data.doc_id)" type="button" class="btn btn-default waves-effect cstm_icon_btn doc-upd-btn" data-toggle="tooltip" title="" data-original-title="Delete document" tooltip-top id="deleteDocBtn<#doc.doc_id#>">
-                        <i class="material-icons cstm_icon_btn_ico">delete_forever</i>
+      <table class="table table-hover ng-hide" ng-show="documents_table">
+        <thead style="background-color:#ebedf8; color:#000; font-size:13px; ">
+          <th>#</th>
+          <th>Document name</th>
+          <th>Actions</th>
+        </thead>
+        <tbody style="font-size:11px;">
+          <tr ng-repeat="data in documents track by $index">
+            <td><#$index+1#></td>
+            <td><#data.doc_ocr#></td>
+            <td style="width:300px">
+              <!-- Edit document -->
+              <a ng-href="/document/<#data.doc_id#>" style="text-decoration: none">
+                <button type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="Edit document" tooltip-top>
+                  <i class="material-icons cstm_icon_btn_ico">edit</i>
+                </button>
+              </a>
+              <!-- Download ocred document -->
+              <a ng-href="/static/documents_ocred/<#data.doc_ocr#>" style="text-decoration: none" download>
+                <button type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="View document" tooltip-top>
+                  <i class="material-icons cstm_icon_btn_ico">remove_red_eye</i>
+                </button>
+              </a>
+                  <span ng-if="data.approved==0">
+                    <!-- Download original document. -->
+                    <a ng-href="/static/documents_new/<#data.doc_org#>" style="text-decoration: none" download>
+                      <button type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="Download original file" tooltip-top>
+                        <i class="material-icons cstm_icon_btn_ico">file_download</i>
+                      </button>
+                    </a>
+                    <!-- Approved document. delete original -->
+                    <button ng-click="approveDocument(data.doc_id,data.doc_org)" type="button" class="btn btn-default waves-effect cstm_icon_btn doc-upd-btn" data-toggle="tooltip" title="" data-original-title="Approve document" tooltip-top id="deleteDocBtn<#doc.doc_id#>">
+                      <i class="material-icons cstm_icon_btn_ico">check</i>
                     </button>
+                  </span>
+              <!-- customize document -->
+              <button type="button" class="btn btn-default waves-effect cstm_icon_btn doc-upd-btn" data-toggle="tooltip" title="" data-original-title="Customize document" tooltip-top>
+                <i class="material-icons cstm_icon_btn_ico">build</i>
+              </button>
 
-                 </td>
-             </tr>
-            </tbody>
-       </table>
+              <button ng-click="deleteDocument(data.doc_id)" type="button" class="btn btn-default waves-effect cstm_icon_btn doc-upd-btn" data-toggle="tooltip" title="" data-original-title="Delete document" tooltip-top id="deleteDocBtn<#doc.doc_id#>">
+                <i class="material-icons cstm_icon_btn_ico">delete_forever</i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
       <center>
         <div class="preloader ng-hide center-block" ng-show="dashboard_preloader" style="margin-top:100px">
-            <div class="spinner-layer pl-blue">
-                <div class="circle-clipper left">
-                    <div class="circle"></div>
-                </div>
-                <div class="circle-clipper right">
-                    <div class="circle"></div>
-                </div>
+          <div class="spinner-layer pl-blue">
+            <div class="circle-clipper left">
+              <div class="circle"></div>
             </div>
+            <div class="circle-clipper right">
+              <div class="circle"></div>
+            </div>
+          </div>
         </div>
 
         <div class="center-block ng-hide" ng-show="not_found" style="margin-top:100px">
-           <h4 style="color:red">No document found.</h4>
+          <h4 style="color:red">No document found.</h4>
         </div>
       </center>
     </div>
@@ -432,7 +493,6 @@ var app = angular.module('dashboard_app', ['ngSanitize'], function($interpolateP
 
 app.directive('tooltipTop', function() {
       return function(scope, element, attrs) {
-
       element.tooltip({
         trigger:"hover",
         placement: "top",
@@ -441,18 +501,13 @@ app.directive('tooltipTop', function() {
     };
 });
 
-app.filter('ocred_status', function(){
+
+app.filter('if_empty', function(){
     return function(data)
       {
-          if(data=='ocred_final'){
-              data = "<b class='stat_ready'>"+"Ready"+"</b>";
-              return data;
-          }
-          else
-          {
-              data = '<b class="stat_failed">'+'Failed'+'</b>';
-              return data;
-          }
+        if(data=="" && data==null && data==undefined){
+            return 0;
+        }
       }
 });
 
@@ -462,39 +517,52 @@ app.controller('dashboard_controller', function($scope, $http, $timeout, $q) {
 // cancel previous http request
 // eg running autocomplete. if user press enter search. cancel all previous running http request.
 $scope.canceler = $q.defer();
+$scope.search_canceler = $q.defer();
+//search autocomplete preloader
+$scope.searchAutoCompLoader = false;
 
+//show/hide numbers of documents to edit.
 $scope.num_to_edit =         false;
+//show/hide numbers of archive documents.
 $scope.num_to_archive =      false;
-$scope.archive_preloader =   true;
+//show/hide preloader for documents to edit.
 $scope.to_edit_preloader =   true;
+//show/hide preloader for archive docs.
+$scope.archive_preloader =   true;
 
+//show/hide dashboard cards.
 $scope.dashboard_grid =      true;
+//show/hide dashboard preloader.
 $scope.dashboard_preloader = false;
+//show/hide not found div.
 $scope.not_found =           false;
+//show hide documents table result.
 $scope.documents_table =     false;
 
 
 // clear autocomplete on search bar
 $scope.clear_autocomplete = function(){
-    $scope.ac_doc_names =    null;
+    $scope.ac_tags     = null;
+    $scope.ac_folders  = null;
+    $scope.ac_fulltext = null;
     $scope.no_result_found = false;
 }
 
-// show preloader
+// show preloader when user select keyword to search
 $scope.show_preloader = function(){
     $scope.dashboard_grid =      false;
     $scope.not_found =           false;
     $scope.dashboard_preloader = true;
     $scope.documents_table =     false;
 }
-
+// hide preloader when user got result.
 $scope.hide_preloader = function(){
     $scope.dashboard_grid =      true;
     $scope.dashboard_preloader = false;
     $scope.not_found =           false;
     $scope.documents_table =     false;
 }
-
+// show not found div when search has no result.
 $scope.doc_not_found = function(){
     $scope.dashboard_grid =      false;
     $scope.dashboard_preloader = false;
@@ -502,227 +570,278 @@ $scope.doc_not_found = function(){
     $scope.documents_table =     false;
 }
 
-
+// get request to get numbers of documents to edit and archived documents.
 $scope.getNumToEditArchive = function(){
   $http.get('/get_docs_edit_archive').success(function(data){
+       //set number of documents to be edit
        $scope.num_edit = data.num_to_edit;
        $scope.to_edit_preloader = false;
        $scope.num_to_edit = true;
-
+       //set number of archive documents.
        $scope.archive =  data.num_archived;
        $scope.archive_preloader = false;
        $scope.num_to_archive = true;
+       //set num of queue docs.
+       $scope.queueDocs = data.num_queue;
+       //set num of failed docs.
+       $scope.failedDocs = data.num_failed_docs;
+       //set oldest doc id, when user click documents to edit, user will be redirected to edit documents
+       //with the oldest doc needed to be edit.
+       $scope.oldest_doc = data.oldest_doc;
+       
+       //set week days for barchart
+       $scope.weekDays = data.week;
+       //set docs count each week days.
+       $scope.docCounts  =  data.bar_datas;
+       
+       console.log(data);
+       $scope.makeBarChart();
   });
 }
+// run getNumToEditArchive on page load.
 $scope.getNumToEditArchive();
 
-
-//if dom is ready run invterval function
+// run getNumToEditArchive every specified interval 20000 = 2 seconds.
 angular.element(document).ready(function () {
     //check for document status
     setInterval(function() {
          // method to be executed;
          $scope.getNumToEditArchive();
-
     },20000);
 });
 
 
-// search documents function
-$scope.searchDocuments = function(){
-    $scope.canceler.resolve();
-    //clear pop autocomplete.
+// on keypress check key
+$scope.searchKeyPress = function(keyEvent) {
+
+  //if key == 13 == ENTER  search document.
+  if (keyEvent.which === 13){
+      //delay function for 1 second
+      $timeout( function()
+      {
+        // method to be executed;
+        $scope.searchDocuments();
+      }, 1000); //end timeout.
+  }
+  // key 8 = backspace. clear autocomplete
+  if (keyEvent.which === 8){
     $scope.clear_autocomplete();
-    //check if search input has value
-    if($scope.doc_name=='' || $scope.doc_name==null || $scope.doc_name == undefined){
-        //if no user input or input is not valid
-        //do nothing. show dashboard grid if hidden
+    if($scope.doc_keyword==""){
         $scope.hide_preloader();
-        $scope.canceler = $q.defer();
     }
-    else{
-      // user has valid input. show preloader.
-      $scope.show_preloader();
-      console.log($scope.doc_name);
-      data = {
-         doc_name: $scope.doc_name
-      }
-      $http.post('/dashboard_search_documents', data).success(function(data){
-           //if return is 0=not found or something went wrong. show not found dom.
-           if(data==0 || data=="" || data==null || data==undefined){
-              $scope.doc_not_found();
-              $scope.clear_autocomplete();
-           }
-           else{
-               //search found matches. show results.
-               $scope.documents = data;
-               $scope.dashboard_preloader = false;
-               $scope.documents_table = true;
-               $scope.clear_autocomplete();
-           }
-           //reinit defer so autocomplete work again
-           $scope.canceler = $q.defer();
-      }); //end http
-    }//end if
 
-}//end searchDocuments.
-
-// search specific document using doc id
-$scope.searchSpecificDocument = function(doc_id,doc_name){
-    $scope.doc_name = doc_name;
-    $scope.clear_autocomplete();
-    $scope.show_preloader();
-    $scope.canceler.resolve();
-    data = {
-       doc_id: doc_id
-    }
-    $http.post('/dashboard_search_specific_doc', data).success(function(data){
-         $scope.documents = data;
-         $scope.dashboard_preloader = false;
-         $scope.documents_table = true;
-         $scope.canceler = $q.defer();
-    });
-}
+  }
+};
 
 // show autocomplete
 $scope.onChangeInput = function(){
 
-        $scope.canceler.resolve();
-        //reinit defer so autocomplete work again
-        $scope.canceler = $q.defer();
-        // check if search input has value
-        if($scope.doc_name=="" || $scope.doc_name==null || $scope.doc_name==undefined){
-            //if no value or invalid input . do nothing.
+    //show autocomplete preloader.
+    if($scope.doc_keyword.length==0){
+      $scope.searchAutoCompLoader = false;
+    }else{
+      $scope.searchAutoCompLoader = true;
+    }
+
+    //cancel previous autocomplete post request.
+    $scope.canceler.resolve();
+    //reinit $q.defer make new autocomplete post request
+    $scope.canceler = $q.defer();
+    // check if search input has value
+    if($scope.doc_keyword!="" && $scope.doc_keyword!=null && $scope.doc_keyword!=undefined){
+        //clear dropdown autocomplete
+        $scope.clear_autocomplete();
+        //store keyword to data to be passed in post request
+        data = {
+            doc_keyword: $scope.doc_keyword
         }
-        else{
-            $scope.clear_autocomplete();
-            console.log('autocomplete..');
-            data = {
-                doc_name: $scope.doc_name
+        //make post request to get if keyword is found in documents tags,folder or page text.
+        $http({method:'POST',url:'/dashboard/search_auto_complete', data, timeout: $scope.canceler.promise}).success(function(data){
+            //if notthing is found, show not found dropdown result.
+            if(data.tags=="not_found" && data.folders=="not_found" && data.fulltext=="not_found"){
+              //not found
+              $scope.no_result_found = true;
+            }else{
+              //store result to be displayed in autocomplete.
+              $scope.ac_tags     = data.tags;
+              $scope.ac_folders  = data.folders;
+              $scope.ac_fulltext = data.fulltext;
             }
-            $http({method:'POST',url:'/dashboard_show_autocomplete', data, timeout: $scope.canceler.promise}).success(function(data){
-                if(data.doc_names == 0){
-                   $scope.clear_autocomplete();
-                   $scope.no_result_found = true;
-                }else{
-                   $scope.clear_autocomplete();
-                   $scope.ac_doc_names = data.doc_names;
-                }
-            });
-        }
+            $scope.searchAutoCompLoader = false;
+        });
+    }
+}
+
+// search document by selecting autocomplete
+$scope.selectSearchDoc = function(keyword,filter){
+    //hide search autocomplete preloader
+    $scope.searchAutoCompLoader = false;
+    //cancel previous selectSearch post request
+    $scope.search_canceler.resolve();
+    //reinit $q.defer to make new post request.
+    $scope.search_canceler = $q.defer();
+    //put selected autocomplete keyword to search bar
+    $scope.doc_keyword = keyword;
+    //show preloader
+    $scope.show_preloader();
+    //clear autocomplete
+    $scope.clear_autocomplete();
+    //store datas to be passed on post request.
+    console.log(keyword);
+    data = {
+       doc_keyword: keyword,
+       doc_filter:  filter
+    }
+    //filter = tag,folder,fulltext
+    $http({method:'POST',url:'/dashboard/select_search', data, timeout: $scope.search_canceler.promise}).success(function(data){
+       
+       if(data=="error"){
+          $scope.doc_not_found();
+       }else{
+          //pass result to scope documents to be rendered in table
+          $scope.documents = data;
+          //make documents table visible
+          $scope.documents_table = true;
+          //hide preloader
+          $scope.dashboard_preloader = false;
+          //output result in consolo -> remove this in production
+       }
+       console.log(data);
+    });
+
 }
 
 
-// on keypress check key
-$scope.searchKeyPress = function(keyEvent) {
-  //if key == 13 == ENTER  search document.
-  if (keyEvent.which === 13){
-    // method to be executed;
-      $scope.searchDocuments();
+// search documents function
+$scope.searchDocuments = function(){
+    //hide search autocomplete preloader
+    $scope.searchAutoCompLoader = false;
+    //clear autocomplete
+    $scope.clear_autocomplete();
+    //cancel previous autocomplete post request.
+    $scope.canceler.resolve();
+    //reinit $q.defer make new autocomplete post request
+    // $scope.canceler = $q.defer();
+    //-------------------------------------------------
+    //cancel previous selectSearch post request
+    $scope.search_canceler.resolve();
+    //reinit $q.defer to make new post request.
+    $scope.search_canceler = $q.defer();
 
-  }
-  //if key === 8 === backspace. clear autocomplete
-  if (keyEvent.which === 8){
-      $scope.clear_autocomplete();
-      console.log('back-spacing');
-      if($scope.doc_name==""){
-          $scope.hide_preloader();
+    //run search if input is not empty
+    if($scope.doc_keyword!=""){
+      $scope.show_preloader();
+      data = {
+         doc_keyword: $scope.doc_keyword
       }
-  }
-}; // end searchKeyPress..
+      $http({method:'POST',url:'/dashboard/enter_search', data, timeout: $scope.search_canceler.promise}).success(function(data){        
+         if(data=="error"){
+             $scope.doc_not_found();
+         }else{
+             //pass result to scope documents to be rendered in table
+             $scope.documents = data;
+             //make documents table visible
+             $scope.documents_table = true;
+             //hide preloader
+             $scope.dashboard_preloader = false;
+             //output result in consolo -> remove this in production
+             console.log(data);
+         }
+      }); //end http
+    }//end if
+
+}//end searchDocuments.
 
 
 // delete document
 $scope.deleteDocument = function(doc_id){
 
     swal({
-        title: "Delete document?",
-        text: "You will not be able to recover this document after you delete.",
-        type: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#DD6B55",
-        confirmButtonText: "Yes, delete it!",
-        cancelButtonText: "No, cancel please!",
-        closeOnConfirm: true,
-        closeOnCancel: false
+      title: "Delete document?",
+      text: "You will not be able to recover this document after you delete.",
+      type: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#DD6B55",
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "No, cancel please!",
+      closeOnConfirm: true,
+      closeOnCancel: false
     }, function (isConfirm) {
-        if (isConfirm) {
-             //ajax send post delete with id.
-             $('.doc-upd-btn').attr("disabled", "disabled");
-             $.ajax({
-                url: '/document/delete',
-                data: {
-                    doc_id: doc_id
-                },
-                type: 'POST',
-                success: function(data) {
-                    swal("Deleted!", "Document has been deleted.", "success");
-                    $scope.searchDocuments();
-                    $('.doc-upd-btn').removeAttr('disabled');
-                }
-            }); //end ajax
-        } else {
-            swal("Cancelled", "Your document is safe :)", "error");
-        }
+      if(isConfirm) {
+         //ajax send post delete with id.
+         $('.doc-upd-btn').attr("disabled", "disabled");
+         $.ajax({
+            url: '/document/delete',
+            data: {
+                doc_id: doc_id
+            },
+            type: 'POST',
+            success: function(data) {
+                swal("Deleted!", "Document has been deleted.", "success");
+                $scope.searchDocuments();
+                $('.doc-upd-btn').removeAttr('disabled');
+            }
+        }); //end ajax
+      }else{
+        swal("Cancelled", "Your document is safe :)", "error");
+      }
     });
 }
 
 
-
+//approve document will delete the original doc in the server.
 $scope.approveDocument = function(doc_id,doc_org){
 
     swal({
-        title: "Approve this document?",
-        text: "Approving document will delete the original file from our server",
-        type: "success",
-        showCancelButton: true,
-        confirmButtonColor: "#b1d5ff",
-        confirmButtonText: "Yes, Approve it!",
-        cancelButtonText: "No, cancel please!",
-        closeOnConfirm: true,
-        closeOnCancel: false
-    }, function (isConfirm) {
-        if (isConfirm) {
-             //ajax send post delete with id.
-             $('.doc-upd-btn').attr("disabled", "disabled");
-             $.ajax({
-                url: '/document/approve',
-                data: {
-                    doc_id: doc_id,
-                    doc_org: doc_org
-                },
-                type: 'POST',
-                success: function(data) {
-                    swal("Success!", "Document has been approved.", "success");
-                    $scope.searchDocuments();
-                    $('.doc-upd-btn').removeAttr('disabled');
-                }
-            }); //end ajax
-        } else {
-            swal("Cancelled", "Your document is safe :)", "error");
+      title: "Approve this document?",
+      text: "Approving document will delete the original file from our server",
+      type: "success",
+      showCancelButton: true,
+      confirmButtonColor: "#b1d5ff",
+      confirmButtonText: "Yes, Approve it!",
+      cancelButtonText: "No, cancel please!",
+      closeOnConfirm: true,
+      closeOnCancel: false
+    },function (isConfirm) {
+        if(isConfirm){
+           //ajax send post delete with id.
+           $('.doc-upd-btn').attr("disabled", "disabled");
+           $.ajax({
+              url: '/document/approve',
+              data: {
+                  doc_id: doc_id,
+                  doc_org: doc_org
+              },
+              type: 'POST',
+              success: function(data) {
+                  swal("Success!", "Document has been approved.", "success");
+                  $scope.searchDocuments();
+                  $('.doc-upd-btn').removeAttr('disabled');
+              }
+          }); //end ajax
+        }else{
+          swal("Cancelled", "Your document is safe :)", "error");
         }
     });
 }
 
-//end controller
-});
+
 
 
 // BAR CHART ==================================================
 // CUSTOM BARCHART
 
-randomScalingFactor = function() {
-  return Math.round(Math.random() * 100);
-}
 
 function getData() {
   var dataSize = 7;
   var evenBackgroundColor = 'rgba(0, 119, 255, 1)';
   var oddBackgroundColor = 'rgba(177,213,255, 1)';
-  var weeks = ["Sun","Mon","Tue","Wed",'Thu','Fir','Sat'];
+
+  var docs  = $scope.docCounts;
+  var weeks = $scope.weekDays;
   var labels = [];
 
-  var scoreData = {
+  var docDatas = {
     label: 'Documents:',
     data: [],
     backgroundColor: [],
@@ -733,25 +852,26 @@ function getData() {
   };
 
   for (var i = 0; i < dataSize; i++) {
-    scoreData.data.push(window.randomScalingFactor());
+    
+    docDatas.data.push(docs[i]);
     labels.push(weeks[i]);
 
     if (i % 2 === 0) {
-      scoreData.backgroundColor.push(evenBackgroundColor);
+      docDatas.backgroundColor.push(evenBackgroundColor);
     } else {
-      scoreData.backgroundColor.push(oddBackgroundColor);
+      docDatas.backgroundColor.push(oddBackgroundColor);
     }
   }
 
   return {
     labels: labels,
-    datasets: [scoreData],
+    datasets: [docDatas],
   };
 };
 
-window.onload = function() {
+$scope.makeBarChart = function(){
+
   var chartData = getData();
-  console.dir(chartData);
 
   var myBar = new Chart(document.getElementById("myChart").getContext("2d"), {
     type: 'bar',
@@ -795,8 +915,14 @@ window.onload = function() {
       }
     }
   });
+
 };
 
+
+
+
+//end controller
+});
 
 
 // modefiy bars add border radius

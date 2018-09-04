@@ -54,13 +54,12 @@ Route::get('/share/{user_name}/{share_hash}/{password}', 'shareDocumentControlle
             //dashboard routes =========================================================================================
             Route::get('/dashboard',                            'dashboardController@index');
             Route::get('/get_docs_edit_archive',                'dashboardController@toEditDocs');
-            Route::post('/dashboard_search_documents',          'dashboardController@searchDocuments');
-            Route::post('/dashboard_show_autocomplete',         'dashboardController@searchAutoComplete');
-            Route::post('/dashboard_search_specific_doc',       'dashboardController@searchSpecificDocuments');
+            Route::post('/dashboard/search_auto_complete',      'dashboardController@searchAutoComplete');
+            Route::post('/dashboard/select_search',             'dashboardController@selectSearchDocumnets');
+            Route::post('/dashboard/enter_search',              'dashboardController@enterSearchDocumnets');
 
             //search document routes ===================================================================================
             Route::get('/search',                               'searchDocumentController@index');
-            Route::post('/search/documentsWithFilter',          'searchDocumentController@searchDocumentWithFilter');
             Route::post('/search/documents',                    'searchDocumentController@searchDocument');
             Route::post('/search/typhead',                      'searchDocumentController@typeHead');
 
@@ -99,10 +98,6 @@ Route::get('/share/{user_name}/{share_hash}/{password}', 'shareDocumentControlle
             Route::get( '/document/{doc_id}',                    'documentsController@viewDocument');
             Route::post('/document/update',                      'documentsController@updateDocument');
             Route::post('/document/share',                       'documentsController@shareDocument');
-
-            // new documents to edit ===================================================================================
-            Route::get( '/new_documents',                        'documentsController@new_documents');
-            Route::get( '/return_new_documents',                 'documentsController@return_new_documents');
 
             // customize pdf ===================================================================================
             Route::get( '/customize_pdf/{doc_id}',               'customizePdfController@index');

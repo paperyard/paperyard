@@ -198,15 +198,6 @@ class foldersController extends Controller
 
 
          // SEARCH
-         // $test  = DB::table('documents')
-         // ->select(
-         //   'documents.created_at',
-         //    DB::raw('count(`doc_id`) as documents'),
-         //    DB::raw('DAYNAME(`created_at`) as day')
-         // )
-         // ->whereBetween('created_at', [\Carbon\Carbon::now()->startOfWeek(),\Carbon\Carbon::now()->endOfWeek()])
-         // ->groupBy(DB::raw('WEEKDAY(created_at)'))
-         // ->get();
 
          // $years = DB::table('documents')
          // ->select(
@@ -236,16 +227,26 @@ class foldersController extends Controller
          // var_dump($years);
 
 
-            $img = Image::make('static/documents_images/2-1-0IH1l.png');
+        // $img = Image::make('static/documents_images/2-1-0IH1l.png');
 
-            // rotate image 45 degrees clockwise
-            $img->rotate(+90);
-            $img->save('static/documents_images/xxxx-1.png');
+        // // rotate image 45 degrees clockwise
+        // $img->rotate(+90);
+        // $img->save('static/documents_images/xxxx-1.png');
 
-            echo "success";
+        // echo "success";
 
+        $folder_id = 1;
+        $qwe = $this->returnResult($folder_id);
 
+    }
 
+    public function returnResult($param){
+        $test = DB::table('documents')
+        ->where('doc_folder_id', $param)
+        ->select('documents.doc_ocr')
+        ->get();
+
+        return $test;
     }
 
 

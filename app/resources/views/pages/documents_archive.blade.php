@@ -92,7 +92,6 @@
 
 <div class="row" ng-app="archive_app" ng-controller="archive_controller">
 
-
     <!-- search filter -->
     <div class="col-md-3">Search document
       <input type="text" ng-model="search" ng-change="filter()" placeholder="Enter keyword" class="form-control" />
@@ -115,6 +114,7 @@
           <option ng-repeat="option in folders" value="<#option.folder_id#>"><#option.folder_name #></option>
         </select>
     </div>
+
     <div class="col-md-4"><br>
         <button class="btn btn-primary" ng-click="addToFolder()">Move to folder</button>
         <button class="btn btn-danger"  ng-click="deleteMultipleDocuments()">Delete documents</button>
@@ -123,6 +123,7 @@
     <div class="col-md-12">
          <br>
     </div>
+
      <!-- preloader -->
     <div class="col-md-12">
       <center>
@@ -220,7 +221,6 @@
     <div class="col-md-6" ng-show="filteredItems > 0">
       <p style="color:#999" class="pull-right">Filtered <# filtered.length #> of <# totalItems #> total Documents</p>
     </div>
-
 
 </div>
 

@@ -57,8 +57,8 @@ class documentsController extends Controller
    	      }
    }
 
-      // DELETE DOCUMENT
-      public function deleteDocument(Request $req){
+  // DELETE DOCUMENT
+  public function deleteDocument(Request $req){
 
              $doc = DB::table('documents')
              ->where('doc_user_id', Auth::user()->id)
@@ -162,6 +162,7 @@ class documentsController extends Controller
 
     }
 
+    // share documents public
     public function shareDocument(Request $req){
 
         try {
@@ -192,27 +193,7 @@ class documentsController extends Controller
 
     }
 
-    public function new_documents(){
-          return view('pages/documents_to_edit');
-    }
-    public function return_new_documents(){
-         //return no. of documents needed to edit.
-         $doc_status = ['ocred_final','failed_force','failed_decrypting'];
-
-         $to_edit_docs = DB::table('documents')->where([
-             ['doc_user_id','=',Auth::user()->id],
-             ['is_archive','=',0]
-         ])
-         ->whereIn('process_status', $doc_status)
-         ->select('documents.doc_id','documents.doc_ocr','documents.doc_org','documents.approved','documents.process_status','documents.created_at')
-         ->orderBy('doc_id', 'DESC')
-         ->get();
-
-        $json_response = json_encode($to_edit_docs);
-        // # Return the response
-        return $json_response;
-    }
-
+    // return edited documents
     public function archives(){
         return view('pages/documents_archive');
     }
@@ -258,6 +239,7 @@ class documentsController extends Controller
         }
 
     }
+
 
 
 }

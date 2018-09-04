@@ -17,308 +17,386 @@ class searchDocumentController extends Controller
         return view('pages/search_docs');
     }
 
-    // search documents without filter
+    // autocomplete
     public function typeHead(Request $req){
+      
+      //default
+      $folders    = "not_found";
+      $clean_tags = "not_found";
+      $clean_text = "not_found";
 
-      //===========================AUTO COMPLETE ================================
-      if($req->acf=="folder"){
+      //filter folder or no filter.
+      if($req->autocomplte_filter=="folder" || $req->autocomplte_filter=="no_filter"){
             //get folders names
             $folders = DB::table('folders')
             ->where('folder_user_id', Auth::user()->id)
             ->where('folder_name', 'LIKE', '%' . $req->keyword . '%')
             ->select('folders.folder_name')
             ->get();
-
-            $json_response = json_encode(array('folders' => $folders));
-            // # Return the response
-            return $json_response;
+            if(count($folders)==0){
+                $folders = "not_found";
+            }
+            //return $folders.
+      }else{
+           $folders = "not_found";
       }
-      if($req->acf=="tag"){
-
-            $f_tags = [];
-            //get tags
+      
+      //filter tags or no filter.
+      if($req->autocomplte_filter=="tag" || $req->autocomplte_filter=="no_filter"){
+            
+            //get/store documents ids using tags.
+            $arr_tags = [];
+            
             $tags = DB::table('documents')
             ->where('doc_user_id', Auth::user()->id)
+            ->where('is_archive', 1)
             ->where('tags', 'LIKE', '%' . $req->keyword . '%')
             ->select('documents.doc_id','documents.tags')
             ->get();
 
-            foreach($tags as $key=>$t){
-                //documents.tags = "a,b,c,d"
-                //convert comma separated string to array.
-                $tagsArray = explode(',', $t->tags);
-                //get elements with matching keyword
-                foreach($tagsArray as $val){
-                    // push value to array.
-                    if (strpos(strtoupper($val), strtoupper($req->keyword)) !== false) {
-                           array_push($f_tags,$val);
+            if(count($tags)>0){
+
+                foreach($tags as $key=>$t){
+                    //documents.tags = "a,b,c,d"
+                    //convert comma separated string to array.
+                    $tagsArray = explode(',', $t->tags);
+                    //get elements with matching keyword
+                    foreach($tagsArray as $val){
+                        // push value to array.
+                        if (strpos(strtoupper($val), strtoupper($req->keyword)) !== false) {
+                               array_push($arr_tags,$val);
+                        }
                     }
                 }
+                // remove duplicates
+                $clean_tags = array_unique($arr_tags);
             }
-            // remove duplicates
-            $clean_tags = array_unique($f_tags);
-            //get full text
-            $json_response = json_encode(array('tags' => $clean_tags));
-            // # Return the response
-            return $json_response;
+            else{
+                $clean_tags = "not_found";
+            }
+            // return clean_tags.
        }
-       if($req->acf=="full_text"){
+       //fulter fulltext or no filter
+       if($req->autocomplte_filter=="full_text" || $req->autocomplte_filter=="no_filter"){
+            
+            $filter_text = [];
+            //get users documents ids 
+            $user_doc = DB::table('documents')
+            ->where('doc_user_id', Auth::user()->id)
+            ->where('is_archive', 1)
+            ->select('documents.doc_id')
+            ->get();
 
-           $filter_text = [];
-           $user_doc = DB::table('documents')->where('doc_user_id', Auth::user()->id)->select('documents.doc_id')->get();
-           $doc_ids = [];
-           foreach($user_doc as $usr){
-               array_push($doc_ids, $usr->doc_id);
-           }
-           $text = DB::table('document_pages')->whereIn('doc_id', $doc_ids)->select('document_pages.doc_page_text')->get();
-
-           foreach($text as $key=>$t){
-                //documents.tags = "a,b,c,d"
-                //convert comma separated string to array.
-                //remove linebreaks
-                $nlbText = str_replace(array("\r", "\n"), ' ', $t->doc_page_text);
-                $textArray = explode(" ", $nlbText);
-                //get elements with matching keyword
-                foreach($textArray as $val){
-                    // push value to array.
-                    if (strpos(strtoupper($val), strtoupper($req->keyword)) !== false) {
-                           array_push($filter_text,$val);
-                    }
+            if(count($user_doc)>0){
+           
+                //store documents ids in array.
+                $doc_ids = [];
+                foreach($user_doc as $usr){
+                   array_push($doc_ids, $usr->doc_id);
                 }
+                //find documents ids in documents pages
+                $text = DB::table('document_pages')
+                ->whereIn('doc_id', $doc_ids)
+                ->where('doc_page_text', 'LIKE', '%' . $req->keyword . '%')
+                ->select('document_pages.doc_page_text')->get();
+
+                if(count($text)>0){
+                
+                    foreach($text as $key=>$t){
+                        //documents.tags = "a,b,c,d"
+                        //convert comma separated string to array.
+                        //remove linebreaks
+                        $nlbText = str_replace(array("\r", "\n"), ' ', $t->doc_page_text);
+                        $textArray = explode(" ", $nlbText);
+                        //get elements with matching keyword
+                        foreach($textArray as $val){
+                            // push value to array.
+                            if (strpos(strtoupper($val), strtoupper($req->keyword)) !== false) {
+                                   array_push($filter_text,$val);
+                            }
+                        }
+                    }
+                    // remove duplicates
+                    $clean_text = array_unique($filter_text);
+                    // return clean_text
+                }else{
+                    $clean_text = "not_found";
+                }    
+  
+            }else{
+                $clean_text = "not_found";
             }
-            // remove duplicates
-            $clean_text = array_unique($filter_text);
+        }//end if fulltext filter
 
-            $json_response = json_encode(array('text' => $clean_text));
-            // # Return the response
-            return $json_response;
-
-       }
-
+        //tag folder fulltext.
+        $json_response = json_encode(array('folders'=>$folders,'tags'=>$clean_tags,'fulltext'=>$clean_text));
+        // # Return the response
+        return $json_response;
 
     }
-    // search documents with filters TAGS, FOLDER , FULL TEXT
-    public function searchDocumentWithFilter(Request $req){
+    
 
-
-         // NO FILTER FIND ALL IN FOLDER TAGS AN TEXT. QUERY TAKE LONGER
-         if($req->filter=="no_filter"){
-
-                $docs_ids = [];
-                //get folder ids
-                $folder_ids = DB::table('folders')->where('folder_user_id', Auth::user()->id)
-                ->where('folder_name', 'LIKE', '%' . $req->keyword . '%')
-                ->select('folders.folder_id')
-                ->get();
-
-                $folder_docs_ids = [];
-                 //get documents from each folder
-                if(count($folder_ids)>0){
-                    foreach($folder_ids as $fid){
-                         array_push($folder_docs_ids,$fid->folder_id);
-                    }
-                }
-                //get documents ids from this folder ids.
-                $folder_docs = DB::table('documents')
-                ->where('doc_user_id', Auth::user()->id)
-                ->whereIn('doc_folder_id',$folder_docs_ids)
-                ->select('documents.doc_id')
-                ->get();
-
-                if(count($folder_docs)>0){
-                     foreach($folder_docs as $fod){
-                         array_push($docs_ids,$fod->doc_id);
-                     }
-                }
-                //get tag ids
-                $tags_ids = DB::table('documents')->where('doc_user_id', Auth::user()->id)
-                ->where('tags', 'LIKE', '%' . $req->keyword . '%')
-                ->select('documents.doc_id')
-                ->get();
-
-                if(count($tags_ids)>0){
-                    foreach($tags_ids as $tid){
-                        array_push($docs_ids,$tid->doc_id);
-                    }
-                }
-
-                //get fulltext ids
-                $user_docs = DB::table('documents')->where('doc_user_id', Auth::user()->id)
-                ->select('documents.doc_id')->get();
-
-                $user_doc_ids = [];
-                if(count($user_docs)>0){
-                      foreach($user_docs as $uid){
-                          array_push($user_doc_ids, $uid->doc_id);
-                      }
-                      $text_ids = DB::table('document_pages')->whereIn('doc_id', $user_doc_ids)
-                      ->where('doc_page_text', 'LIKE', '%' . $req->keyword . '%')
-                      ->select('document_pages.doc_id')
-                      ->get();
-                      if(count($text_ids)>0){
-                            foreach($text_ids as $txt){
-                                array_push($docs_ids,$txt->doc_id);
-                            }
-                      }
-                }
-                //---------------
-                $find_all_ids = array_unique($docs_ids);
-
-                $documents = DB::table('documents')
-                ->where('doc_user_id', Auth::user()->id)
-                ->whereIn('documents.doc_id', $find_all_ids)
-                ->leftJoin('document_pages','documents.doc_id','=','document_pages.doc_id')
-                ->groupBy('document_pages.doc_id')
-                ->select(
-                    'documents.doc_id',
-                    'documents.doc_ocr',
-                    'documents.sender',
-                    'documents.receiver',
-                    'documents.date',
-                    'documents.tags',
-                    'documents.category',
-                    'documents.memory',
-                    'documents.tax_relevant',
-                    'documents.note',
-                    'document_pages.doc_page_image_preview',
-                    'document_pages.doc_page_thumbnail_preview'
-                )->get();
-
-                foreach($documents as $key=>$d){
-                    //append doc size to obj result
-                    $fname = "static/documents_ocred/" . $d->doc_ocr;
-                    $fsize = filesize($fname);
-                    $d->size = $this->FileSizeConvert($fsize);
-                }
-
-                if(count($documents)>=1){
-                    $json_response = json_encode($documents);
-                    return $json_response;
-                }
-         }
-
-         // FOLDER  ===================================================================================================
-         if($req->filter=="folder"){
-
-                //get folder id using folder name
-                $folderID = DB::table('folders')->where([
-                    ['folder_user_id', '=', Auth::user()->id],
-                    ['folder_name', '=', $req->keyword]
-                ])->get();
-
-                $f_ids = [];
-
-                foreach($folderID as $i){
-                    array_push($f_ids, $i->folder_id);
-                }
-
-                $documents = DB::table('documents')
-                ->where('doc_user_id', Auth::user()->id)
-                ->whereIn('doc_folder_id', $f_ids)
-                ->join('document_pages','documents.doc_id','=','document_pages.doc_id')
-                ->groupBy('document_pages.doc_id')
-                ->select(
-                    'documents.doc_id',
-                    'documents.doc_ocr',
-                    'documents.sender',
-                    'documents.receiver',
-                    'documents.date',
-                    'documents.tags',
-                    'documents.category',
-                    'documents.memory',
-                    'documents.tax_relevant',
-                    'documents.note',
-                    'document_pages.doc_page_image_preview',
-                    'document_pages.doc_page_thumbnail_preview'
-                )->get();
-
-                foreach($documents as $key=>$d){
-                    //append doc size to obj result
-                    $fname = "static/documents_ocred/" . $d->doc_ocr;
-                    $fsize = filesize($fname);
-                    $d->size = $this->FileSizeConvert($fsize);
-                }
-
-                if(count($documents)>=1){
-                    $json_response = json_encode($documents);
-                    return $json_response;
-                }
-
+    public function searchDocument(Request $req){
+         
+        //keypress enter search. no filter
+        if($req->filter=="no_filter"){
+           $docs = $this->searchNoFilter($req->keyword);
         }
-        // TAGS  =====================================================================================================
-        if ($req->filter=="tag") {
-             # code...
-
-                $documents = DB::table('documents')
-                ->where('doc_user_id', Auth::user()->id)
-                ->where('tags', 'LIKE', '%' . $req->keyword . '%')
-                ->join('document_pages','documents.doc_id','=','document_pages.doc_id')
-                ->groupBy('document_pages.doc_id')
-                ->select(
-                    'documents.doc_id',
-                    'documents.doc_ocr',
-                    'documents.sender',
-                    'documents.receiver',
-                    'documents.date',
-                    'documents.tags',
-                    'documents.category',
-                    'documents.memory',
-                    'documents.tax_relevant',
-                    'documents.note',
-                    'document_pages.doc_page_image_preview',
-                    'document_pages.doc_page_thumbnail_preview'
-                )->get();
-
-                foreach($documents as $key=>$d){
-                    //append doc size to obj result
-                    $fname = "static/documents_ocred/" . $d->doc_ocr;
-                    $fsize = filesize($fname);
-                    $d->size = $this->FileSizeConvert($fsize);
-                }
-
-                if(count($documents)>=1){
-                    $json_response = json_encode($documents);
-                    return $json_response;
-                }
+        if($req->filter=="folder"){
+            $docs = $this->searchFolders($req->keyword);
         }
-        // TEXT ======================================================================================================
+        
+        if($req->filter=="tag") {
+            $docs = $this->searchTags($req->keyword);
+        }
         if($req->filter=="full_text"){
-             # code
-                $documents = DB::table('documents')
-                ->where('doc_user_id', Auth::user()->id)
-                ->join('document_pages','documents.doc_id','=','document_pages.doc_id')
-                ->where('document_pages.doc_page_text', 'LIKE', '%' . $req->keyword . '%')
-                ->groupBy('document_pages.doc_id')
-                ->select(
-                    'documents.doc_id',
-                    'documents.doc_ocr',
-                    'documents.sender',
-                    'documents.receiver',
-                    'documents.date',
-                    'documents.tags',
-                    'documents.category',
-                    'documents.memory',
-                    'documents.tax_relevant',
-                    'documents.note',
-                    'document_pages.doc_page_image_preview',
-                    'document_pages.doc_page_thumbnail_preview'
-                )->get();
+            $docs = $this->searchFullText($req->keyword);
+        }
 
+        if(count($docs)>0){
+            $json_response = json_encode($docs);
+            return $json_response;
+        }else{
+            return "error";
+        }
+
+    }
+
+    //search on keypress enter
+    public function searchNoFilter($keyword){
+        
+        //store document ids found in keyword tag,folder and text
+        $docs_ids = [];
+
+        //get folder ids
+        $folder_ids = DB::table('folders')->where('folder_user_id', Auth::user()->id)
+        ->where('folder_name', 'LIKE', '%' . $keyword . '%')
+        ->select('folders.folder_id')
+        ->get();
+
+        //if folder found
+        if(count($folder_ids)>0){
+
+            $folder_docs_ids = [];
+             //get ids from each folder
+            foreach($folder_ids as $fid){
+                 array_push($folder_docs_ids, $fid->folder_id);
+            }
+
+            //get documents ids from this folder ids.
+            $folder_docs = DB::table('documents')
+            ->where('is_archive', 1)
+            ->where('doc_user_id', Auth::user()->id)
+            ->whereIn('doc_folder_id',$folder_docs_ids)
+            ->select('documents.doc_id')
+            ->get();
+
+            if(count($folder_docs)>0){
+                 foreach($folder_docs as $fod){
+                     array_push($docs_ids,$fod->doc_id);
+                 }
+            }
+        }
+        //------------------------------------------------------------------------------  
+        //get tag ids
+        $tags_ids = DB::table('documents')
+        ->where('doc_user_id', Auth::user()->id)
+        ->where('is_archive', 1)
+        ->where('tags', 'LIKE', '%' . $keyword . '%')
+        ->select('documents.doc_id')
+        ->get();
+
+        if(count($tags_ids)>0){
+            foreach($tags_ids as $tid){
+                array_push($docs_ids,$tid->doc_id);
+            }
+        }
+        //-------------------------------------------------------------------------------
+        
+        //get fulltext ids
+        $user_docs = DB::table('documents')
+        ->where('doc_user_id', Auth::user()->id)
+        ->where('is_archive', 1) 
+        ->select('documents.doc_id')
+        ->get();
+
+        $user_doc_ids = [];
+        if(count($user_docs)>0){
+
+              foreach($user_docs as $uid){
+                  array_push($user_doc_ids, $uid->doc_id);
+              }
+
+              $text_ids = DB::table('document_pages')->whereIn('doc_id', $user_doc_ids)
+              ->where('doc_page_text', 'LIKE', '%' . $keyword . '%')
+              ->select('document_pages.doc_id')
+              ->get();
+              if(count($text_ids)>0){
+                    foreach($text_ids as $txt){
+                        array_push($docs_ids,$txt->doc_id);
+                    }
+              }
+        }
+        //-------------------------------------------------------------------------------
+        $find_all_ids = array_unique($docs_ids);
+
+        $documents = DB::table('documents')
+        ->where('doc_user_id', Auth::user()->id)
+        ->where('is_archive', 1) 
+        ->whereIn('documents.doc_id', $find_all_ids)
+        ->leftJoin('document_pages','documents.doc_id','=','document_pages.doc_id')
+        ->groupBy('document_pages.doc_id')
+        ->select(
+            'documents.doc_id',
+            'documents.doc_ocr',
+            'documents.sender',
+            'documents.receiver',
+            'documents.date',
+            'documents.tags',
+            'documents.category',
+            'documents.memory',
+            'documents.tax_relevant',
+            'documents.note',
+            'document_pages.doc_page_image_preview',
+            'document_pages.doc_page_thumbnail_preview'
+        )->get();
+
+        if(count($documents)>0){
+            foreach($documents as $key=>$d){
+                //append doc size to obj result
+                $fname = "static/documents_ocred/" . $d->doc_ocr;
+                $fsize = filesize($fname);
+                $d->size = $this->FileSizeConvert($fsize);
+            }
+            return $documents;
+        }else{
+            return $documents;
+        }    
+
+    }
+
+    //search documents with tag keyword
+    public function searchTags($keyword){
+
+        $documents = DB::table('documents')
+        ->where('doc_user_id', Auth::user()->id)
+        ->where('is_archive', 1) 
+        ->where('tags', 'LIKE', '%' . $keyword . '%')
+        ->join('document_pages','documents.doc_id','=','document_pages.doc_id')
+        ->groupBy('document_pages.doc_id')
+        ->select(
+            'documents.doc_id',
+            'documents.doc_ocr',
+            'documents.sender',
+            'documents.receiver',
+            'documents.date',
+            'documents.tags',
+            'documents.category',
+            'documents.memory',
+            'documents.tax_relevant',
+            'documents.note',
+            'document_pages.doc_page_image_preview',
+            'document_pages.doc_page_thumbnail_preview'
+        )->get();
+        
+        if(count($documents)>0){
+            foreach($documents as $key=>$d){
+                //append doc size to obj result
+                $fname = "static/documents_ocred/" . $d->doc_ocr;
+                $fsize = filesize($fname);
+                $d->size = $this->FileSizeConvert($fsize);
+            }
+            return $documents;
+        }else{
+            return $documents;
+        }    
+    }
+    
+    //search documents with folder keyword
+    public function searchFolders($keyword){
+        
+        //get folder id using folder name
+        $folderID = DB::table('folders')->where([
+            ['folder_user_id', '=', Auth::user()->id],
+            ['folder_name', '=', $keyword]
+        ])->first();
+
+        if(count($folderID)>0){
+            $documents = DB::table('documents')
+            ->where('is_archive', 1) 
+            ->where('doc_user_id', Auth::user()->id)
+            ->where('doc_folder_id', $folderID->folder_id)
+            ->join('document_pages','documents.doc_id','=','document_pages.doc_id')
+            ->groupBy('document_pages.doc_id')
+            ->select(
+                'documents.doc_id',
+                'documents.doc_ocr',
+                'documents.sender',
+                'documents.receiver',
+                'documents.date',
+                'documents.tags',
+                'documents.category',
+                'documents.memory',
+                'documents.tax_relevant',
+                'documents.note',
+                'document_pages.doc_page_image_preview',
+                'document_pages.doc_page_thumbnail_preview'
+            )->get();
+            
+            //documents found in folder
+            if(count($documents)>0){
                 foreach($documents as $key=>$d){
                     //append doc size to obj result
                     $fname = "static/documents_ocred/" . $d->doc_ocr;
                     $fsize = filesize($fname);
                     $d->size = $this->FileSizeConvert($fsize);
                 }
-
-                if(count($documents)>=1){
-                    $json_response = json_encode($documents);
-                    return $json_response;
-                }
-
+                return $documents;
+            }else{
+                return $documents;
+            }
+        }else{
+            $documents = $folderID;
+            return $documents;
         }
+            
 
+    }
 
+    public function searchFullText($keyword){
+        
+        $documents = DB::table('documents')
+        ->where('doc_user_id', Auth::user()->id)
+        ->where('is_archive', 1) 
+        ->join('document_pages','documents.doc_id','=','document_pages.doc_id')
+        ->where('document_pages.doc_page_text', 'LIKE', '%' . $keyword . '%')
+        ->groupBy('document_pages.doc_id')
+        ->select(
+            'documents.doc_id',
+            'documents.doc_ocr',
+            'documents.sender',
+            'documents.receiver',
+            'documents.date',
+            'documents.tags',
+            'documents.category',
+            'documents.memory',
+            'documents.tax_relevant',
+            'documents.note',
+            'document_pages.doc_page_image_preview',
+            'document_pages.doc_page_thumbnail_preview'
+        )->get();
+        
+        if(count($documents)>0){
+            foreach($documents as $key=>$d){
+                //append doc size to obj result
+                $fname = "static/documents_ocred/" . $d->doc_ocr;
+                $fsize = filesize($fname);
+                $d->size = $this->FileSizeConvert($fsize);
+            }
+            return $documents;
+        }else{
+            return $documents;
+        }
     }
 
     //convert file size to human readable.

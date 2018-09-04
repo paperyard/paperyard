@@ -16,23 +16,25 @@ flush privileges;
 \q
 MY_QUERY
 
-### cd to laravel application root.
+### cd to larave application root.
 cd /var/www/html
 
-### Windows || Mac make directory if not exit
+### windows | mac make directory if not exit
 # mkdir -p public/static/documents_new/
 # mkdir -p public/static/documents_processing/
 # mkdir -p public/static/documents_ocred/
 # mkdir -p public/static/documents_images/
+# mkdir -p public/static/symfony_process_error_logs/
 
-### Linux make directory if not exist
+## linux make directory if not exist
 # chmod -R 777 public/static
 # mkdir -p -m 777 public/static/documents_new/
 # mkdir -p -m 777 public/static/documents_processing/
 # mkdir -p -m 777 public/static/documents_ocred/
 # mkdir -p -m 777 public/static/documents_images/
+# mkdir -p -m 777 public/static/symfony_process_error_logs/
 
-### Linux laravel permissions
+## linux laravel permissions
 # chgrp -R www-data storage bootstrap/cache
 # chmod -R ug+rwx storage bootstrap/cache
 
@@ -45,8 +47,6 @@ php artisan migrate
 echo "* * * * * php /var/www/html/artisan schedule:run >> /dev/null 2>&1" >>  cronjobs_paperyard
 crontab cronjobs_paperyard
 service cron start
-
-
 
 
 

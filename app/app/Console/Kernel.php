@@ -42,10 +42,10 @@ class Kernel extends ConsoleKernel
     {
         // // run ocrmypdf to new documents added
         $schedule->command('ocr:new')->everyMinute();
-        // // make image preview and get text from documents for searching.
-        $schedule->command('ocr:txt_img')->everyMinute();
         // // rerun failed ocred documents
         $schedule->command('ocr:force')->everyMinute();
+        // // make image preview and get text from documents for searching.
+        $schedule->command('ocr:txt_img')->everyMinute();
         // shedule reminder
         $schedule->command('ocr:reminder')->everyMinute();
     }

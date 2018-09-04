@@ -52,34 +52,35 @@ class ocr_force extends Command
     public function handle()
     {
 
-            // run ocrmypdf less than current time();
+            // get failed documents.
             $time = time();
-            $documents = DB::table('documents')->where([
-                ['t_process', '<=', $time],
-                ['process_status', '=', 'failed']
-            ])->get();
+            $documents = DB::table('documents')
+            ->where("t_process", '<=', $time)
+            ->where("process_status", "failed")
+            ->get();
 
-            // iF DOCUMENTS FOUND RUN
-            if(count($documents)>=1){
+            // If failed documents found. rerun ocr with force
+            if(count($documents)>0){
 
-                    // UPDATE FOUND DOCUMENTS STATUS TO PROCESSING.
-                    $upd_docz = [];
+                    // store failed docs ids to array
+                    $rerun_doc_ids = [];
                     foreach($documents as $upd){
-                      array_push($upd_docz, $upd->t_process);
+                      array_push($rerun_doc_ids, $upd->doc_id);
                     }
+                    // change status of "failed" docs to "rerun_failed" 
                     DB::table('documents')
-                      ->whereIn('t_process', $upd_docz)
-                      ->update(['process_status' => 'rerun_failed']);
+                    ->whereIn('doc_id', $rerun_doc_ids)
+                    ->update(['process_status' => 'rerun_failed']);
 
-                    // APPLY OCR ON EACH DOCUMENT
+                    // rerun force ocr on each docs
                     foreach($documents as $key=>$d){
 
                           //location of original doc.
                           $document_src[$key] = "public/static/documents_new/" . $d->doc_org;
                           //location for where the document with applied ocr will be stored.
                           $document_dst[$key] = "public/static/documents_ocred/" . $d->doc_ocr;
-                          //location of processing documents
-                          $document_prc[$key] = "public/static/documents_processing/" . $d->doc_prc;
+
+
                           //decrypted doc
                           $decrypted_doc = "decrypted-" . $d->doc_org;
                           $decrypted_document_src[$key] = "public/static/documents_new/" . $decrypted_doc;
@@ -91,18 +92,10 @@ class ocr_force extends Command
                           //qpdf dycrpy flag
                           $params3[$key] = "qpdf --decrypt";
 
-                          //decrypt docs before running ocr
-                          //combine ocrmypdf params + source + destination of document. | convert to string
-                          //smyfony process accepts only string as parameter.
-                          //see symfony process component for more information.
+                          //process param for running ocr with force
                           $process_ocr[$key] = $params1[$key]     . " " . $decrypted_document_src[$key] . " " . $document_dst[$key];
                           $p_id1[$key] = (string)$process_ocr[$key];
-                          //convert image to pdf
-                          $process_img[$key] = $params2[$key]     . " " . $document_prc[$key] . " " . $document_src[$key];
-                          $p_id2[$key] = (string)$process_img[$key];
-                          //run ocr on imgpdf
-                          $process_ocr2[$key] = $params1[$key]    . " " . $document_prc[$key] . " " . $document_dst[$key];
-                          $p_id3[$key] = (string)$process_ocr2[$key];
+                          
                           //decrypt document
                           $process_decrypt[$key] = $params3[$key] . " " . $document_src[$key] . " " . $decrypted_document_src[$key];
                           $p_id4[$key] = (string)$process_decrypt[$key];
@@ -120,20 +113,33 @@ class ocr_force extends Command
                             if(file_exists($decrypted_document_src[$key])){
                                     //run ocr force on decrypted doc
                                     $process[$key] = new Process($p_id1[$key]);
-                                    $process[$key]->disableOutput();
+                                    $process[$key]->setTimeout(9000000);
+                                    $process[$key]->enableOutput();
                                     $process[$key]->start();
                                     $process[$key]->wait();
 
-                                    if(file_exists('public/static/documents_ocred/'.$d->doc_ocr)){
-                                        // file found. no error
+                                    //check if getErrorOuput has ERROR. (getErrorOutput will ouput 'INFO','WARNING' and 'ERROR').
+                                    //we will only store ERROR logs.
+                                    //stripos is case-insensitive.
+                                    $check_if_has_error = stripos($process[$key]->getErrorOutput(), 'error');
+                                    
+                                    //if "error" string found. process has error.
+                                    if ($check_if_has_error !== false){
+                                        //error found. update process status to failed.
+                                        DB::table('documents')->where([
+                                          ['doc_org', '=', $d->doc_org]
+                                        ])->update(['process_status'=>'failed_force']);
+                                        //forced+location+name+time of error log
+                                        $error_log = "public/static/symfony_process_error_logs/" ."forced-". $d->doc_org . "-" . time();
+                                        //outpout error
+                                        echo $process[$key]->getErrorOutput();
+                                        //store error log in file
+                                        file_put_contents($error_log, $process[$key]->getErrorOutput());
+                                    }else{
+                                        //process success
                                         DB::table('documents')->where([
                                            ['doc_org', '=', $d->doc_org]
                                         ])->update(['process_status'=>'ocred']);
-                                    }else{
-                                        //file not found error occured
-                                        DB::table('documents')->where([
-                                           ['doc_org', '=', $d->doc_org]
-                                        ])->update(['process_status'=>'failed_force']);
                                     }
                             }
                             else{
@@ -141,39 +147,14 @@ class ocr_force extends Command
                                    ['doc_org', '=', $d->doc_org]
                                 ])->update(['process_status'=>'failed_decrypting']);
                                 echo "failed decrypting";
-                            }
+                            }//end if file exist
+                        
+                        }//end if strtoupper
 
-                        }
-                        // IMAGE
-                        else {
-                            //convert images to pdf
-                            $process[$key] = new Process($p_id2[$key]);
-                            $process[$key]->disableOutput();
-                            $process[$key]->start();
-                            //code will wait until images are converted to pdf.
-                            $process[$key]->wait();
-                            //apply ocr
-                            $process2[$key] = new Process($p_id3[$key]);
-                            $process2[$key]->disableOutput();
-                            $process2[$key]->start();
-                            $process2[$key]->wait();
+                   }//end foreach
 
-                            if(file_exists('public/static/documents_ocred/'.$d->doc_ocr)){
-                                // file found. no error
-                                DB::table('documents')->where([
-                                   ['doc_org', '=', $d->doc_org]
-                                ])->update(['process_status'=>'ocred']);
-                            }else{
-                                //file not found error occured
-                                DB::table('documents')->where([
-                                   ['doc_org', '=', $d->doc_org]
-                                ])->update(['process_status'=>'failed']);
-                            }
+              }//end if count > 0
 
-                        }
-                   }
-
-                   echo "success";
-              }
-    }
+    }//end handle function
+  
 }

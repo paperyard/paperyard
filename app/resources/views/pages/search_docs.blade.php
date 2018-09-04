@@ -79,6 +79,7 @@
    position:absolute !important;
    z-index:100 !important;
 }
+
 .hideBarChart {
 	visibility: hidden;
 }
@@ -154,6 +155,9 @@
    color:#017cff;
 }
 
+.tab_view_space {
+  margin-left:10px;
+}
 
 </style>
 @endsection
@@ -193,18 +197,21 @@
 	</div>
 
 	<div class="col-md-12">
-		<input type="text" class="form-control form-control-lg" id="usr" ng-model="keyword" ng-model-options='{ debounce: 1000 }' ng-change="autoComplete()" ng-keypress="myFunct($event)">
+		<input type="text" class="form-control form-control-lg" id="usr" ng-model="keyword" ng-model-options='{ debounce: 1000 }' ng-change="autoComplete()" ng-keydown="myFunct($event)">
         <div class="row cleafix">
 	        <div class="col-md-3 ">
 		        <div class="list-group list-group-autocomplete">
-		            <a  ng-click="selectTH(tag,'tag')" class="list-group-item th-t typeHeadCstm" ng-repeat="tag in find_tags track by $index" ng-show="find_tags!=null && find_tags.length>0">
+		            <a  ng-click="selectAutocompleteSearch(tag,'tag')" class="list-group-item th-t typeHeadCstm" ng-repeat="tag in find_tags track by $index" ng-show="find_tags!=null && find_tags.length>0">
 			            <# tag #>
 			        </a>
-			        <a  ng-click="selectTH(f.folder_name,'folder')" class="list-group-item th-f typeHeadCstm" ng-repeat="f in find_folders track by $index" ng-show="find_folders!=null && find_folders.length>0">
-                        <# f.folder_name #>
+			        <a  ng-click="selectAutocompleteSearch(folder.folder_name,'folder')" class="list-group-item th-f typeHeadCstm" ng-repeat="folder in find_folders track by $index" ng-show="find_folders!=null && find_folders.length>0">
+                        <# folder.folder_name #>
 			        </a>
-			        <a  ng-click="selectTH(text,'full_text')" class="list-group-item th-ft typeHeadCstm" ng-repeat="text in find_fText track by $index" ng-show="find_fText!=null && find_fText.length>0">
+			        <a  ng-click="selectAutocompleteSearch(text,'full_text')" class="list-group-item th-ft typeHeadCstm" ng-repeat="text in find_fText track by $index" ng-show="find_fText!=null && find_fText.length>0">
 			            <# text #>
+			        </a>
+			        <a  class="list-group-item typeHeadCstm ng-hide" ng-show="autocomplte_no_result">
+			            No result found..
 			        </a>
 			    </div>
 		    </div>
@@ -246,13 +253,13 @@
 				<a href="#home_only_icon_title"     data-toggle="tab"><i class="fa  fa-th-large tab_view_icon" ng-class="{activeView: selected=='lg_view'}"></i></a>
 			</li>
 			<li ng-click="selected='md_view'">
-				<a href="#profile_only_icon_title"  data-toggle="tab"><i class="fa  fa-th tab_view_icon" ng-class="{activeView: selected=='md_view'}"></i></a>
+				<a href="#profile_only_icon_title"  data-toggle="tab"><i class="fa  fa-th tab_view_icon tab_view_space" ng-class="{activeView: selected=='md_view'}"></i></a>
 			</li>
 			<li ng-click="selected='grid_view'">
-				<a href="#messages_only_icon_title" data-toggle="tab"><i class="fa  fa-th-list tab_view_icon" ng-class="{activeView: selected=='grid_view'}"></i></a>
+				<a href="#messages_only_icon_title" data-toggle="tab"><i class="fa  fa-th-list tab_view_icon tab_view_space" ng-class="{activeView: selected=='grid_view'}"></i></a>
 			</li>
 			<li ng-click="selected='table_view'">
-				<a href="#settings_only_icon_title" data-toggle="tab"><i class="fa  fa-align-justify tab_view_icon" ng-class="{activeView: selected=='table_view'}"></i></a>
+				<a href="#settings_only_icon_title" data-toggle="tab"><i class="fa  fa-align-justify tab_view_icon tab_view_space" ng-class="{activeView: selected=='table_view'}"></i></a>
 			</li>
 		</ul>
 	</div>
@@ -381,7 +388,6 @@
 @section('scripts')
 <script src="{{ asset('static/js/search_documents.js') }}"></script>
 
-<!-- ======================ANGUALR=========================  -->
 <script type="text/javascript" differ>
 	//used angular interpolate for syntax compatibility
 var app = angular.module('search_doc', ['ui.bootstrap'], function($interpolateProvider) {
@@ -389,6 +395,7 @@ var app = angular.module('search_doc', ['ui.bootstrap'], function($interpolatePr
     $interpolateProvider.endSymbol('#>');
 });
 
+//custom filter for empty fields
 app.filter('default', function(){
     return function(data)
       {
@@ -397,182 +404,216 @@ app.filter('default', function(){
         }
         else
         {
-            data = "---";
+            data = "-";
             return data;
         }
       }
 });
 
-app.controller('searc_doc_controller', function($scope, $http, $timeout) {
+app.controller('searc_doc_controller', function($scope, $http, $timeout, $q) {
+
+
+// cancel previous http request
+// eg running autocomplete. if user press enter search. cancel all previous running http request.
+$scope.canceler = $q.defer();
+$scope.search_canceler = $q.defer();
 
 //active tab.
 $scope.selected='lg_view';
-// $scope.filter = 'folder';
+//default filter
 $scope.filter  = 'no_filter';
+
 $scope.keyword = '';
+
+
 $scope.list1   = '';
 $scope.list2   = '';
 $scope.list3   = '';
 $scope.list4   = '';
 
+//autocomplte no result
+$scope.autocomplte_no_result = false;
+//document div to show documents. 
 $scope.doc_view =   false;
+//documents preloader when searching document
 $scope.doc_loader = false;
+//not found status
 $scope.not_found =  false;
 
 
-$scope.selectTH = function(keyW,filTer){
-// empty typehead
-$scope.clearTypeHead();
-$scope.keyword = keyW;
-$scope.filter = filTer;
-$scope.doc_loader = true;
-$scope.not_found = false;
-$scope.searchDocumentWithFilter();
-
-}
-
+//clear autocomplete
 $scope.clearTypeHead = function(){
-	$scope.find_tags = '';
-	$scope.find_fText = '';
-	$scope.find_folders = '';
+	$scope.find_tags    = null;
+	$scope.find_fText   = null;
+	$scope.find_folders = null;
+	$scope.autocomplte_no_result = false;
 }
-// on keypress=enter search doc
+
+//run function on key press
 $scope.myFunct = function(keyEvent) {
-  if (keyEvent.which === 13){
-	$scope.doc_loader = true;
-	$scope.not_found = false;
-	$scope.searchDocumentWithFilter();
-  }
+    //key 13 = ENTER
+    if (keyEvent.which === 13){
+  		//delay function for 1 second
+        $timeout( function()
+        {
+			$scope.enterKeySearch();
+		},1000); //end timeout.
+    }//end key 13
 };
 
-// search document with filter
-$scope.searchDocumentWithFilter = function(){
-
-    $('#myChart').addClass('hideBarChart');
-    $scope.clearTypeHead();
-    $scope.doc_view = false;
-    $scope.list1 = '';
-	$scope.list2 = '';
-	$scope.list3 = '';
-	$scope.list4 = '';
-	$scope.bar_chart = false;
-
-    data = {
-   	  filter:$scope.filter,
-   	  keyword:$scope.keyword
-    }
-    $http.post('/search/documentsWithFilter', data).success(function(data){
-
-          $('#myChart').removeClass('hideBarChart');
-
-          $scope.list1 = data;
-          $scope.list2 = data;
-          $scope.list3 = data;
-          $scope.list4 = data;
-
-          $scope.bar_chart = true;
-          $scope.doc_view = true;
-          $scope.doc_loader = false;
-
-          if(data.length>=1){
-          	 $('#myChart').removeClass('hideBarChart');
-          	 $scope.not_found = false;
-          	 $scope.doc_view = true;
-             barChart();
-          }else{
-          	 $('#myChart').addClass('hideBarChart');
-          	 $scope.not_found = true;
-          	 $scope.doc_view = false;
-          }
-          $scope.clearTypeHead();
-
-   });
-}
-
-
+//on keypress run autocomplete
 $scope.autoComplete = function(){
 
-    // empty typehead
+    // empty dropdown autocomplete.
     $scope.clearTypeHead();
+    //cancel previous autocomplete post request.
+    $scope.canceler.resolve();
+    //reinit $q.defer make new autocomplete post request
+    $scope.canceler = $q.defer();
+    
+    //set datas. keyword. acf(autocomplete filter)
+    data = {
+   	  keyword:$scope.keyword,
+   	  autocomplte_filter:$scope.filter
+    }
+    console.log($scope.filter);
+    //send post request.
+    $http({method:'POST',url:'/search/typhead', data, timeout: $scope.canceler.promise}).success(function(data){
+         //store data if found
+         if(data.tags!="not_found"){
+         	 $scope.find_tags = data.tags;
+         }
+         //store data if found
+         if(data.folders!="not_found"){
+         	 $scope.find_folders = data.folders;
+         }
+         //store data if found
+         if(data.fulltext!="not_found"){
+                
+				if(typeof data.fulltext === 'object'){
+				     $scope.find_fText = Object.keys(data.fulltext).map(function(key){
+				          return data.fulltext[key];
+				     });
 
-    if($scope.filter=='no_filter'){
-    	console.log('finding all---keyword:'+$scope.keyword+'---filter'+$scope.filter);
-		$scope.autoCompleteFolders();
-		$scope.autoCompleteTags();
-		$scope.autoCompleteFullText();
-	}
-	if($scope.filter=='full_text'){
-	    console.log('finding full text---keyword:'+$scope.keyword+'---filter'+$scope.filter);
-       $scope.autoCompleteFullText();
-	}
-	if($scope.filter=='tag'){
-	   console.log('finding tag---keyword:'+$scope.keyword+'---filter'+$scope.filter);
-       $scope.autoCompleteTags();
-	}
-	if($scope.filter=='folder'){
-		 console.log('finding folder---keyword:'+$scope.keyword+'---filter'+$scope.filter);
-		$scope.autoCompleteFolders();
-	}
+				}else{
+				    $scope.find_fText = data.fulltext;
+				}
+         }
 
+         if(data.tags=="not_found" && data.folders=="not_found" && data.fulltext=="not_found"){
+         	//not result.
+         	$scope.autocomplte_no_result = true;
+         }
+         console.log(data);
+
+    });
+}
+
+$scope.reInit = function(){
+    //add class to hide chart
+    $('#myChart').addClass('hideBarChart');
+    //hide current doc view
+    $scope.doc_view = false;
+    //hide chart
+	$scope.bar_chart = false;
+
+    $scope.canceler.resolve();
+    //cancel previous selectSearch post request
+    $scope.search_canceler.resolve();
+    //reinit $q.defer to make new post request.
+    $scope.search_canceler = $q.defer();
+    //clear autocomplete
+	$scope.clearTypeHead();
+	//show search preloader
+	$scope.doc_loader = true;
+	//hide doc not found status.
+	$scope.not_found = false;
+    //put selected autocomplete keyword to search bar
+}
+
+$scope.docsFound = function(){
+    $('#myChart').removeClass('hideBarChart');
+    //show barchart
+	$scope.bar_chart  = true;
+	//hide notfound status
+    $scope.not_found  = false;
+	//show doc views
+    $scope.doc_view   = true;
+    //hide preloader
+    $scope.doc_loader = false;
+    //create barchart
+    barChart();
+}
+
+$scope.docsNotFound = function(){
+    $('#myChart').addClass('hideBarChart');
+    //show barchart
+	$scope.bar_chart  = false;
+  	//show notfound status
+  	$scope.not_found  = true;
+  	//hide document view.
+  	$scope.doc_view   = false;
+  	//hide preloader
+    $scope.doc_loader = false;
 }
 
 
-// typehead folder
-$scope.autoCompleteFolders = function(){
-   // method to be executed;
-   if($scope.keyword!=''){
-       data = {
-	   	  keyword:$scope.keyword,
-	   	  acf:'folder'
-	   }
-	   $http.post('/search/typhead', data).success(function(data){
-	          $scope.find_folders = data.folders;
-	          console.log('succes');
-	          console.log(data.folders);
-	   });
-   }
+$scope.selectAutocompleteSearch = function(keyword,filter){
+    
+    $scope.reInit();
+    //put selected autocomplete keyword to search bar
+    $scope.keyword = keyword;
+    $scope.filter  = filter;
+    //store datas for post request
+    data = {
+       keyword: keyword,
+       filter:  filter
+    }
+    //filter = tag,folder,fulltext
+    $http({method:'POST',url:'/search/documents', data, timeout: $scope.search_canceler.promise}).success(function(data){
+        if(data=="error"){
+	        $scope.docsNotFound();
+	    }
+	    else{ 
+	        $scope.docsFound();         
+	        //store datas in different views
+	        $scope.list1 = data;
+			$scope.list2 = data;
+			$scope.list3 = data;
+			$scope.list4 = data;
+	    }
+	    console.log(data);
+    });
+
 }
 
-// typehead folder
-$scope.autoCompleteTags = function(){
-   // method to be executed;
-   if($scope.keyword!=''){
-       data = {
-	   	  keyword:$scope.keyword,
-	   	  acf:'tag'
-	   }
-	   $http.post('/search/typhead', data).success(function(data){
-	          $scope.find_tags = data.tags;
-	          console.log('succes');
-	          console.log(data.tags);
-	   });
-   }
-}
+$scope.enterKeySearch = function(){
 
-// typehead folder
-$scope.autoCompleteFullText = function(){
-   // method to be executed;
-   if($scope.keyword!=''){
-       data = {
-	   	  keyword:$scope.keyword,
-	   	  acf:'full_text'
-	   }
-	   $http.post('/search/typhead', data).success(function(data){
-
-                if(typeof data.text === 'object'){
-
-                     $scope.find_fText = Object.keys(data.text).map(function(key){
-                          return data.text[key];
-                     });
-
-                }else{
-                	$scope.find_fText = data.text;
-                }
-                console.log('success');
-                console.log(data.text);
-
-	   });
-   }
+    if($scope.keyword != ""){
+        
+        $scope.reInit();
+	    //store datas for post request
+	    data = {
+	       keyword: $scope.keyword,
+	       filter:  $scope.filter
+	    }
+	    //filter = tag,folder,fulltext
+	    $http({method:'POST',url:'/search/documents', data, timeout: $scope.search_canceler.promise}).success(function(data){
+            
+            if(data=="error"){
+                $scope.docsNotFound();
+            }
+            else{ 
+                $scope.docsFound();         
+		        //store datas in different views
+		        $scope.list1 = data;
+				$scope.list2 = data;
+				$scope.list3 = data;
+				$scope.list4 = data;
+	        }
+	        console.log(data);
+	    });
+    }
 }
 
 

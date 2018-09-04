@@ -57,96 +57,96 @@ class ocr_txt_img extends Command
             ['t_process', '<=', $time],
             ['process_status', '=', 'ocred']
         ])->get();
-        // get documents ids to process.
-        $prcs = [];
-        foreach($documents as $p){
-          array_push($prcs, $p->doc_id);
-        }
-        // CHANGE STATUS FOR IMAGE CONVERTION
-        DB::table('documents')
-          ->whereIn('doc_id', $prcs)
-          ->update(['process_status' => 'final_process']);
 
-        foreach($documents as $d){
-                //check if file exist
-                $filename = 'public/static/documents_ocred/' . $d->doc_ocr;
-                if (file_exists($filename)) {
+        if(count($documents)>0){
 
-                   $datas = [];
-                   //convert pdf pages to images.
-                   //get text from images
-                   //save to database
-                   $pdf = new Pdf($filename);
-                   $num_p = $pdf->getNumberOfPages();
+                // get documents ids to process.
+                $prcs = [];
+                foreach($documents as $p){
+                  array_push($prcs, $p->doc_id);
+                }
+                // CHANGE STATUS FOR IMAGE CONVERTION
+                DB::table('documents')
+                ->whereIn('doc_id', $prcs)
+                ->update(['process_status' => 'final_process']);
 
-                    for($pageNum = 1; $pageNum<=$num_p; $pageNum ++){
-                        //page name.
-                        $str_r = str_random(5);
-                        $page_name = $d->doc_id . '-' . $pageNum . '-' . $str_r . '.png';
-                        $page_thumbnail_name = $d->doc_id . '-' . $pageNum . '-' . $str_r . '-' . 'thumbnail' . '.png';
-                        //page location.
-                        $page_loc = 'public/static/documents_images/' . $page_name;
-                        $page_thumb_loc = 'public/static/documents_images/' . $page_thumbnail_name;
-                        //convert pdf to page number.
-                        $pdf->setPage($pageNum)->saveImage($page_loc);
-                        //get text from converted image.
-                        $page_text = (new TesseractOCR($page_loc))->run();
-                        //make image thumbnail
-                        $image = Image::make($page_loc);
-                        $image->resize(100, 150);
-                        $image->save($page_thumb_loc);
+                foreach($documents as $d){
+                        //check if file exist
+                        $filename = 'public/static/documents_ocred/' . $d->doc_ocr;
+                        if (file_exists($filename)) {
 
-                        //save database.
-                        $data = array(
-                            "doc_id"=>$d->doc_id,
-                            "doc_page_num"=>$pageNum,
-                            "doc_page_image_preview"=>$page_name,
-                            "doc_page_thumbnail_preview"=>$page_thumbnail_name,
-                            "doc_page_text"=>$page_text,
-                            "created_at"=>\Carbon\Carbon::now(),
-                            "updated_at"=>\Carbon\Carbon::now()
-                        );
+                           $datas = [];
+                           //convert pdf pages to images.
+                           //get text from images
+                           //save to database
+                           $pdf = new Pdf($filename);
+                           $num_p = $pdf->getNumberOfPages();
 
-                        array_push($datas, $data);
-                    }
-                    //save & update
-                    //save doc pages
-                    try {
-                        // save doc page. check if success
-                        $save_doc_page = DB::table('document_pages')->insert($datas);
-                        if(count($save_doc_page)>=1){
-                             //save success.
+                            for($pageNum = 1; $pageNum<=$num_p; $pageNum ++){
+                                //page name.
+                                $str_r = str_random(5);
+                                $page_name = $d->doc_id . '-' . $pageNum . '-' . $str_r . '.png';
+                                $page_thumbnail_name = $d->doc_id . '-' . $pageNum . '-' . $str_r . '-' . 'thumbnail' . '.png';
+                                //page location.
+                                $page_loc = 'public/static/documents_images/' . $page_name;
+                                $page_thumb_loc = 'public/static/documents_images/' . $page_thumbnail_name;
+                                //convert pdf to page number.
+                                $pdf->setPage($pageNum)->saveImage($page_loc);
+                                //get text from converted image.
+                                $page_text = (new TesseractOCR($page_loc))->run();
+                                //make image thumbnail
+                                $image = Image::make($page_loc);
+                                $image->resize(100, 150);
+                                $image->save($page_thumb_loc);
 
-                             //check if user has notifications for this document
-                             $this->CheckNotifications($d->doc_user_id, $d->doc_id, $d->doc_ocr);
-                             //remove empty pages.
-                             $this->removeEmptyPages($prcs);
+                                //save database.
+                                $data = array(
+                                    "doc_id"=>$d->doc_id,
+                                    "doc_page_num"=>$pageNum,
+                                    "doc_page_image_preview"=>$page_name,
+                                    "doc_page_thumbnail_preview"=>$page_thumbnail_name,
+                                    "doc_page_text"=>$page_text,
+                                    "created_at"=>\Carbon\Carbon::now(),
+                                    "updated_at"=>\Carbon\Carbon::now()
+                                );
 
+                                array_push($datas, $data);
+                            }
+                            //save & update
+                            //save doc pages
+                            try {
+                                // save doc page. check if success
+                                $save_doc_page = DB::table('document_pages')->insert($datas);
+                                if(count($save_doc_page)>=1){
+                                     //save success.
+                                     //check if user has notifications for this document
+                                     $this->CheckNotifications($d->doc_user_id, $d->doc_id, $d->doc_ocr);
+                                     //remove empty pages.
+                                     $this->removeEmptyPages($prcs);
 
-                             //remove empty pages;
+                                } //save doc success
 
-                        } //save doc success
+                            } catch(\Illuminate\Database\QueryException $err){
+                             echo "error saving datas";
+                             // Note any method of class PDOException can be called on $err.
+                            }
 
-                    } catch(\Illuminate\Database\QueryException $err){
-                     echo "error saving datas";
-                     // Note any method of class PDOException can be called on $err.
-                    }
+                            try {
+                                DB::table('documents')->where([
+                                   ['doc_id', '=', $d->doc_id]
+                                ])->update(['process_status'=>'ocred_final']);
 
-                    try {
-                        DB::table('documents')->where([
-                           ['doc_id', '=', $d->doc_id]
-                        ])->update(['process_status'=>'ocred_final']);
+                            } catch(\Illuminate\Database\QueryException $err){
+                             echo "error updating status";
+                             // Note any method of class PDOException can be called on $err.
+                            }
 
-                    } catch(\Illuminate\Database\QueryException $err){
-                     echo "error updating status";
-                     // Note any method of class PDOException can be called on $err.
-                    }
-
-              } //if file exist
-        }//foreach
-
-    }
-
+                      } //if file exist
+                }//foreach
+        }//end if count
+    } 
+    
+    
     public function CheckNotifications($doc_user_id, $doc_id, $doc_ocr){
 
             //doc_user_id
