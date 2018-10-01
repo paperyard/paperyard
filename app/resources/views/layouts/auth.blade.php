@@ -119,7 +119,12 @@
           </li>
         </ul>
       </div>
-      <p><a href="http://www.consider-it.de/impressum" class="imprint">@lang('auth.footer_txt')</a></p>
+      <div class="col-md-6 col-md-12 col-xs-12">
+         <p class="pull-left"><a href="http://www.consider-it.de/impressum" class="imprint">@lang('auth.footer_txt')</a></p>
+      </div>
+      <div class="col-md-6 col-md-12 col-xs-12">   
+        <label class="pull-right">v 0.3</label>
+      </div>
     </div>
   </div>
 

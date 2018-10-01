@@ -86,7 +86,7 @@
 @section('content')
 
 <!-- Vertical Layout -->
-<div class="row clearfix" ng-app="user_settings" ng-controller="user_settings">
+<div class="row clearfix" ng-controller="user_settings">
 
     @if(count($userData)>=1)
     <div class="col-md-12 col-sm-12 col-xs-12" style="padding-top:10px">
@@ -203,10 +203,8 @@
 
 <script type="text/javascript">
 
-var app = angular.module('user_settings', [], function($interpolateProvider) {
-$interpolateProvider.startSymbol('<#');
-$interpolateProvider.endSymbol('#>');
-});
+//inject this app to rootApp
+var app = angular.module('app', []);
 
 app.controller('user_settings', function($scope, $http, $timeout) {
 

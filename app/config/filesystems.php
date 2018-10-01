@@ -66,7 +66,7 @@ return [
 
         'documents' => [
             'driver' => 'local',
-            'root'   => public_path() . '/static',
+            'root'   => storage_path() . '/app',
             'visibility' => 'public',
         ],
 

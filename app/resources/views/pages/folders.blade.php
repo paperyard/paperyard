@@ -67,6 +67,7 @@
 .view3_card_d {
 	top:0; position:absolute;
 	margin-top:40px;
+  color:#000 !important;
 }
 
 .view3_card_d li {
@@ -77,9 +78,7 @@
 	top:0; right:0; position:absolute; margin:10px
 }
 
-.view_tags {
-	bottom:0; position:absolute; margin:10px
-}
+
 
 .img1 {
   position:relative;
@@ -170,7 +169,31 @@
 }
 /*--------------------------------------------------------------------*/
 
+/* ------------table custom design -----------------*/
 
+.table-striped>tbody>tr:nth-child(odd)>td,
+.table-striped>tbody>tr:nth-child(odd)>th {
+   background-color: #fff;
+ }
+
+.table-striped>thead>tr:nth-child(odd)>th {
+   background-color: #ebedf8;
+ }
+.table-hover tbody tr:hover td{
+   background-color: #b1d5ff !important;
+   cursor: pointer;
+}
+
+.table-striped>tbody>tr:nth-child(even)>td,
+.table-striped>tbody>tr:nth-child(even)>th {
+   background-color: #ebedf8;
+}
+/*---------------------------------------------------*/
+
+
+.canvasStyle {
+   width:100%;
+}
 </style>
 @endsection
 
@@ -182,7 +205,7 @@
 @endsection
 
 @section('content')
-<div class="row" ng-app="folders_app" ng-controller="folders_controller">
+<div class="row" ng-controller="folders_controller">
 
    @if(count($folder_stat)>=1)
 
@@ -253,10 +276,9 @@
                 <!-- GRID TAB -->
    				<div role="tabpanel" class="tab-pane fade in active" id="grid_view">
 
-					<div class="col-md-6"  ng-repeat="folder in gridDatas | orderBy:propertyName:reverse track by $index ">
+					<div class="col-md-6"  ng-repeat="folder in gridDatas | orderBy:propertyName:reverse track by $index " ng-init="$last && finished()">
 						<div class="card view3_container "  >
-							<table clas="table-responsive">
-
+							<table>
 								<tr>
 									<!-- FOLDER IMAGE CONTAINING DOCUMENT -->
 									<td>
@@ -264,16 +286,16 @@
 											<div class="view3_div">
 												<img class="img1" src="{{ asset('static/img/folder_img_holder.jpg') }}">
 												<span ng-if=" folder.thumb != null ">
-												    <img class="img2" ng-src="/static/documents_images/<#folder.thumb#>">
+												    <img class="img2" ng-src="/files/image/<#folder.thumb#>">
 												</span>
 											</div>
 									    </a>
 									</td>
 									<!-- FOLDER DETAILS -->
-									<td>
+									<td style="width:100%">
 										<div class="view_date">
 											<ul class="list-unstyled header-dropdown m-r--5 list-inline">
-												<li><p style="font-size:20px; padding-top:-20px;"><b><# folder.folder_name #></b></p></li>
+												<li><p style="font-size:18px; padding-top:-20px;"><b><# folder.folder_name #></b></p></li>
 												<li class="dropdown" >
 													<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" >
 														<i class="material-icons" style="padding:0px;">more_vert</i>
@@ -288,17 +310,20 @@
 										<a ng-href="/folder/<#folder.folder_id#>">
 											<ul class="list-unstyled view3_card_d" >
 												<li><p><# folder.total_c #> Dokumente</p></li>
-												<li ng-if="folder.latest_date!=null"><p>neuestes Dokument vom <# folder.latest_date#></p></li>
+												<li ng-if="folder.latest_date!=null"><p>neuestes Dokument vom <# folder.short_date#></p></li>
 											</ul>
-									    </a>
-										<div class="view_tags" >
-                                             <canvas id="myChart<#folder.folder_id#>" style="width:100% !important; height:60px"></canvas>
-										</div>
-
+									   </a>
+                     <!-- LINECHART -->
+                    <div style="height:70px; margin-top:120px; padding:8px;">
+                        <canvas id="myChart<#folder.folder_id#>" class="canvasStyle"></canvas>
+                    </div> 
+										
 									</td>
 								</tr>
 							</table>
 						</div>
+
+           
 					</div>
 
 				</div>
@@ -321,8 +346,8 @@
 				        			<tbody>
 				        				<tr  ng-repeat="folder in tableDatas | orderBy:propertyName:reverse track by $index">
 				        					<td><# folder.folder_name #></td>
-				        					<td><# folder.total_c #></td>
-				        					<td><# folder.latest_date #></td>
+				        					<td><# folder.total_c     | default #></td>
+				        					<td><# folder.latest_date | default #></td>
 				        					<td><# folder.folder_date_created #></td>
 				        					<td>
 				        						<span class="pull-right">
@@ -376,16 +401,26 @@
 
 <script src="{{ asset('static/js/folders.js') }}"></script>
 <script type="text/javascript">
-//used angular interpolate for syntax compatibility
-var app = angular.module('folders_app', [], function($interpolateProvider) {
-    $interpolateProvider.startSymbol('<#');
-    $interpolateProvider.endSymbol('#>');
-});
 
-app.controller('folders_controller', function($scope, $http, $timeout) {
+//inject this app to rootApp
+var app = angular.module('app', []);
+//custom filter for empty fields
+app.filter('default', function(){
+    return function(data)
+      {
+        if(data!=undefined && data!=null && data!=""){
+            return data;
+        }
+        else
+        {
+            data = "N/D";
+            return data;
+        }
+      }
+});
+app.controller('folders_controller', function($scope, $http, $timeout, $compile) {
 
   $scope.propertyName = 'folder_name';
-
   $scope.reverse = true;
   $scope.alphaSortIcon = 'fa-sort-alpha-asc';
   $scope.numSortIcon = 'fa-sort-numeric-asc';
@@ -406,15 +441,23 @@ app.controller('folders_controller', function($scope, $http, $timeout) {
     $scope.reverse = ($scope.propertyName === filterName) ? !$scope.reverse : false;
     $scope.propertyName = filterName;
     $scope.reverse == false? $scope.alphaSortIcon = 'fa-sort-alpha-asc' : $scope.alphaSortIcon = 'fa-sort-alpha-desc';
+    $timeout( function()
+    {
+        $scope.createLineChart();
+    }, 1000);  
   };
 
   $scope.sortByNum = function(filterNum) {
     $scope.reverse = ($scope.propertyName === filterNum) ? !$scope.reverse : false;
     $scope.propertyName = filterNum;
     $scope.reverse == false? $scope.numSortIcon = 'fa-sort-numeric-asc' : $scope.numSortIcon = 'fa-sort-numeric-desc';
+    $timeout( function()
+    {
+        $scope.createLineChart();
+    }, 1000); 
   };
 
-
+  //get folder datas
   $scope.getFolders = function(){
     $scope.show_preloader();
     $http.get('/folders/return').success(function(data){
@@ -428,11 +471,23 @@ app.controller('folders_controller', function($scope, $http, $timeout) {
 			      this.push(value.folder_name.toUpperCase());
 		      }, $scope.folder_names);
 
+          console.log(data);
     });
   }
 
   $scope.getFolders();
 
+  $scope.finished = function(){
+    $scope.createCanvas();
+  }
+
+  $scope.createCanvas = function(){
+    $timeout( function()
+    {
+        $scope.createLineChart();
+    }, 1000);   
+  }
+  
   $scope.deleteFolder = function(f_id){
 
     swal({
@@ -509,7 +564,6 @@ app.controller('folders_controller', function($scope, $http, $timeout) {
   }
 
   $scope.newFolder = function(){
-
     swal({
         title: "Create new folder",
         text: "Name your folder:",
@@ -545,12 +599,89 @@ app.controller('folders_controller', function($scope, $http, $timeout) {
         }); //end ajax
 
     });
-
   }
 
+$scope.createLineChart = function(){
+
+  var lineCanvas  = [];
+  var makeDatas   = [];
+  var lineDatas   = [];
+  var lineChart   = [];
+  var maxVal      = [];
+
+  angular.forEach($scope.gridDatas, function(value, key) {
+       lineCanvas[value.folder_id] = document.getElementById("myChart"+value.folder_id);
+       makeDatas[value.folder_id] = {
+          label: "",
+          //number of documents group by date.           //group notifications id by date
+          data: value.line_chart_datas,
+          lineTension: 0.3,
+          fill: false,
+          borderColor: 'rgba(0, 119, 255, 1)',
+          backgroundColor: 'transparent',
+          pointBorderWidth: 0,
+          pointRadius:0,
+          borderWidth:4
+      };
+      lineDatas[value.folder_id] = {
+          labels: makeDatas[value.folder_id].data,
+          datasets: [makeDatas[value.folder_id]],
+      };
+      maxVal = Math.max.apply(Math, value.line_chart_datas);
+
+      lineChart[value.folder_id] = new Chart(lineCanvas[value.folder_id], {
+          type: 'line',
+          data: lineDatas[value.folder_id],
+          // options --------------------------------
+          options: {
+                  maintainAspectRatio: false,
+                  legend: {
+                      display: false,
+                  },
+                  tooltips: {
+                      enabled: false
+                  },
+                   scales: {
+                      yAxes: [{
+                        ticks: {
+                          beginAtZero: true,
+                          autoSkip: false,
+                          display:false,
+                          max: maxVal+0.1
+   
+                        },
+                         gridLines: {
+                          display: false,
+                          color: "white",
+                          zeroLineColor: "white"
+                        },
+                      }],
+                      xAxes: [{
+                        ticks: {
+                          beginAtZero: true,
+                          autoSkip: false,
+                          display:false,
+                            
+                        },
+                        gridLines: {
+                          display: false,
+                          color: "white",
+                          zeroLineColor: "white"
+                        },
+                        categoryPercentage: 1,
+
+                      }]
+                    }
+          }
+          // options --------------------------------
+      });
+
+      console.log('linechart data created');
+  });
+} 
 
 
-});
+}); //end controller
 
 </script>
 

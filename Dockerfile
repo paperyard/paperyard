@@ -24,6 +24,7 @@ RUN apt-get -y install mariadb-server mariadb-client
 RUN apt-get -y install nano
 RUN apt-get -y install curl
 RUN apt-get -y install cron
+RUN apt-get -y install git
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # install nodejs
@@ -60,7 +61,7 @@ RUN cp config/config-db.php /etc/phpmyadmin/config-db.php
 EXPOSE 80
 
 # ADD start.sh to ubuntu root dir /
-ADD /app/start.sh /
+ADD /config/start.sh /
 
 # edit permission
 RUN chmod 755 /start.sh

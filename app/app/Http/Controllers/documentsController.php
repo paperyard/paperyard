@@ -17,14 +17,14 @@ class documentsController extends Controller
 
    // VIEW DOCUMENT
    public function viewDocument($doc_id){
-
+           
    	      // session()->put('lst_opened_doc', $doc_id);
    	      $document = DB::table('documents')->where([
              ['doc_id', '=', $doc_id],
              ['doc_user_id', '=', Auth::user()->id]
    	      ])->get();
 
-   	      if(count($document)>=1){
+   	      if(count($document)>0){
 
                   //STORE TO PREVIEWS VIEWD TABLE
                   $pv = DB::table('documents_viewed')->where([
@@ -45,7 +45,28 @@ class documentsController extends Controller
                             "updated_at" => \Carbon\Carbon::now(),  # \Datetime()
                       ]);
                   }
+                  foreach($document as $d){
+                      if($d->is_archive==1){
+                        //convert DateTime to d.m.Y format
+                        if($d->date=="0000-00-00 00:00:00"){
+                            $d->date = "";
+                        }else{
+                          $n_date = new \DateTime($d->date);
+                          $short_date = date_format($n_date,"d.m.Y");
+                          $d->date = $short_date;
+                        }
 
+                        if($d->reminder=="0000-00-00 00:00:00"){
+                            $d->reminder = "";
+                        }else{
+                          $n_date = new \DateTime($d->date);
+                          $short_date = date_format($n_date,"d.m.Y");
+                          $d->reminder = $short_date;
+                        }
+
+                      }  
+                  }
+                  // get document pages image
                   $document_pages = DB::table('document_pages')->where([
     		             ['doc_id', '=', $doc_id]
     		   	      ])->get();
@@ -53,7 +74,7 @@ class documentsController extends Controller
                   // RETURN DOCUMENTS DATAS AND IMAGES
 		              return view('pages/document_view')->with(compact('document','document_pages'));
    	      }else{
-   	      	 return redirect('error_404');
+   	      	 return redirect('/dashboard');
    	      }
    }
 
@@ -71,18 +92,18 @@ class documentsController extends Controller
 
              // DELETE DOCUMENTS FILES
              foreach($doc as $d){
-             	   $file1 = 'static/documents_new/' . $d->doc_org;
+             	   $file1 = storage_path('app/documents_new') . '/' . $d->doc_org;
                  File::delete((string)$file1);
-                 $file2 = 'static/documents_processing/' . $d->doc_prc;
+                 $file2 = storage_path('app/documents_processing') . '/' . $d->doc_prc;
                  File::delete((string)$file2);
-                 $file3 = 'static/documents_ocred/' . $d->doc_ocr;
+                 $file3 = storage_path('app/documents_ocred') . '/' . $d->doc_ocr;
                  File::delete((string)$file3);
              }
              // DELETE DOCUMENTS IMAGES
              foreach($doc_page as $dp){
-                 $file1 = 'static/documents_images/' . $dp->doc_page_image_preview;
+                 $file1 = storage_path('app/documents_images') . '/' . $dp->doc_page_image_preview;
                  File::delete((string)$file1);
-                 $file2 = 'static/documents_images/' . $dp->doc_page_thumbnail_preview;
+                 $file2 = storage_path('app/documents_images') . '/' . $dp->doc_page_thumbnail_preview;
                  File::delete((string)$file2);
              }
              // DELETE DOCUMENT FROM DATABASE
@@ -112,12 +133,13 @@ class documentsController extends Controller
              if(count($approve)>=1){
                   //approve updated successfully.
                   //proceed deleteing original doc.
-                  $file = 'static/documents_new/' . $req->doc_org;
+                  $file = storage_path('app/documents_new') . '/' . $req->doc_org;
                   File::delete((string)$file);
                   return "success";
              }
 
     }
+
 
     // UPDATE DOCUMENTS DATAS.
     public function updateDocument(Request $req){
@@ -126,6 +148,10 @@ class documentsController extends Controller
 
           // set user time zone.
           date_default_timezone_set(Auth::user()->user_timezone);
+          
+
+          $req->reminder = $this->formatDate($req->reminder);
+         
 
           $update = DB::table('documents')->where([
                ['doc_id', '=',$req->doc_id],
@@ -133,25 +159,48 @@ class documentsController extends Controller
             ])->update([
             	'sender'=>$req->doc_sender,
             	'receiver'=>$req->doc_receiver,
-            	'date'=>$req->doc_date,
+            	'date'=> $this->formatDate($req->doc_date),
             	'tags'=>$req->doc_tags,
             	'category'=>$req->doc_category,
-            	'memory'=>$req->doc_memory,
+            	'reminder'=>$this->formatDate($req->doc_reminder),
             	'tax_relevant'=>$req->doc_tax_r,
             	'note'=>$req->doc_notes,
               'is_archive'=>1
             ]);
-          // if update is succes check if there is still doc to edit.
-          if($update==1){
-              $to_edit_docs = DB::table('documents')->where([
-                 ['doc_user_id','=',Auth::user()->id],
-                 ['is_archive','=',0]
-              ])->select('documents.doc_id')->first();
-              if(count($to_edit_docs)>0){
-                  return $to_edit_docs->doc_id;
-              }else{
-                  return "nothing_to_edit";
+          //if update is succes check if there is still doc to edit.
+          if($update>0){
+              //check if documents is ocred or ocred_failed
+              $check_ocr = DB::table('documents')->where('doc_id', $req->doc_id)->select('is_ocred')->first();
+              
+              //return next ocred documents
+              if($check_ocr->is_ocred==1){
+                  $to_edit_docs = DB::table('documents')->where([
+                     ['doc_user_id','=',Auth::user()->id],
+                     ['is_archive','=',0],
+                     ['is_ocred','=',1]
+                  ])->select('documents.doc_id')->first();
+                  if(count($to_edit_docs)>0){
+                      return $to_edit_docs->doc_id;
+                  }else{
+                      return "nothing_to_edit";
+                  }
               }
+              //return next ocred failed document
+              else{
+                  $to_edit_docs = DB::table('documents')->where([
+                     ['doc_user_id','=',Auth::user()->id],
+                     ['is_archive','=',0],
+                     ['is_ocred','=',0]
+                  ])->select('documents.doc_id')->first();
+                  if(count($to_edit_docs)>0){
+                      return $to_edit_docs->doc_id;
+                  }else{
+                      return "nothing_to_edit";
+                  }
+              }
+
+          }else{
+              return "something went wrong";
           }
 
         } catch(\Illuminate\Database\QueryException $err){
@@ -159,7 +208,21 @@ class documentsController extends Controller
          // Note any method of class PDOException can be called on $err.
         }
 
+    }
 
+
+
+    public function formatDate($date){
+
+       if(!empty($date)){
+          $d_date = $date;
+          $dateTime = \DateTime::createFromFormat('d.m.Y', $d_date);
+          $newDate = $dateTime->format('Y-m-d 00:00:00');
+          return $newDate;
+        }else{
+          $newDate = "0000-00-00 00:00:00";
+          return $newDate; 
+        }
     }
 
     // share documents public
@@ -207,17 +270,68 @@ class documentsController extends Controller
          }else{
             $folders = '';
          }
+         
+         $prs_stat = ['ocred_final','ocred_final_failed'];
+
          $archive_docs = DB::table('documents')->where([
              ['doc_user_id','=',Auth::user()->id],
-             ['process_status','=','ocred_final'],
              ['is_archive','=',1]
          ])
-         ->select('documents.doc_id','documents.doc_ocr','documents.doc_org','documents.approved','documents.process_status','documents.created_at')
+         ->whereIn('process_status', $prs_stat)
+         ->select(
+             'documents.doc_id',
+             'documents.doc_ocr',
+             'documents.doc_org',
+             'documents.approved',
+             'documents.process_status',
+             'documents.sender',
+             'documents.receiver',
+             'documents.tags',
+             'documents.date',
+             'documents.category',
+             'documents.created_at')
          ->orderBy('doc_id', 'DESC')
          ->get();
-        $json_response = json_encode(array('archive_docs' => $archive_docs,'folders'=>$folders));
-        // # Return the response
-        return $json_response;
+
+          $format = "";
+          $ext = ".pdf";
+          $dash = "-";
+          $d_date = new \DateTime();
+          $date   = date_format($d_date, "ymd");
+          
+          //download format
+          $arrFormat = explode(',',Auth::user()->download_filename_format);
+          foreach($archive_docs as $key=>$d){
+            foreach($arrFormat as $key2=>$f){
+                if($f=="YYMMDD"){
+                    $format .= $date.$dash;
+                }
+                elseif($f=="doc_ocr"){
+                    $format .= substr($d->$f, 0, -14).$dash;
+                }
+                else{
+                   if($d->$f!=""){ 
+                        $format .= $d->$f.$dash;
+                   } 
+                }
+            }
+            //insert new object 
+            $d->download_format = substr($format, 0, -1).$ext;
+            $format = "";
+
+            //date format
+            if($d->date=="0000-00-00 00:00:00"){
+                $d->date = "N/D";
+            }else{
+              $n_date = new \DateTime($d->date);
+              $short_date = date_format($n_date,"d.m.Y");
+              $d->date = $short_date;
+            }
+          }
+                 
+          $json_response = json_encode(array('archive_docs' => $archive_docs,'folders'=>$folders));
+          // # Return the response
+          return $json_response;
     }
 
 

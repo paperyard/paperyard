@@ -35,7 +35,7 @@ Route::get('/share/{user_name}/{share_hash}/{password}', 'shareDocumentControlle
 // ------------------------------------------------------------------------------------------------------------
 
     //default route -------------------------------------------------------------------------------------------
-	Route::get('/', function () { return view('auth/login'); })->middleware('guest');
+	Route::get('/', 'userController@welcome')->middleware('guest');
 
     // AUTH routes --------------------------------------------------------------------------------------------
 	Auth::routes();
@@ -55,13 +55,18 @@ Route::get('/share/{user_name}/{share_hash}/{password}', 'shareDocumentControlle
             Route::get('/dashboard',                            'dashboardController@index');
             Route::get('/get_docs_edit_archive',                'dashboardController@toEditDocs');
             Route::post('/dashboard/search_auto_complete',      'dashboardController@searchAutoComplete');
-            Route::post('/dashboard/select_search',             'dashboardController@selectSearchDocumnets');
-            Route::post('/dashboard/enter_search',              'dashboardController@enterSearchDocumnets');
+            Route::post('/dashboard/select_search',             'dashboardController@selectSearchDocuments');
+            Route::post('/dashboard/enter_search',              'dashboardController@enterSearchDocuments');
 
             //search document routes ===================================================================================
             Route::get('/search',                               'searchDocumentController@index');
+            Route::get('/search/barchar_datas',                 'searchDocumentController@getBarchartDatas');
             Route::post('/search/documents',                    'searchDocumentController@searchDocument');
             Route::post('/search/typhead',                      'searchDocumentController@typeHead');
+
+            //common search routes =====================================================================================
+            Route::post('/common_search/autocomplete',          'commonSearchDocumentCOntroller@autoComplete');
+            Route::post('/common_search/select_search',          'commonSearchDocumentCOntroller@selectAutoCompleteSearch');
 
             //notifications routes =====================================================================================
             Route::get('/notifications',                        'notificationsController@index');
@@ -69,6 +74,7 @@ Route::get('/share/{user_name}/{share_hash}/{password}', 'shareDocumentControlle
             Route::post('/notifications/save_update',           'notificationsController@createUpdateNotification');
             Route::get('/notifications/edit/{notify_id}',       'notificationsController@editNotification');
             Route::post('/notifications/delete',                'notificationsController@deleteNotification');
+            Route::get('/notifications/line_chart_datas',       'notificationsController@getNotificationLineChartDatas');
 
             //Reminders route  =========================================================================================
             Route::get('/reminders',                            'remindersController@index');
@@ -139,10 +145,11 @@ Route::get('/share/{user_name}/{share_hash}/{password}', 'shareDocumentControlle
             Route::post('/share/remove_shared',                 'shareDocumentController@removeShared');
             Route::post('/share/generate_password',             'shareDocumentController@generatePassword');
 
-            // ---------------------------------------------------------------------------------------------------------
-
+            // Settings ------------------------------------------------------------------------------------------------
 			Route::get('/settings',                             'settingsController@index');
             Route::post('/settings/change_timezone',            'settingsController@changeTimeZone');
+            Route::get('/settings/get_d_filename_format',       'settingsController@returnDownloadFilenameFormat');
+            Route::post('/settings/update_filename_format',     'settingsController@updateDownloadFilenameFormat');
 
             // ---------------------------------------------------------------------------------------------------------
 
@@ -152,9 +159,13 @@ Route::get('/share/{user_name}/{share_hash}/{password}', 'shareDocumentControlle
             Route::post('/account_settings/email_update',       'userController@emailUpdate');
             Route::post('/account_settings/passowrd_update',    'userController@passwordUpdate');
 
-            //------------------------------------------------------------------------------------------------------------
+            // Files routes --------------------------------------------------------------------------------------------
 
+            Route::get('/files/{type}/{filename}',               'filesController@index');
 
+            Route::get('/files_public/{type}/{filename}',        'filesController@publicFiles');
+
+    
         });
         // USERS  routes -------------------------------------------------------------------------------------------------
 

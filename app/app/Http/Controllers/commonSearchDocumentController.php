@@ -10,148 +10,18 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Http\RedirectResponse;
 use DB;
 
-
-class dashboardController extends Controller
+/*
+this controller has common search code used in
+-reminder page
+-merge document page
+-dashboard
+*/
+class commonSearchDocumentController extends Controller
 {
-    //
-    public function index(){
-         
-         date_default_timezone_set(Auth::user()->user_timezone);
+    //return autocomplete 
+    public function autoComplete(Request $req){
 
-         //recent opened documents
-         $last_opened = DB::table('documents_viewed')->where('view_user_id', Auth::user()->id)
-         ->join('document_pages', 'documents_viewed.view_doc_id','=','document_pages.doc_id')
-         ->groupBy('document_pages.doc_id')
-         ->select('documents_viewed.view_id','documents_viewed.view_doc_id','document_pages.doc_page_thumbnail_preview as thumbnail')
-         ->orderBy('documents_viewed.view_id', 'desc')
-         ->limit(6)->get();
-
-         //latest recent opened document
-         $latest_opened = DB::table('documents_viewed')->where('view_user_id', Auth::user()->id)
-         ->join('document_pages', 'documents_viewed.view_doc_id','=','document_pages.doc_id')
-         ->groupBy('document_pages.doc_id')
-         ->select('documents_viewed.view_id','documents_viewed.view_doc_id','document_pages.doc_page_thumbnail_preview as thumbnail')
-         ->orderBy('documents_viewed.view_id', 'desc')
-         ->first();
-         
-         $prs_stat = ['ocred_final','ocred_final_failed'];
-         //return no of archived docs for knob
-         $knob = DB::table('documents')->where([
-             ['doc_user_id','=',Auth::user()->id],
-             ['is_archive','=',1]
-         ])
-         ->whereIn('process_status',$prs_stat)
-         ->whereBetween('created_at', [\Carbon\Carbon::now()->startOfWeek(),\Carbon\Carbon::now()->endOfWeek()])
-         ->count();
-
-         return view('pages/dashboard')->with(compact('last_opened','latest_opened','knob'));
-    }
-
-    public function toEditDocs(){
-
-         date_default_timezone_set(Auth::user()->user_timezone);
-
-         //return oldest document success
-         $doc = DB::table('documents')->where([
-             ['doc_user_id','=',Auth::user()->id],
-             ['process_status','=','ocred_final'],
-             ['is_archive','=',0]
-         ])
-         ->select('documents.doc_id')
-         ->first();
-
-         //return oldest document failed
-         $doc_failed = DB::table('documents')->where([
-             ['doc_user_id','=',Auth::user()->id],
-             ['process_status','=','ocred_final_failed'],
-             ['is_archive','=',0]
-         ])
-         ->select('documents.doc_id')
-         ->first();
-
-
-         //return no. of documents needed to edit.
-         $num_pending_docs = DB::table('documents')->where([
-             ['doc_user_id','=',Auth::user()->id],
-             ['process_status','=','ocred_final'],
-             ['is_archive','=',0]
-         ])->count();
-        
-         $prs_stat = ['ocred_final','ocred_final_failed'];
-         //return no of archived docs
-         $num_archive_docs = DB::table('documents')->where([
-             ['doc_user_id','=',Auth::user()->id],
-             ['is_archive','=',1]
-         ])
-         ->whereIn('process_status',$prs_stat)
-         ->whereBetween('created_at', [\Carbon\Carbon::now()->startOfWeek(),\Carbon\Carbon::now()->endOfWeek()])
-         ->count();
-
-         //return no. of documents needed to edit.
-         $queueProcess = ['processing','ocred','failed','rerun_failed','final_process'];
-         $queueDocs = DB::table('documents')->where([
-             ['doc_user_id','=',Auth::user()->id],
-             ['is_archive','=',0]
-         ])
-         ->whereIn('process_status', $queueProcess)
-         ->count();
-
-          //return no. failed
-         $failedProcess = ['ocred_final_failed'];
-         $failedDocs = DB::table('documents')->where([
-             ['doc_user_id','=',Auth::user()->id],
-             ['is_archive','=',0]
-         ])
-         ->whereIn('process_status', $failedProcess)
-         ->count();
-
-
-         //return documents this week
-         $bar_datas = [];
-         $week      = [];
-
-         $docs_this_week  = DB::table('documents')
-         ->select(
-           'documents.created_at',
-            DB::raw('count(`doc_id`) as documents'),
-            DB::raw('DAYNAME(`created_at`) as day')
-         )
-         ->where('doc_user_id', Auth::user()->id)
-         ->where('is_archive', 1)
-         ->whereIn('process_status', $prs_stat)
-         ->whereBetween('created_at', [\Carbon\Carbon::now()->startOfWeek(),\Carbon\Carbon::now()->endOfWeek()])
-         ->groupBy(DB::raw('WEEKDAY(created_at)'))
-         ->get();
-
-         if(count($docs_this_week)>=1){
-             foreach($docs_this_week as $docs)
-             {
-                array_push($bar_datas, $docs->documents);
-                array_push($week, $docs->day);
-             }
-         }else{
-             $bar_datas = [0,0,0,0,0,0,0];
-             $week      = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-         }
-
-         $json_response = json_encode(array(
-             'num_to_edit' => $num_pending_docs,
-             'num_archived'=>$num_archive_docs,
-             'num_queue'=>$queueDocs,
-             'num_failed_docs'=>$failedDocs,
-             'oldest_doc'=>$doc,
-             'oldest_doc_failed'=>$doc_failed,
-             'bar_datas'=>$bar_datas,
-             'week'=>$week
-         ));
-         // # Return the response
-         return $json_response;
-
-    }
-
-    public function searchAutoComplete(Request $req){
-
-        //======get folders names ===============================================================================================
+    	//======get folders names ===============================================================================================
         $folders = DB::table('folders')
         ->where('folder_user_id', Auth::user()->id)
         ->where('folder_name', 'LIKE', '%' . $req->doc_keyword . '%')
@@ -245,16 +115,43 @@ class dashboardController extends Controller
 
     }
 
-    public function enterSearchDocuments(Request $req){
+    //returns documents from selected autocomplete
+    public function selectAutoCompleteSearch(Request $req){
+
+        // $req->doc_keyword
+        // $req->doc_filter
+        if($req->doc_filter=="tag"){
+            $docs = $this->searchTags($req->doc_keyword);
+        }
+        if($req->doc_filter=="folder"){
+            $docs = $this->searchFolders($req->doc_keyword);
+        }
+        if($req->doc_filter=="fulltext"){
+            $docs = $this->searchFulltext($req->doc_keyword);
+        }
+        if($req->doc_filter=="no_filter"){
+            $docs = $this->enterkeySearch($req->doc_keyword);
+        }
+
+        if(count($docs)>0){
+            $docs = $this->generateDownloadFormat($docs);
+            return json_encode($docs);
+        }else{
+            return "error";
+        }
+    }
+
+
+    //search for documents using enter key.
+    public function enterkeySearch($keyword){
 
         //$req->doc_keyword
-
         //store documents ids found in tag, folder and fulltext
         $docs_ids = [];
         //------------------------------------------------------------------------------
         //FOLDERS -------------get folder using passed keyword--------------------------
         $folder_id = DB::table('folders')->where('folder_user_id', Auth::user()->id)
-        ->where('folder_name', 'LIKE', '%' . $req->doc_keyword . '%')
+        ->where('folder_name', 'LIKE', '%' . $keyword . '%')
         ->select('folders.folder_id')
         ->first();
 
@@ -280,7 +177,7 @@ class dashboardController extends Controller
         $tags_ids = DB::table('documents')
         ->where('doc_user_id', Auth::user()->id)
         ->where('is_archive', 1)
-        ->where('tags', 'LIKE', '%' . $req->doc_keyword . '%')
+        ->where('tags', 'LIKE', '%' . $keyword . '%')
         ->select('documents.doc_id')
         ->get();
 
@@ -306,7 +203,7 @@ class dashboardController extends Controller
 
             //find password keyword in each doc pages. get ids and store in array
             $text_ids = DB::table('document_pages')->whereIn('doc_id', $user_doc_ids)
-            ->where('doc_page_text', 'LIKE', '%' . $req->doc_keyword . '%')
+            ->where('doc_page_text', 'LIKE', '%' . $keyword . '%')
             ->select('document_pages.doc_id')
             ->get();
 
@@ -319,12 +216,11 @@ class dashboardController extends Controller
         //-------------------------------------------------------------------------------
         //get unique ids in doc_ids array.
         $unique_doc_ids = array_unique($docs_ids);
-        
-        $pr_status = ['ocred_final','ocred_final_failed'];
+
         $documents = DB::table('documents')
         ->where('doc_user_id', Auth::user()->id)
         ->where('is_archive', 1)
-        ->whereIn('process_status',   $pr_status)
+        ->where('process_status', 'ocred_final')
         ->whereIn('documents.doc_id', $unique_doc_ids)
         ->leftJoin('document_pages','documents.doc_id','=','document_pages.doc_id')
         ->groupBy('document_pages.doc_id')
@@ -343,27 +239,106 @@ class dashboardController extends Controller
             'document_pages.doc_page_image_preview'
         )->get();
 
-        $documents = $this->generateDownloadFormat($documents);
-
-        if(count($documents)>=1){
-
-            foreach($documents as $d){                
-                if($d->date=="0000-00-00 00:00:00"){
-                    $d->date = "N/D";
-                }else{
-                  $n_date = new \DateTime($d->date);
-                  $short_date = date_format($n_date,"d.m.Y");
-                  $d->date = $short_date;
-                }
-            }
-            $json_response = json_encode($documents);
-            return $json_response;
-        }else{
-            return "error";
-        }
+        return $documents;
 
     }
 
+   // search document with selected tag
+   public function searchTags($keyword){
+
+   	    $documents = DB::table('documents')
+        ->where('doc_user_id', Auth::user()->id)
+        ->where('is_archive', 1)
+        ->where('tags', 'LIKE', '%' . $keyword . '%')
+        ->where('process_status', 'ocred_final')
+        ->join('document_pages','documents.doc_id','=','document_pages.doc_id')
+        ->groupBy('document_pages.doc_id')
+        ->select(
+                'documents.doc_id',
+                'documents.doc_ocr',
+                'documents.doc_org',
+                'documents.approved',
+                'documents.process_status',
+                'documents.sender',
+                'documents.receiver',
+                'documents.tags',
+                'documents.date',
+                'documents.category',
+                'documents.created_at',
+                'document_pages.doc_page_image_preview'
+        )->get();
+         
+        return $documents;
+   }
+
+   // search document with selected folder
+   public function searchFolders($keyword){
+
+   	    //get folder id using folder name
+        $folderID = DB::table('folders')->where([
+            ['folder_user_id', '=', Auth::user()->id],
+            ['folder_name', '=', $keyword]
+        ])->first();
+
+        if(count($folderID)>0){
+            $documents = DB::table('documents')
+            ->where('doc_user_id', Auth::user()->id)
+            ->where('is_archive', 1)
+            ->where('doc_folder_id', $folderID->folder_id)
+            ->where('process_status', 'ocred_final')
+            ->join('document_pages','documents.doc_id','=','document_pages.doc_id')
+            ->groupBy('document_pages.doc_id')
+            ->select(
+                'documents.doc_id',
+                'documents.doc_ocr',
+                'documents.doc_org',
+                'documents.approved',
+                'documents.process_status',
+                'documents.sender',
+                'documents.receiver',
+                'documents.tags',
+                'documents.date',
+                'documents.category',
+                'documents.created_at',
+                'document_pages.doc_page_image_preview'
+            )->get();
+            return $documents;
+        }
+   	
+   }
+
+   // search document with selected text
+   public function searchFulltext($keyword){
+
+   	    $documents = DB::table('documents')
+        ->where('doc_user_id', Auth::user()->id)
+        ->where('is_archive', 1) 
+        ->where('process_status', 'ocred_final')
+        ->join('document_pages','documents.doc_id','=','document_pages.doc_id')
+        ->where('document_pages.doc_page_text', 'LIKE', '%' . $keyword. '%')
+        ->groupBy('document_pages.doc_id')
+        ->select(
+                'documents.doc_id',
+                'documents.doc_ocr',
+                'documents.doc_org',
+                'documents.approved',
+                'documents.process_status',
+                'documents.sender',
+                'documents.receiver',
+                'documents.tags',
+                'documents.date',
+                'documents.category',
+                'documents.created_at',
+                'document_pages.doc_page_image_preview'
+        )->get();
+
+        if(count($documents)>=1){
+            return $documents;
+        }
+   	
+    }
+    
+    //generate download format otf based on user downloadfileformat
     public function generateDownloadFormat($datas){
         $format = "";
         $ext = ".pdf";
@@ -393,141 +368,6 @@ class dashboardController extends Controller
         return $datas;  
     }
 
-    public function selectSearchDocuments(Request $req){
-
-        // $req->doc_keyword
-        // $req->doc_filter
-
-        if($req->doc_filter=="tag"){
-            $docs = $this->filterTag($req->doc_keyword);
-        }
-        if($req->doc_filter=="folder"){
-            $docs = $this->filterFolder($req->doc_keyword);
-        }
-        if($req->doc_filter=="fulltext"){
-            $docs = $this->filterFulltext($req->doc_keyword);
-        }
-
-        $docs = $this->generateDownloadFormat($docs);
-
-        if(count($docs)>0){
-
-            foreach($docs as $d){
-
-                if($d->date=="0000-00-00 00:00:00"){
-                    $d->date = "";
-                }else{
-                  $n_date = new \DateTime($d->date);
-                  $short_date = date_format($n_date,"d.m.Y");
-                  $d->date = $short_date;
-                }
-            }
-            $json_response = json_encode($docs);
-            return $json_response;
-        }else{
-            return "error";
-        }
-
-     }
-     //return documents using tag keyword
-     public function filterTag($keyword){
-       
-        $pr_status = ['ocred_final','ocred_final_failed'];
-
-        $documents = DB::table('documents')
-        ->where('doc_user_id', Auth::user()->id)
-        ->where('is_archive', 1)
-        ->where('tags', 'LIKE', '%' . $keyword . '%')
-        ->whereIn('process_status', $pr_status)
-        ->join('document_pages','documents.doc_id','=','document_pages.doc_id')
-        ->groupBy('document_pages.doc_id')
-        ->select(
-                'documents.doc_id',
-                'documents.doc_ocr',
-                'documents.doc_org',
-                'documents.approved',
-                'documents.process_status',
-                'documents.sender',
-                'documents.receiver',
-                'documents.tags',
-                'documents.date',
-                'documents.category',
-                'documents.created_at',
-                'document_pages.doc_page_image_preview'
-        )->get();
-         
-        return $documents;
-     }
-
-     //return documents using folder keyword
-     public function filterFolder($keyword){
-
-         //get folder id using folder name
-        $folderID = DB::table('folders')->where([
-            ['folder_user_id', '=', Auth::user()->id],
-            ['folder_name', '=', $keyword]
-        ])->first();
-
-        if(count($folderID)>0){
-
-            $pr_status = ['ocred_final','ocred_final_failed']; 
-
-            $documents = DB::table('documents')
-            ->where('doc_user_id', Auth::user()->id)
-            ->where('is_archive', 1)
-            ->where('doc_folder_id', $folderID->folder_id)
-            ->whereIn('process_status', $pr_status)
-            ->join('document_pages','documents.doc_id','=','document_pages.doc_id')
-            ->groupBy('document_pages.doc_id')
-            ->select(
-                'documents.doc_id',
-                'documents.doc_ocr',
-                'documents.doc_org',
-                'documents.approved',
-                'documents.process_status',
-                'documents.sender',
-                'documents.receiver',
-                'documents.tags',
-                'documents.date',
-                'documents.category',
-                'documents.created_at',
-                'document_pages.doc_page_image_preview'
-            )->get();
-            return $documents;
-        }
-     }
-
-     //return documents using fulltext keyword
-     public function filterFulltext($keyword){
-
-        $pr_status = ['ocred_final','ocred_final_failed']; 
-
-        $documents = DB::table('documents')
-        ->where('doc_user_id', Auth::user()->id)
-        ->where('is_archive', 1) 
-        ->whereIn('process_status', $pr_status)
-        ->join('document_pages','documents.doc_id','=','document_pages.doc_id')
-        ->where('document_pages.doc_page_text', 'LIKE', '%' . $keyword. '%')
-        ->groupBy('document_pages.doc_id')
-        ->select(
-                'documents.doc_id',
-                'documents.doc_ocr',
-                'documents.doc_org',
-                'documents.approved',
-                'documents.process_status',
-                'documents.sender',
-                'documents.receiver',
-                'documents.tags',
-                'documents.date',
-                'documents.category',
-                'documents.created_at',
-                'document_pages.doc_page_image_preview'
-        )->get();
-
-        if(count($documents)>=1){
-            return $documents;
-        }
-     }
 
 
 }

@@ -52,10 +52,16 @@ class LoginController extends Controller
 
     public function credentials(Request $request)
     {
+        // // check if verified
+        // return [
+        //     'email' => $request->email,
+        //     'password' => $request->password,
+        //     'verified' => 1,
+        // ];
+
         return [
             'email' => $request->email,
-            'password' => $request->password,
-            'verified' => 1,
+            'password' => $request->password
         ];
     }
 }

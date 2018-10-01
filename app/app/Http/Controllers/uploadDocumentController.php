@@ -44,6 +44,7 @@ class uploadDocumentController extends Controller
               $doc_prc =  $base_n . "-" . "prc" . "." . "pdf";
               //set ocr name
               $doc_ocr =  $base_n . "-" . "ocr" . "." . "pdf";
+
               //store names to array of arrays for single insert.
               $doc_dataz = array(
                   "doc_user_id" => Auth::user()->id,
@@ -52,6 +53,7 @@ class uploadDocumentController extends Controller
                   "doc_ocr" => $doc_ocr,
                   "t_process" => time(),
                   "process_status" => 'new',
+                  "origin" => 'Manual upload',
                   "created_at" =>  \Carbon\Carbon::now(),
                   "updated_at" =>  \Carbon\Carbon::now(),
               );

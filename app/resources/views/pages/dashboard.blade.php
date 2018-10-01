@@ -79,6 +79,13 @@
   margin-top:-6px;
 }
 
+.doc_num_stat_failed {
+  font-size:15px !important;
+  background-color:red !important;
+  margin-top:-6px;
+}
+
+
 .preload_custm_loc{
    margin-top:-7px;
 }
@@ -134,8 +141,12 @@
    background-color: #fff;
  }
 
+.table-striped>thead>tr:nth-child(odd)>th {
+   background-color: #ebedf8;
+ }
 .table-hover tbody tr:hover td{
-  background-color: #b1d5ff !important;
+   background-color: #b1d5ff !important;
+   cursor: pointer;
 }
 
 .table-striped>tbody>tr:nth-child(even)>td,
@@ -155,11 +166,23 @@
   background-color: #fade45;
 }
 /*---------------------------------------------------*/
+
+.cstm_input {
+  background-color:#ebedf8;
+}
+
+.ocr_success {
+    color:#017cff;
+}
+
+.ocr_failed {
+     color:red;
+}
 </style>
 @endsection
 
 @section('content')
-<div class="row" ng-app="dashboard_app" ng-controller="dashboard_controller" ng-click="clear_autocomplete()">
+<div class="row" ng-controller="dashboard_controller" ng-click="clear_autocomplete()">
 
   <!-- preloader for search autocomplete -->
   <div class="preloader pl-size-xs" ng-show="searchAutoCompLoader" style="position:absolute; top:102px; right:33px">
@@ -176,7 +199,7 @@
   <!-- Search bar -->
   <div>
     <div class="col-md-6  col-md-offset-3">
-      <input type="text" class="form-control search_inp text-center" placeholder="@lang('dashboard.input_search_p_holder')"  ng-model-options='{ debounce: 1000 }' ng-change="onChangeInput()" ng-model="doc_keyword" ng-keydown="searchKeyPress($event)">
+      <input type="text" class="form-control  input-lg search_inp text-center cstm_input" placeholder="@lang('dashboard.input_search_p_holder')"  ng-model-options='{ debounce: 1000 }' ng-change="onChangeInput()" ng-model="doc_keyword" ng-keydown="searchKeyPress($event)">
       <div class="row cleafix">
         <div class="col-md-12 col-sm-12 col-xs-12 col-lg-12 list-group-autocomplete " >
           <div class="list-group ">
@@ -216,10 +239,10 @@
             <div class="card dashboard_card">
               <div class="body ">
                 <ul class="list-group" >
-                  <a ng-href="/document/<#oldest_doc.doc_id#>" style="text-decoration: none !important">
+                  <a ng-href="/document/<#oldest_doc.doc_id | default_id #>" style="text-decoration: none !important">
                     <button type="button" class="list-group-item cstm_list_g waves-effect waves-blue">@lang('dashboard.to_edit_tx')
                       <span class="badge bg-light-blue doc_num_stat ng-hide" ng-show="num_to_edit"><# num_edit #></span>
-                      <div class="preloader ng-hide pull-right pl-size-xs preload_custm_loc" ng-show="to_edit_preloader">
+                      <div class="preloader ng-hide pull-right pl-size-xs preload_custm_loc" ng-show="num_data_preloader">
                         <div class="spinner-layer pl-blue">
                           <div class="circle-clipper left">
                             <div class="circle"></div>
@@ -234,7 +257,7 @@
                   <a ng-href="/archives" style="text-decoration: none !important">
                     <button type="button" class="list-group-item cstm_list_g waves-effect waves-blue">@lang('dashboard.This_whole_week_tx')
                       <span class="badge bg-light-blue doc_num_stat ng-hide" ng-show="num_to_archive"><# archive #></span>
-                      <div class="preloader ng-hide pull-right pl-size-xs preload_custm_loc" ng-show="archive_preloader">
+                      <div class="preloader ng-hide pull-right pl-size-xs preload_custm_loc" ng-show="num_data_preloader">
                         <div class="spinner-layer pl-blue">
                           <div class="circle-clipper left">
                             <div class="circle"></div>
@@ -252,7 +275,6 @@
           </div>
           <!-- ./DOCUMENTS TO EDIT / ARCHIVED -->
 
-          <!-- DOCUMENTS TO EDIT / ARCHIVED -->
           <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
             <div class="card dashboard_card">
               <div class="body ">
@@ -260,7 +282,7 @@
                   <a ng-href="" style="text-decoration: none !important">
                     <button type="button" class="list-group-item cstm_list_g waves-effect waves-blue">Documents being processed
                       <span class="badge bg-light-blue doc_num_stat ng-hide" ng-show="num_to_edit"><# queueDocs #></span>
-                      <div class="preloader ng-hide pull-right pl-size-xs preload_custm_loc" ng-show="to_edit_preloader">
+                      <div class="preloader ng-hide pull-right pl-size-xs preload_custm_loc" ng-show="num_data_preloader">
                         <div class="spinner-layer pl-blue">
                           <div class="circle-clipper left">
                             <div class="circle"></div>
@@ -272,10 +294,10 @@
                       </div>
                     </button>
                   </a>
-                  <a ng-href="" style="text-decoration: none !important">
+                  <a ng-href="/document/<#doc_failed.doc_id | default_id#>" style="text-decoration: none !important">
                     <button type="button" class="list-group-item cstm_list_g waves-effect waves-blue">Failed OCRED documents
-                      <span class="badge bg-light-blue doc_num_stat ng-hide" ng-show="num_to_archive"><# failedDocs#></span>
-                      <div class="preloader ng-hide pull-right pl-size-xs preload_custm_loc" ng-show="archive_preloader">
+                      <span class="badge bg-red doc_num_stat_failed ng-hide" ng-show="num_to_archive"><# failedDocs#></span>
+                      <div class="preloader ng-hide pull-right pl-size-xs preload_custm_loc" ng-show="num_data_preloader">
                         <div class="spinner-layer pl-blue">
                           <div class="circle-clipper left">
                             <div class="circle"></div>
@@ -324,7 +346,7 @@
                   @if(count($latest_opened)>=1)
                   <div class="col-xs-5 col-sm-3 " style="padding-left:0px;">
                     <div class="prev_viewed_doc_div" onclick="window.location='{{ url('document/'.$latest_opened->view_doc_id) }}'">
-                      <img src="{{ asset('static/documents_images/') .'/'. $latest_opened->thumbnail }}" class="img-responsive prev_viewd_doc_div_img">
+                      <img src="{{ url('/files/image') .'/'. $latest_opened->thumbnail }}" class="img-responsive prev_viewd_doc_div_img">
                     </div>
                   </div>
                   @endif
@@ -338,7 +360,7 @@
                     <div class="row pull-right" style="margin-top:4px">
                       @foreach($last_opened as $doc)
                       <div class="col-xs-2 col-sm-1 prev_viewed_docs"  onclick="window.location='{{ url('document/'.$doc->view_doc_id) }}'">
-                        <img src="{{ asset('static/documents_images/') .'/'. $doc->thumbnail }}" class="img-responsive">
+                        <img src="{{ url('/files/image') .'/'. $doc->thumbnail }}" class="img-responsive">
                       </div>
                       @endforeach
                     </div>
@@ -353,7 +375,7 @@
                     <div class="row pull-right" style="margin-top:24px">
                       @foreach($last_opened->slice(0, 3) as $docs)
                       <div class="col-xs-2 col-sm-1 prev_viewed_docs_m" onclick="window.location='{{ url('document/'.$docs->view_doc_id) }}'">
-                        <img src="{{ asset('static/documents_images/') .'/'. $docs->thumbnail }}" class="img-responsive">
+                        <img src="{{ url('/files/image') .'/'. $docs->thumbnail }}" class="img-responsive">
                       </div>
                       @endforeach
                     </div>
@@ -412,16 +434,24 @@
 
     <!-- Documents table search result -->
     <div class="col-md-12" ng-click="clear_autocomplete()">
-      <table class="table table-hover ng-hide" ng-show="documents_table">
+      <table class="table table-hover ng-hide table-striped" ng-show="documents_table">
         <thead style="background-color:#ebedf8; color:#000; font-size:13px; ">
           <th>#</th>
-          <th>Document name</th>
+          <th>Recipient</th>
+          <th>Sender</th>
+          <th>Category</th>
+          <th>OCRED</th>
+          <th>Date</th>
           <th>Actions</th>
         </thead>
-        <tbody style="font-size:11px;">
+        <tbody style="font-size:13px;">
           <tr ng-repeat="data in documents track by $index">
             <td><#$index+1#></td>
-            <td><#data.doc_ocr#></td>
+            <td><# data.receiver | default #></td>
+            <td><# data.sender   | default #></td>
+            <td><# data.category | default #></td>
+            <td ng-bind-html="data.process_status  | ocr_status "></td>
+            <td><# data.date     | default  #></td>    
             <td style="width:300px">
               <!-- Edit document -->
               <a ng-href="/document/<#data.doc_id#>" style="text-decoration: none">
@@ -430,14 +460,14 @@
                 </button>
               </a>
               <!-- Download ocred document -->
-              <a ng-href="/static/documents_ocred/<#data.doc_ocr#>" style="text-decoration: none" download>
+              <a ng-href="/files/ocr/<#data.doc_ocr#>" style="text-decoration: none" download="<#data.download_format#>">
                 <button type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="View document" tooltip-top>
                   <i class="material-icons cstm_icon_btn_ico">remove_red_eye</i>
                 </button>
               </a>
                   <span ng-if="data.approved==0">
                     <!-- Download original document. -->
-                    <a ng-href="/static/documents_new/<#data.doc_org#>" style="text-decoration: none" download>
+                    <a ng-href="/files/org/<#data.doc_org#>" style="text-decoration: none" download="<#data.download_format#>">
                       <button type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="Download original file" tooltip-top>
                         <i class="material-icons cstm_icon_btn_ico">file_download</i>
                       </button>
@@ -447,14 +477,18 @@
                       <i class="material-icons cstm_icon_btn_ico">check</i>
                     </button>
                   </span>
+
               <!-- customize document -->
-              <button type="button" class="btn btn-default waves-effect cstm_icon_btn doc-upd-btn" data-toggle="tooltip" title="" data-original-title="Customize document" tooltip-top>
-                <i class="material-icons cstm_icon_btn_ico">build</i>
-              </button>
+              <a ng-href="/customize_pdf/<#data.doc_id#>" style="text-decoration: none">  
+                <button type="button" class="btn btn-default waves-effect cstm_icon_btn doc-upd-btn" data-toggle="tooltip" title="" data-original-title="Customize document" tooltip-top>
+                  <i class="material-icons cstm_icon_btn_ico">build</i>
+                </button>
+              </a>
 
               <button ng-click="deleteDocument(data.doc_id)" type="button" class="btn btn-default waves-effect cstm_icon_btn doc-upd-btn" data-toggle="tooltip" title="" data-original-title="Delete document" tooltip-top id="deleteDocBtn<#doc.doc_id#>">
                 <i class="material-icons cstm_icon_btn_ico">delete_forever</i>
               </button>
+              
             </td>
           </tr>
         </tbody>
@@ -486,10 +520,8 @@
 <script src="{{ asset('static/js/dashboard.js') }}"></script>
 <script type="text/javascript">
 
-var app = angular.module('dashboard_app', ['ngSanitize'], function($interpolateProvider) {
-    $interpolateProvider.startSymbol('<#');
-    $interpolateProvider.endSymbol('#>');
-});
+//inject this app to rootApp
+var app = angular.module('app', ['ngSanitize']);
 
 app.directive('tooltipTop', function() {
       return function(scope, element, attrs) {
@@ -501,14 +533,36 @@ app.directive('tooltipTop', function() {
     };
 });
 
+app.filter('default', function(){
+   return function(data){
+       if(data==null){
+           data = "N/D";
+           return data;
+       }
+       return data;
+   }
+});
 
-app.filter('if_empty', function(){
-    return function(data)
-      {
-        if(data=="" && data==null && data==undefined){
-            return 0;
-        }
-      }
+app.filter('default_id', function(){
+   return function(data){
+       if(data==null){
+           data = "no_id";
+           return data;
+       }
+       return data;
+   }
+});
+
+app.filter('ocr_status', function(){
+   return function(data){
+       if(data=="ocred_final"){
+           data = "<b class='ocr_success'>"+"YES"+"</b>";
+           return data;
+       }else{
+           data = "<b class='ocr_failed'>"+"NO"+"</b>";
+           return data;
+       }
+   }
 });
 
 
@@ -525,10 +579,9 @@ $scope.searchAutoCompLoader = false;
 $scope.num_to_edit =         false;
 //show/hide numbers of archive documents.
 $scope.num_to_archive =      false;
-//show/hide preloader for documents to edit.
-$scope.to_edit_preloader =   true;
-//show/hide preloader for archive docs.
-$scope.archive_preloader =   true;
+//show/hide preloader for documents numeric values
+$scope.num_data_preloader =   true;
+
 
 //show/hide dashboard cards.
 $scope.dashboard_grid =      true;
@@ -575,11 +628,10 @@ $scope.getNumToEditArchive = function(){
   $http.get('/get_docs_edit_archive').success(function(data){
        //set number of documents to be edit
        $scope.num_edit = data.num_to_edit;
-       $scope.to_edit_preloader = false;
+       $scope.num_data_preloader = false;
        $scope.num_to_edit = true;
        //set number of archive documents.
        $scope.archive =  data.num_archived;
-       $scope.archive_preloader = false;
        $scope.num_to_archive = true;
        //set num of queue docs.
        $scope.queueDocs = data.num_queue;
@@ -588,7 +640,8 @@ $scope.getNumToEditArchive = function(){
        //set oldest doc id, when user click documents to edit, user will be redirected to edit documents
        //with the oldest doc needed to be edit.
        $scope.oldest_doc = data.oldest_doc;
-       
+       //
+       $scope.doc_failed = data.oldest_doc_failed;
        //set week days for barchart
        $scope.weekDays = data.week;
        //set docs count each week days.

@@ -32,7 +32,7 @@
 @section('content')
 
 <div class="login-box col-md-offset-3 col-md-6 lg-box">
-  <p class="text-center align-middle lg-box-title main_color">@lang('auth.sign_in_w')</p>
+  <p class="text-center align-middle lg-box-title main_color">@lang('auth.sign_in_w') </p>
   <div class="card" >
     <div class="body" >
       <form id="sign_in" method="POST" action="{{ route('login') }}"><br>

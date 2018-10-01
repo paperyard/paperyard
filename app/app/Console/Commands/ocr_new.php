@@ -72,11 +72,11 @@ class ocr_new extends Command
                   foreach($documents as $key=>$d){
 
                         //location of original doc.
-                        $document_src[$key] = "public/static/documents_new/" . $d->doc_org;
+                        $document_src[$key] = "storage/app/documents_new/" . $d->doc_org;
                         //location for where the document with applied ocr will be stored.
-                        $document_dst[$key] = "public/static/documents_ocred/" . $d->doc_ocr;
+                        $document_dst[$key] = "storage/app/documents_ocred/" . $d->doc_ocr;
                         //location of processing documents
-                        $document_prc[$key] = "public/static/documents_processing/" . $d->doc_prc;
+                        $document_prc[$key] = "storage/app/documents_processing/" . $d->doc_prc;
 
                         //flags for ocrmypdf. flags are available ata ocrmypdf documentation.
                         $params1[$key] = "ocrmypdf --output-type pdf -l deu+eng --rotate-pages --deskew";
@@ -117,7 +117,7 @@ class ocr_new extends Command
                               ])->update(['process_status'=>'failed']);
           
                               //localtion+name+time of error log
-                              $error_log[$key] = "public/static/symfony_process_error_logs/" ."new-". $d->doc_org . "-" . time();
+                              $error_log[$key] = "storage/app/symfony_process_error_logs/" ."new-". $d->doc_org . "-" . time();
                               //outpout error
                               echo $process[$key]->getErrorOutput();
                               //store error log in file
@@ -126,7 +126,7 @@ class ocr_new extends Command
                               //process success
                               DB::table('documents')->where([
                                  ['doc_org', '=', $d->doc_org]
-                              ])->update(['process_status'=>'ocred']);
+                              ])->update(['process_status'=>'ocred','is_ocred'=>1]);
                           }
                       }
                       // IMAGE
@@ -143,11 +143,11 @@ class ocr_new extends Command
                           $process2[$key]->start();
                           $process2[$key]->wait();
 
-                          if(file_exists('public/static/documents_ocred/'.$d->doc_ocr)){
+                          if(file_exists('storage/app/documents_ocred/'.$d->doc_ocr)){
                               // file found. no error
                               DB::table('documents')->where([
                                  ['doc_org', '=', $d->doc_org]
-                              ])->update(['process_status'=>'ocred']);
+                              ])->update(['process_status'=>'ocred','is_ocred'=>1]);
                           }else{
                               //file not found error occured
                               DB::table('documents')->where([

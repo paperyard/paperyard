@@ -98,7 +98,7 @@
 
 @section('content')
 
-<div style="margin-top:50px">
+<div style="margin-top:50px" ng-controller="uploadController">
 <form action="/upload_documents" class="dropzone" id="my-awesome-dropzone" style="background-color: white !important; border-style: dashed !important; border-color:#ccc !important;" >
 @csrf
 <div class="dz-message" data-dz-message>
@@ -129,7 +129,6 @@ Dropzone.options.myAwesomeDropzone = {
     });
   }
 };
-
 
 function showNotification(colorName, text, placementFrom, placementAlign, animateEnter, animateExit) {
     if (colorName === null || colorName === '') { colorName = 'bg-black'; }
@@ -169,6 +168,11 @@ function showNotification(colorName, text, placementFrom, placementAlign, animat
 
 });
 
+
+var app = angular.module('app', []);
+app.controller('uploadController', function($scope) {
+
+});
 
 </script>
 @endsection

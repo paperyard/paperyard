@@ -123,7 +123,7 @@
 @endsection
 
 @section('content')
-<div class="row clearfix" ng-app="reminder_app" ng-controller="reminder_controller" ng-click="clear()"><br>
+<div class="row clearfix" ng-controller="reminder_controller" ng-click="clear()"><br>
 
 
     @if (session()->has('reminder_updated'))
@@ -256,11 +256,8 @@ $(function () {
 
 });
 
-//used angular interpolate for syntax compatibility
-var app = angular.module('reminder_app', [], function($interpolateProvider) {
-    $interpolateProvider.startSymbol('<#');
-    $interpolateProvider.endSymbol('#>');
-});
+//inject this app to rootApp
+var app = angular.module('app', []);
 
 app.controller('reminder_controller', function($scope, $http, $timeout, $q) {
 

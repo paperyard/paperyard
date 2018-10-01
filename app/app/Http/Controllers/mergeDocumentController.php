@@ -32,7 +32,7 @@ class mergeDocumentController extends Controller
            ['doc_user_id','=',Auth::user()->id],
            ['process_status','=','ocred_final']
     	])
-      ->where('doc_ocr', 'LIKE', '%' . $request->doc_keyword . '%')
+        ->where('doc_ocr', 'LIKE', '%' . $request->doc_keyword . '%')
     	->select('documents.doc_ocr','documents.doc_id')->get();
 
     	$json_response = json_encode($docs);
@@ -58,10 +58,10 @@ class mergeDocumentController extends Controller
     public function mergeDocuments(Request $request){
 
         // documents location
-        $doc1 = 'static/documents_ocred/' . $request->doc1_name;
-        $doc2 = 'static/documents_ocred/' . $request->doc2_name;
+        $doc1 = storage_path('app/documents_ocred') . '/' . $request->doc1_name;
+        $doc2 = storage_path('app/documents_ocred') . '/' . $request->doc2_name;
         // output file location/name
-        $output_doc = 'static/documents_ocred/' . str_random(10) . ".pdf";
+        $output_doc = storage_path('app/documents_ocred') . '/' . str_random(10) . ".pdf";
 
         $doc1_pages = DB::table('document_pages')->where('doc_id',$request->doc1_id)->get();
         $doc2_pages = DB::table('document_pages')->where('doc_id',$request->doc2_id)->get();

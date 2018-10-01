@@ -10,6 +10,18 @@ use DB;
 
 class userController extends Controller
 {
+    
+    public function welcome(){
+        $wc = DB::table('app_status')->select('app_installed')->first();
+        if(count($wc)>0){
+             //return login
+             return view('auth/login');
+        }else{
+             DB::table('app_status')->insert(['app_installed'=>1]);
+             return view('layouts/welcome');
+        }
+    }
+
     // RETURN ACCOUNT SETTINGS
     public function accountSettings(){
           $userData = DB::table('users')->where('id', Auth::user()->id)->first();

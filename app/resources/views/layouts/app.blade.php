@@ -38,6 +38,22 @@
             border:1px solid #ccc !important;
         }
     }
+
+    @media handheld and (min-width: 1200px), 
+      screen and (min-width: 1200px){
+         .m_tab_view {
+            margin-left:140px !important;
+         }
+    }
+
+    @media handheld and (max-width: 1200px), 
+      screen and (max-width: 1200px){
+        .nav_logo_hide {
+            visibility: hidden;
+        }
+    }
+
+
     .router_link_icon {
         font-size:23px !important;
         margin-left:30px !important;
@@ -98,7 +114,7 @@
 
 </head>
 
-<body style="background-color:#fff">
+<body style="background-color:#fff" ng-app="rootApp" ng-controller="rootController">
     <div id="app">
         <!-- Page Loader -->
         <div class="page-loader-wrapper">
@@ -113,7 +129,7 @@
                         </div>
                     </div>
                 </div>
-                <p>PAPERYARD</p>
+                <p>PAPERYARD </p>
             </div>
         </div>
         <!-- #END# Page Loader -->
@@ -126,7 +142,7 @@
             <div class="navbar-header">
                 <a href="javascript:void(0);" class="navbar-toggle collapsed custom_nav_icons" data-toggle="collapse" data-target="#navbar-collapse" aria-expanded="false"></a>
                 <a href="javascript:void(0);" class="bars custom_nav_icons" style="height:50px"></a>
-                <a class="navbar-brand nav_logo hidden-sm hidden-xs" href="#">
+                <a class="navbar-brand nav_logo hidden-sm hidden-xs nav_logo_hide" href="#">
                     <img src="{{ asset('static/img/paperyard_logo.png') }}" class="img-responsive nav_m_logo">
                 </a>
                 <div style="position: absolute; left: 50%;" class="visible-sm visible-xs">
@@ -289,12 +305,11 @@
             <!-- #Menu -->
         </section>
         <!-- #END# Left Sidebar -->
-        <section class="content x_1" style="margin-left:140px" >
+        <section class="content x_1 m_tab_view">
 
             <div class="container-fluid">
                 <div class="row" style="margin-bottom:10px">
                     <div class="col-md-12 col-sm-12 col-xs-12 ">
-
                         <h3 style="margin:0px; padding:0px" class="pull-left">@yield('page_title')</h3>
 
                         @if(View::hasSection('search_page_filter'))
@@ -332,6 +347,18 @@
             //Popover
             $('[data-toggle="popover"]').popover();
         })
+
+        //root app------------------------------------------------------------------
+        var rootApp = angular.module('rootApp', ['app'], function($interpolateProvider) {
+            $interpolateProvider.startSymbol('<#');
+            $interpolateProvider.endSymbol('#>');
+        });
+
+        rootApp.controller('rootController', function($scope, $http, $timeout, $compile) {
+
+        });
+
+
     </script>
     @yield('scripts')
 </body>

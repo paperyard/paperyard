@@ -76,14 +76,14 @@ class ocr_force extends Command
                     foreach($documents as $key=>$d){
 
                           //location of original doc.
-                          $document_src[$key] = "public/static/documents_new/" . $d->doc_org;
+                          $document_src[$key] = "storage/app/documents_new/" . $d->doc_org;
                           //location for where the document with applied ocr will be stored.
-                          $document_dst[$key] = "public/static/documents_ocred/" . $d->doc_ocr;
+                          $document_dst[$key] = "storage/app/documents_ocred/" . $d->doc_ocr;
 
 
                           //decrypted doc
                           $decrypted_doc = "decrypted-" . $d->doc_org;
-                          $decrypted_document_src[$key] = "public/static/documents_new/" . $decrypted_doc;
+                          $decrypted_document_src[$key] = "storage/app/documents_new/" . $decrypted_doc;
 
                           //flags for ocrmypdf. flags are available ata ocrmypdf documentation.
                           $params1[$key] = "ocrmypdf --output-type pdf -l deu+eng --tesseract-timeout 3600 --skip-big 5000 --force-ocr --rotate-pages --deskew";
@@ -130,7 +130,7 @@ class ocr_force extends Command
                                           ['doc_org', '=', $d->doc_org]
                                         ])->update(['process_status'=>'failed_force']);
                                         //forced+location+name+time of error log
-                                        $error_log = "public/static/symfony_process_error_logs/" ."forced-". $d->doc_org . "-" . time();
+                                        $error_log = "storage/app/symfony_process_error_logs/" ."forced-". $d->doc_org . "-" . time();
                                         //outpout error
                                         echo $process[$key]->getErrorOutput();
                                         //store error log in file
@@ -139,7 +139,7 @@ class ocr_force extends Command
                                         //process success
                                         DB::table('documents')->where([
                                            ['doc_org', '=', $d->doc_org]
-                                        ])->update(['process_status'=>'ocred']);
+                                        ])->update(['process_status'=>'ocred','is_ocred'=>1]);
                                     }
                             }
                             else{

@@ -145,7 +145,41 @@ class notificationsController extends Controller
            }else{
               return "Something went wrong";
            }
+    }
+    
+    //notification linechart datas
+    public function getNotificationLineChartDatas(){
+            
+       //get users notification id in notification history
+        $notify_ids = DB::table('notifications_history')
+        ->where('notification_user_id', Auth::user()->id)
+        ->select('notification_id')
+        ->groupBy('notification_id')
+        ->get();
+    
+        if(count($notify_ids)>0){
+            foreach($notify_ids as $n){
+                $datas = [0.1];
+                //count total notification , group by day and year
+                $notify_datas = DB::table('notifications_history')
+                ->where('notification_id', $n->notification_id)
+                ->select(DB::raw('count(`notification_id`) as total_notif')) 
+                ->groupBy(DB::raw('DAY(created_at)'))
+                ->groupBy(DB::raw('YEAR(created_at)'))
+                ->orderBy('created_at', 'ASC')
+                ->get();
 
+                if(count($notify_datas)>0){
+                     foreach($notify_datas as $d){
+                        array_push($datas, $d->total_notif);
+                     }
+                     $n->notif_counts = $datas;
+                }else{
+                     $n->notif_counts = $datas;
+                }      
+            }
+        }
+        return json_encode($notify_ids);
     }
 
 

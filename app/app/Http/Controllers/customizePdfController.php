@@ -53,8 +53,8 @@ class customizePdfController extends Controller
     public function removeDocPages(Request $req){
 
         // documents locations
-        $docLocal   = 'static/documents_ocred/' . $req->doc_name;
-        $doc_output = 'static/documents_ocred/' . "output" . str_random(8) . ".pdf";
+        $docLocal   =  storage_path('app/documents_ocred') . '/' . $req->doc_name;
+        $doc_output =  storage_path('app/documents_ocred') . '/' . "output" . str_random(8) . ".pdf";
 		$pdf = new Pdf($docLocal);
 
 		// get document total pages.
@@ -81,9 +81,9 @@ class customizePdfController extends Controller
 		->select('document_pages.doc_page_image_preview','document_pages.doc_page_thumbnail_preview')
 		->get();
 		foreach($deleteDocPages as $dp){
-              $file1 = 'static/documents_images/'.$dp->doc_page_image_preview;
+              $file1 = storage_path('app/documents_images') . '/' . $dp->doc_page_image_preview;
               File::delete((string)$file1);
-              $file2 = 'static/documents_images/'.$dp->doc_page_thumbnail_preview;
+              $file2 = storage_path('app/documents_images') . '/' .$dp->doc_page_thumbnail_preview;
               File::delete((string)$file2);
 		}
         //delete datas
@@ -99,8 +99,8 @@ class customizePdfController extends Controller
 
         //qpdf in.pdf out.pdf --rotate=+90:2,4,6
         // documents locations
-        $docLocal   = 'static/documents_ocred/' . $req->doc_name;
-        $doc_output = 'static/documents_ocred/' . "output" . str_random(8) . ".pdf";
+        $docLocal   = storage_path('app/documents_ocred') . '/' . $req->doc_name;
+        $doc_output = storage_path('app/documents_ocred') . '/' . "output" . str_random(8) . ".pdf";
 
 
         $doc_pages =  implode(",",$req->doc_pages);
@@ -136,8 +136,8 @@ class customizePdfController extends Controller
 		foreach($rotate_doc_images as $key=>$dp){
 
             $new_file_name = str_random(10)."-".$dp->doc_page_image_preview;
-            $file1 = "static/documents_images/".$dp->doc_page_image_preview;
-            $file2 = "static/documents_images/".$new_file_name;
+            $file1 = storage_path('app/documents_images') . '/' . $dp->doc_page_image_preview;
+            $file2 = storage_path('app/documents_images') . '/' . $new_file_name;
 
 			$img = Image::make($file1);
 			// rotate image 45 degrees clockwise

@@ -75,8 +75,12 @@
    background-color: #fff;
  }
 
+.table-striped>thead>tr:nth-child(odd)>th {
+   background-color: #ebedf8;
+ }
 .table-hover tbody tr:hover td{
-  background-color: #b1d5ff !important;
+   background-color: #b1d5ff !important;
+   cursor: pointer;
 }
 
 .table-striped>tbody>tr:nth-child(even)>td,
@@ -85,12 +89,19 @@
 }
 /*-------------------------------------------------------*/
 
+.ocr_success {
+    color:#017cff;
+}
+
+.ocr_failed {
+     color:red;
+}
 </style>
 @endsection
 
 @section('content')
 
-<div class="row" ng-app="archive_app" ng-controller="archive_controller">
+<div class="row" ng-controller="archive_controller">
 
     <!-- search filter -->
     <div class="col-md-3">Search document
@@ -143,35 +154,43 @@
     <!-- table of documents -->
     <div class="col-md-12 ng-hide"  ng-show="doc_table">
         <div class="table-responsive" style="height:100%;">
-            <table class="table table-hover">
+            <table class="table table-hover table-striped">
                   <thead style="background-color:#ebedf8; color:#000; font-size:13px; ">
                     <th style="width:100px">
                         <input type="checkbox" id="archSelectAll" class="filled-in chk-col-blue"  ng-model="selectAll" ng-click="checkAll()" />
                         <label for="archSelectAll" style="margin-bottom:-12px" >#</label>
                     </th>
-                    <th>Document name</th>
-                    <th>Status</th>
-                    <th>Date ocred</th>
+                    <th>Date</th>
+                    <th>Recipient</th>
+                    <th>Sender</th>
+                    <th>Category</th>
+                    <th>OCRED</th>  
                     <th style="width:300px"> <span >Actions</span></th>
                   </thead>
                   <!-- | filter: dateRangeFilter('timestamp', dateFromTo) -->
-                  <tbody style="font-size:11px;">
+                  <tbody style="font-size:13px;">
                     <tr ng-repeat="data in filtered = (list | filter:search ) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit track by $index" >
                        <td>
                             <input type="checkbox" id="arch<#data.doc_id#>" class="filled-in chk-col-blue"  ng-model="data.select" />
                             <label for="arch<#data.doc_id#>"><#$index+1#></label>
                        </td>
-                       <td><# data.doc_ocr #></td>
-                       <td ng-bind-html="data.process_status | ocred_status"></td>
-                       <td ><# data.created_at #></td>
+                       <td><# data.date     | default #></td>
+                       <td><# data.receiver | default #></td>
+                       <td><# data.sender   | default #></td>
+                       <td><# data.category | default #></td>
+                       <td ng-bind-html="data.process_status  | ocr_status "></td>  
                        <td>
                           <span>
+                            
+                            <!-- document edit -->
                             <a ng-href="/document/<#data.doc_id#>" style="text-decoration: none">
                               <button type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="Edit document" tooltip-top>
                                   <i class="material-icons cstm_icon_btn_ico">edit</i>
                               </button>
                             </a>
-                            <a ng-href="/static/documents_ocred/<#data.doc_ocr#>" style="text-decoration: none" download>
+
+                            <!-- download document -->
+                            <a ng-href="/files/ocr/<#data.doc_ocr#>" style="text-decoration: none" download="<#data.download_format#>">
                             <button type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="View document" tooltip-top>
                                 <i class="material-icons cstm_icon_btn_ico">remove_red_eye</i>
                             </button>
@@ -179,7 +198,7 @@
 
                             <span ng-if="data.approved==0">
                               <!-- Download original document. -->
-                              <a ng-href="/static/documents_new/<#data.doc_org#>" style="text-decoration: none" download>
+                              <a ng-href="/files/org/<#data.doc_org#>" style="text-decoration: none" download="<#data.download_format#>">
                                 <button type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="Download original file" tooltip-top>
                                   <i class="material-icons cstm_icon_btn_ico">file_download</i>
                                 </button>
@@ -189,6 +208,7 @@
                                 <i class="material-icons cstm_icon_btn_ico">check</i>
                               </button>
                             </span>
+
                             <!-- customize document -->
                             <a ng-href="/customize_pdf/<#data.doc_id#>" style="text-decoration: none">
                             <button type="button" class="btn btn-default waves-effect cstm_icon_btn doc-upd-btn" data-toggle="tooltip" title="" data-original-title="Customize document" tooltip-top>
@@ -196,6 +216,7 @@
                             </button>
                             </a>
 
+                            <!-- delete document  -->
                             <button ng-click="deleteDocument(data.doc_id)" type="button" class="btn btn-default waves-effect cstm_icon_btn doc-upd-btn" data-toggle="tooltip" title="" data-original-title="Delete document" tooltip-top id="deleteDocBtn<#doc.doc_id#>">
                                 <i class="material-icons cstm_icon_btn_ico">delete_forever</i>
                             </button>
@@ -230,11 +251,9 @@
 
 <script type="text/javascript">
 
-//used angular interpolate for syntax compatibility
-var app = angular.module('archive_app', ['ui.bootstrap','ngSanitize'], function($interpolateProvider) {
-    $interpolateProvider.startSymbol('<#');
-    $interpolateProvider.endSymbol('#>');
-});
+
+//inject this app to rootApp
+var app = angular.module('app', ['ui.bootstrap','ngSanitize']);
 
 // custom directive for tooltip to work.  directive name tooltipTip.. dom attrib tooltip-top
 app.directive('tooltipTop', function() {
@@ -271,6 +290,28 @@ app.filter('ocred_status', function(){
             return data;
         }
       }
+});
+
+app.filter('default', function(){
+   return function(data){
+       if(data==null){
+           data = "N/D";
+           return data;
+       }
+       return data;
+   }
+});
+
+app.filter('ocr_status', function(){
+   return function(data){
+       if(data=="ocred_final"){
+           data = "<b class='ocr_success'>"+"YES"+"</b>";
+           return data;
+       }else{
+           data = "<b class='ocr_failed'>"+"NO"+"</b>";
+           return data;
+       }
+   }
 });
 
 app.controller('archive_controller', function($scope, $http, $timeout) {
@@ -353,6 +394,7 @@ $scope.approveDocument = function(doc_id,doc_org){
 // delete document
 $scope.deleteDocument = function(doc_id) {
 
+    var doc_ids = [doc_id];
     swal({
         title: "Delete document?",
         text: "You will not be able to recover this document after you delete.",
@@ -370,13 +412,14 @@ $scope.deleteDocument = function(doc_id) {
              $.ajax({
                 url: '/document/delete',
                 data: {
-                    doc_id: doc_id
+                    doc_id: doc_ids
                 },
                 type: 'POST',
                 success: function(data) {
                     swal("Deleted!", "Document has been deleted.", "success");
                     $scope.get_to_edit_documents();
                     $('.doc-upd-btn').removeAttr('disabled');
+                    console.log(data);
                 }
             }); //end ajax
         } else {

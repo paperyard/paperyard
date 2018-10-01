@@ -206,7 +206,7 @@ transform: scale(1.03) !important;
 @section('content')
 
 <!-- Hover Rows -->
-<div class="row" ng-app="merge_app" ng-controller="merge_controller">
+<div class="row" ng-controller="merge_controller">
 
       <div class="col-md-12">
           @if (session()->has('merge_success'))
@@ -266,7 +266,7 @@ transform: scale(1.03) !important;
                 <div class="image ">
 
                      <span ng-repeat="doc_1 in doc1 track by $index">
-                        <img ng-src="/static/documents_images/<#doc_1.doc_page_image_preview#>" class="img img1 img-responsive full-width"/>
+                        <img ng-src="/files/image/<#doc_1.doc_page_image_preview#>" class="img img1 img-responsive full-width"/>
                      </span>
 
                      <div class="content ng-hide" ng-show="doc1SelectPreloader">
@@ -329,7 +329,7 @@ transform: scale(1.03) !important;
 
                 <div class="image">
                      <span ng-repeat="doc_2 in doc2 track by $index">
-                        <img ng-src="/static/documents_images/<#doc_2.doc_page_image_preview#>" class="img img2 img-responsive full-width"/>
+                        <img ng-src="/files/image/<#doc_2.doc_page_image_preview#>" class="img img2 img-responsive full-width"/>
                      </span>
 
                      <div class="content ng-hide" ng-show="doc2SelectPreloader">
@@ -397,12 +397,10 @@ transform: scale(1.03) !important;
 @section('scripts')
 <script src="{{ asset('static/js/customize_pdf.js') }}"></script>
 <script type="text/javascript">
-//used angular interpolate for syntax compatibility
-var app = angular.module('merge_app', ['ngSanitize'], function($interpolateProvider) {
-    $interpolateProvider.startSymbol('<#');
-    $interpolateProvider.endSymbol('#>');
-});
 
+
+//inject this app to rootApp
+var app = angular.module('app', ['ngSanitize']);
 
 app.controller('merge_controller', function($scope, $http, $timeout, $q) {
 

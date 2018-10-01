@@ -104,7 +104,7 @@
 @section('content')
 
 <!-- Hover Rows -->
-<div class="row" ng-app="share_app" ng-controller="share_controller">
+<div class="row" ng-controller="share_controller">
 
 @if(count($check)>=1)
 	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -196,12 +196,9 @@
 @section('scripts')
 
 <script type="text/javascript">
-//used angular interpolate for syntax compatibility
-var app = angular.module('share_app', ['ngSanitize'], function($interpolateProvider) {
-    $interpolateProvider.startSymbol('<#');
-    $interpolateProvider.endSymbol('#>');
-});
 
+//inject this app to rootApp
+var app = angular.module('app', ['ngSanitize']);
 
 app.filter('pass', function(){
     return function(data)

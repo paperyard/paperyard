@@ -54,9 +54,10 @@ class ocr_txt_img extends Command
         // GET DOCUMENTS WITH OCR
         $time = time();
         $documents = DB::table('documents')->where([
-            ['t_process', '<=', $time],
-            ['process_status', '=', 'ocred']
-        ])->get();
+            ['t_process', '<=', $time]
+        ])
+        ->whereIn('process_status', ['ocred','failed_force'])
+        ->get();
 
         if(count($documents)>0){
 
@@ -72,7 +73,7 @@ class ocr_txt_img extends Command
 
                 foreach($documents as $d){
                         //check if file exist
-                        $filename = 'public/static/documents_ocred/' . $d->doc_ocr;
+                        $filename = 'storage/app/documents_ocred/' . $d->doc_ocr;
                         if (file_exists($filename)) {
 
                            $datas = [];
@@ -88,15 +89,15 @@ class ocr_txt_img extends Command
                                 $page_name = $d->doc_id . '-' . $pageNum . '-' . $str_r . '.png';
                                 $page_thumbnail_name = $d->doc_id . '-' . $pageNum . '-' . $str_r . '-' . 'thumbnail' . '.png';
                                 //page location.
-                                $page_loc = 'public/static/documents_images/' . $page_name;
-                                $page_thumb_loc = 'public/static/documents_images/' . $page_thumbnail_name;
+                                $page_loc = 'storage/app/documents_images/' . $page_name;
+                                $page_thumb_loc = 'storage/app/documents_images/' . $page_thumbnail_name;
                                 //convert pdf to page number.
                                 $pdf->setPage($pageNum)->saveImage($page_loc);
                                 //get text from converted image.
                                 $page_text = (new TesseractOCR($page_loc))->run();
                                 //make image thumbnail
                                 $image = Image::make($page_loc);
-                                $image->resize(100, 150);
+                                $image->resize(300, 420);
                                 $image->save($page_thumb_loc);
 
                                 //save database.
@@ -122,7 +123,8 @@ class ocr_txt_img extends Command
                                      //check if user has notifications for this document
                                      $this->CheckNotifications($d->doc_user_id, $d->doc_id, $d->doc_ocr);
                                      //remove empty pages.
-                                     $this->removeEmptyPages($prcs);
+                                     
+                                     //$this->removeEmptyPages($prcs);
 
                                 } //save doc success
 
@@ -132,14 +134,27 @@ class ocr_txt_img extends Command
                             }
 
                             try {
-                                DB::table('documents')->where([
-                                   ['doc_id', '=', $d->doc_id]
-                                ])->update(['process_status'=>'ocred_final']);
+
+                                if($d->is_ocred==1){
+                                    DB::table('documents')->where([
+                                       ['doc_id', '=', $d->doc_id]
+                                    ])->update(['process_status'=>'ocred_final']);
+                                }else{
+                                    DB::table('documents')->where([
+                                       ['doc_id', '=', $d->doc_id]
+                                    ])->update(['process_status'=>'ocred_final_failed']);
+                                }
+                                //get total pages of document
+                                $total_doc_pages = DB::table('document_pages')->where('doc_id', $d->doc_id)->pluck('doc_id');
+                                //update total number of pages
+                                $update_doc_pages = DB::table('documents')->where('doc_id', $d->doc_id)->update(['number_of_pages'=>count($total_doc_pages)]);
 
                             } catch(\Illuminate\Database\QueryException $err){
                              echo "error updating status";
                              // Note any method of class PDOException can be called on $err.
                             }
+
+
 
                       } //if file exist
                 }//foreach
@@ -200,10 +215,16 @@ class ocr_txt_img extends Command
                                     Mail::to($notify->se_receiver_email)->send(new sendNotification($se_data));
                                }
                                //====== Save notification history ========
+                                //get set user timezone
+                                $user_timezone = DB::table('users')->where('id', $doc_user_id)->select('user_timezone')->first();
+                                date_default_timezone_set($user_timezone->user_timezone);
+
                                 DB::table('notifications_history')
                                 ->insert([
-                                     'notification_id'=>$notify->notif_id,
-                                     'notification_user_id'=>$notify->notif_user_id
+                                    'notification_id'=>$notify->notif_id,
+                                    'notification_user_id'=>$notify->notif_user_id,
+                                    "created_at" =>  \Carbon\Carbon::now(),
+                                    "updated_at" =>  \Carbon\Carbon::now()
                                 ]);
                                //====================
 
@@ -219,24 +240,28 @@ class ocr_txt_img extends Command
                 $rm_pages = DB::table('document_pages')
                 ->whereIn('document_pages.doc_id', $doc_ids)
                 ->where('doc_page_text', "")
-                 ->join('documents', 'document_pages.doc_id', '=', 'documents.doc_id')
-                 ->select(
+                ->join('documents', 'document_pages.doc_id', '=', 'documents.doc_id')
+                ->select(
                     'documents.doc_ocr',
                     'documents.doc_id',
+                    'documents.is_ocred as iss_ocred',
                     'document_pages.doc_page_image_preview',
                     'document_pages.doc_page_thumbnail_preview',
                      DB::raw('group_concat(`doc_page_num`) as remove_pages')
                  )
-                 ->groupBy('document_pages.doc_id')
-                 ->get();
+                ->having('iss_ocred', '=', 1)
+                ->groupBy('document_pages.doc_id')
+                ->get();
+
+                $iss_ocred_ids = [];
 
                 //if doc with empty page found.
                 if(count($rm_pages)>=1){
                     foreach($rm_pages as $key=>$rm){
                         //document ocr location
-                        $doc_ocred =    'public/static/documents_ocred/'  . $rm->doc_ocr;
+                        $doc_ocred =    'storage/app/documents_ocred/'  . $rm->doc_ocr;
                         //output
-                        $doc_output =   'public/static/documents_ocred/'  . "rm_output-" . str_random(5) . ".pdf";
+                        $doc_output =   'storage/app/documents_ocred/'  . "rm_output-" . str_random(5) . ".pdf";
                         // remove empty page from document ============================
                         // total number of pages..
                         $pdf = new Pdf($doc_ocred);
@@ -259,28 +284,30 @@ class ocr_txt_img extends Command
                         $process[$key]->disableOutput();
                         $process[$key]->start();
                         $process[$key]->wait();
+
+                        array_push($iss_ocred_ids, $rm->doc_id);
                     }
                 }
 
                 //delete document images and thumbnail
                 $deleteImages = DB::table('document_pages')
-                ->whereIn('doc_id', $doc_ids)
+                ->whereIn('doc_id', $iss_ocred_ids)
                 ->where('doc_page_text', "")
                 ->select('document_pages.doc_page_image_preview','document_pages.doc_page_thumbnail_preview')
                 ->get();
 
                 foreach($deleteImages as $img){
                     //doc page image preview location
-                    $doc_image =    'public/static/documents_images/' . $img->doc_page_image_preview;
+                    $doc_image =    'storage/app/documents_images/' . $img->doc_page_image_preview;
                     File::delete((string)$doc_image);
                     //doc page image thumbnail location
-                    $doc_thumbnail = 'public/static/documents_images/' . $img->doc_page_thumbnail_preview;
+                    $doc_thumbnail = 'storage/app/documents_images/' . $img->doc_page_thumbnail_preview;
                     File::delete((string)$doc_thumbnail);
                 }
 
                 //delete doc pages from database.
                 $deleteDatas = DB::table('document_pages')
-                ->whereIn('doc_id', $doc_ids)
+                ->whereIn('doc_id', $iss_ocred_ids)
                 ->where('doc_page_text', "")
                 ->delete();
 

@@ -11,9 +11,10 @@
 /app/npm-debug.log
 /app/yarn-error.log
 /app/cronjobs_paperyard
-/app/public/static/documents_images/
-/app/public/static/documents_new/
-/app/public/static/documents_ocred/
-/app/public/static/documents_processing/
+/app/storage/app/documents_images/
+/app/storage/app/documents_new/
+/app/storage/app/documents_ocred/
+/app/storage/app/documents_processing/
+/app/storage/app/symfony_process_error_logs/
 .phpintel
 

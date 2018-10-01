@@ -2,9 +2,9 @@
 
 @section('page_title', 'Document')
 
-
 @section('custom_style')
 <link href="{{ asset('static/css/document.css') }}" rel="stylesheet">
+<link href="{{ asset('static/css/bootstrap-material-datetimepicker.css') }}" rel="stylesheet">
 <style type="text/css" media="screen">
 .lg-btn-tx {
 	font-size:18px;
@@ -35,11 +35,17 @@
 }
 
 .f_cover {
-	border: 3px solid #b1d5ff; border-radius: 4px; margin-top: 10px;
+	margin-top: 10px;
+  border: 3px solid #b1d5ff; border-radius: 4px;  
 }
 
 .f_cover div img {
 	width:100%;
+
+}
+
+.f_cover_img {
+  
 }
 
 .form-g-label span{
@@ -62,6 +68,23 @@
     .doc-upd-input { margin-top: 0px !important; }
 }
 
+
+/*--------------tags input --------------*/
+.bootstrap-tagsinput {
+    width:100%;
+}
+.bootstrap-tagsinput .tag {
+   background-color:#017cff !important;
+   font-size:13px !important;
+   color:#fff !important;
+}
+
+.bootstrap-tagsinput span {
+   color:#fff !important;
+   margin-left:0px;
+}
+
+
 </style>
 @endsection
 
@@ -74,17 +97,19 @@
 @endsection
 
 @section('content')
-<div class="row" ng-app="document" ng-controller="doc_controller">
+<div class="row" ng-controller="doc_view_controller">
+
 
   <div class="col-md-4" style="margin-top:-20px">
     <div class="doc_pages f_cover">
       @foreach($document_pages as $dp)
-      <div><img src="{{ asset('static/documents_images/') .'/'. $dp->doc_page_image_preview }}"></div>
+      <div class="f_cover_img"><img src="{{  url('/files/image') .'/'. $dp->doc_page_image_preview }}"></div>
       @endforeach
     </div>
   </div>
 
   <div class="col-md-8 doc-upd-input">
+
     <br>
     @foreach($document as $doc)
     <form  enctype="multipart/form-data" id="doc_upd_form" name="doc_upd_form"  ng-submit="updateDocument(); $event.preventDefault();">
@@ -123,11 +148,11 @@
         </div>
 
         <div class="col-md-6">
-          <div class="form-group form-group-lg form-g-label" style="margin-top:15px">
+          <div class="form-group form-group-lg form-g-label" style="margin-top:15px;">
             <div class="form-line frm-input">
-              <input name="doc_tags" type="text" class="form-control"  data-role="tagsinput" placeholder="" value="{{$doc->tags}}" required>
+              <input name="doc_tags" type="text" class="form-control"  data-role="tagsinput" placeholder="" value="{{$doc->tags}}" >
             </div>
-            <p>Tags*</p>
+            <p>Tags</p>
           </div>
         </div>
       </div>
@@ -136,18 +161,18 @@
         <div class="col-md-6">
           <div class="form-group form-group-lg form-g-label">
             <div class="form-line frm-input">
-              <input name="doc_category" type="text" class="form-control" placeholder="" value="{{$doc->category}}" required>
+              <input name="doc_category" type="text" class="form-control" placeholder="" value="{{$doc->category}}" >
             </div>
-            <span>Category*</span>
+            <span>Category</span>
           </div>
         </div>
 
         <div class="col-md-6">
           <div class="form-group form-group-lg form-g-label">
             <div class="form-line frm-input">
-              <input name="doc_memory" type="text" class="form-control" placeholder="" value="{{$doc->memory}}">
+              <input name="doc_reminder" type="text" class="form-control datepicker2" placeholder="" value="{{$doc->reminder}}">
             </div>
-            <span>Memory</span>
+            <span>Reminder</span>
           </div>
         </div>
       </div>
@@ -155,14 +180,14 @@
       @if($doc->tax_relevant=="on")
       <div class="row clearfix">
         <div class="col-md-12">
-          <input type="checkbox" name="doc_tax_r" id="doc_tax_r" class="filled-in chk-col-light-blue" checked>
+          <input type="checkbox" name="doc_tax_r" id="doc_tax_r" class="filled-in chk-col-blue" checked>
           <label for="doc_tax_r" >Tax relevant </label>
         </div>
       </div>
       @else
       <div class="row clearfix">
         <div class="col-md-12">
-          <input type="checkbox" name="doc_tax_r" id="doc_tax_r" class="filled-in chk-col-light-blue">
+          <input type="checkbox" name="doc_tax_r" id="doc_tax_r" class="filled-in chk-col-blue">
           <label for="doc_tax_r" >Tax relevant </label>
         </div>
       </div>
@@ -172,7 +197,7 @@
         <div class="col-md-12">
           <div class="form-group form-group-lg form-g-label">
             <div class="form-line frm-input">
-              <input name="doc_notes" type="text" class="form-control" placeholder="Notes*" value="{{$doc->note}}" required>
+              <input name="doc_notes" type="text" class="form-control" placeholder="Notes" value="{{$doc->note}}" >
             </div>
           </div>
         </div>
@@ -200,7 +225,9 @@
 
 @section('scripts')
 <script src="{{ asset('static/js/document.js') }}"></script>
+<script src="{{ asset('static/js/bootstrap-material-datetimepicker.js') }}"></script>
 <script type="text/javascript">
+
 
 $(function () {
        //Masked Input ============================================================================================================================
@@ -226,7 +253,7 @@ $(function () {
 
         // check if key is press.
 	    document.onkeydown = checkKey;
-		function checkKey(e) {
+		  function checkKey(e) {
 		    e = e || window.event;
 		    if (e.keyCode == '37') {
 		       // left arrow
@@ -236,17 +263,23 @@ $(function () {
 		       // right arrow
 		       $('.doc_pages').slick('slickNext');
 		    }
+      }
 
-}
+      //Datetimepicker plugin
+      $('.datepicker2').bootstrapMaterialDatePicker({
+          format: 'DD.MM.YYYY',
+          clearButton: true,
+          weekStart: 1,
+          time:false
+      });
+
 });
 
-//used angular interpolate for syntax compatibility
-var app = angular.module('document', [], function($interpolateProvider) {
-    $interpolateProvider.startSymbol('<#');
-    $interpolateProvider.endSymbol('#>');
-});
 
-app.controller('doc_controller', function($scope, $http, $timeout) {
+//inject this app to rootApp
+var app = angular.module('app', []);
+
+app.controller('doc_view_controller', function($scope, $http, $timeout) {
 
   $scope.sub_btn_p = true;
   $scope.sub_btn_d = false;
@@ -275,16 +308,18 @@ app.controller('doc_controller', function($scope, $http, $timeout) {
 		            type: 'POST',
 		            success: function(data) {
 		                if(data=="nothing_to_edit"){
-                        swal("Success", "Document datas updated", "success");
-                        window.location.replace('/dashboard');
+                          swal("Success", "Document datas updated", "success");
+                          window.location.replace('/dashboard');
+        
                     }
-                    if(parseInt(data)>=0){
-                        swal("Success", "Document datas updated", "success");
-                        window.location.replace('/document/'+data);
+                    else if(parseInt(data)>=0){
+                          swal("Success", "Document datas updated", "success");
+                          $timeout(function() { 
+                              window.location.replace('/document/'+data);
+                          }, 1500);
                     }else{
                         window.location.replace('/dashboard');
                     }
-
 		            }
 		        }); //end ajax
          }

@@ -40,7 +40,7 @@
 
 
 
-<div class="row clearfix lg-box" ng-app="share_public" ng-controller="share_public_controller">
+<div class="row clearfix lg-box" ng-controller="share_public_controller">
 
 
 @if($document->share_password == NULL)
@@ -54,7 +54,7 @@
     </div>
 
     <div class="col-sm-4 col-xs-4 rm-pm">
-      <a href="{{ asset('static/documents_ocred/'.$document->doc_ocr) }}" download>
+      <a href="{{ url('/files_public/ocr').'/'.$document->doc_ocr }}" download>
       <button type="button" class="btn bg-light-blue waves-effects shareBtn"  style="float:right">
         Download
       </button>
@@ -69,7 +69,7 @@
 
   <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12 col-md-offset-3 col-lg-offset-3">
     <div class="f_cover">
-      <img src="{{ asset('static/documents_images/'.$document->doc_page_image_preview) }}" class="img-responsive">
+      <img src="{{ url('/files_public/image').'/'.$document->doc_page_image_preview }}" class="img-responsive">
     </div>
   </div>
 @else
@@ -120,10 +120,8 @@
 
 <script type="text/javascript">
 
-var app = angular.module('share_public', [], function($interpolateProvider) {
-    $interpolateProvider.startSymbol('<#');
-    $interpolateProvider.endSymbol('#>');
-});
+//inject this app to rootApp
+var app = angular.module('app', []);
 
 app.controller('share_public_controller', function($scope, $http) {
 

@@ -120,7 +120,7 @@
 
 @section('content')
 
-<div class="row clearfix" ng-app="notification_app" ng-controller="notification_controller">
+<div class="row clearfix" ng-controller="notification_controller">
 
     @if (session()->has('notif_update_success'))
     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -389,14 +389,10 @@ function deleteNotification(){
 
 }
 
-//used angular interpolate for syntax compatibility
-var app = angular.module('notification_app', [], function($interpolateProvider) {
-    $interpolateProvider.startSymbol('<#');
-    $interpolateProvider.endSymbol('#>');
-});
+//inject this app to rootApp
+var app = angular.module('app', []);
 
 app.controller('notification_controller', function($scope, $http, $timeout) {
-
 
 $scope.base_notify   = [];
 $scope.submit_notify = true;

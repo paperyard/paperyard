@@ -25,6 +25,14 @@ mix.js('resources/assets/js/app.js', 'public/static/js')
         'node_modules/adminbsb-materialdesign/plugins/sweetalert/sweetalert.css',
         'node_modules/hover.css/css/hover.css',
     ],  'public/static/css/core_mix.css')
+    // SETTINGS ASSETS
+    .combine([
+       'node_modules/angular-drag-and-drop-lists/angular-drag-and-drop-lists.min.js',
+    ], 'public/static/js/settings.js')
+    // REGISTER ASSETS
+    .combine([
+       'node_modules/adminbsb-materialdesign/plugins/jquery-validation/jquery.validate.js',
+    ], 'public/static/js/register.js')
     // USER DASHBOARD ASSETS
     .combine([
        'node_modules/adminbsb-materialdesign/plugins/jquery-knob/jquery.knob.min.js',
@@ -64,7 +72,8 @@ mix.js('resources/assets/js/app.js', 'public/static/js')
     .combine([
        'node_modules/adminbsb-materialdesign/plugins/jquery-inputmask/jquery.inputmask.bundle.js',
        'node_modules/adminbsb-materialdesign/plugins/bootstrap-tagsinput/bootstrap-tagsinput.js',
-       'node_modules/slick-carousel/slick/slick.min.js'
+       'node_modules/slick-carousel/slick/slick.min.js',
+       'node_modules/adminbsb-materialdesign/plugins/momentjs/moment.js',       
     ], 'public/static/js/document.js')
     // CUSTOMIZE PDF ASSETS
     .combine([
@@ -121,4 +130,3 @@ mix.js('resources/assets/js/app.js', 'public/static/js')
     ], 'public/static/js/core_mix.js')
 
 mix.browserSync('http://localhost');
-

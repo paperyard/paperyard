@@ -7,6 +7,26 @@
 @section('custom_style')
 <style type="text/css" media="screen">
 
+/*---------paperyard custom button ----------------------*/
+
+.lg-btn-tx {
+	font-size:18px;
+	color:#017cff;
+	font-weight:bold
+}
+.lg-btn_x2 {
+	padding-left:15px;
+	padding-right:15px;
+	height:35px;
+	border:none;
+	border-radius:5px
+}
+.btn_color{
+	background-color:#b1d5ff
+}
+/* -------------------------------------------------------*/
+
+
 /* ===================== breadcrumb nav ======================*/
 .arrows li {
     background-color:#b1d5ff;
@@ -54,6 +74,83 @@
    color:#017cff;
 }
 
+/***************************** Dropzone Styling *****************************/
+
+/**
+ * The dnd-list should always have a min-height,
+ * otherwise you can't drop to it once it's empty
+ */
+.advancedDemo .dropzone ul[dnd-list] {
+    min-height: 42px;
+    margin: 0px;
+    padding-left: 0px;
+}
+
+.advancedDemo .dropzone li {
+    display: block;
+}
+
+/**
+ * Reduce opacity of elements during the drag operation. This allows the user
+ * to see where he is dropping his element, even if the element is huge. The
+ * .dndDragging class is automatically set during the drag operation.
+ */
+
+
+.advancedDemo .dropzone .dndDragging {
+    opacity: 0.7;
+}
+
+/**
+ * The dndDraggingSource class will be applied to the source element of a drag
+ * operation.
+ */
+.advancedDemo .dropzone .dndDraggingSource {
+    opacity: 0.5;
+}
+
+/**
+ * An element with .dndPlaceholder class will be added as child of the dnd-list
+ * while the user is dragging over it.
+ */
+.advancedDemo .dropzone .dndPlaceholder {
+    background-color: #ddd !important;
+    display: block;
+    min-height: 42px;
+}
+
+/***************************** Element type specific styles *****************************/
+
+/*.advancedDemo .dropzone .itemlist {
+    min-height: 120px !important;
+}*/
+
+.advancedDemo .dropzone .itemlist > li {
+    background-color: #017cff;
+    border: none;
+    border-radius: .25em;
+    color: #fff;
+    float: left;
+    font-weight: 700;
+    height: 40px;
+    margin-right: 10px;
+    padding: 10px;
+    text-align: center;
+}
+
+.advancedDemo .dropzone .itemlist > li:hover {
+   cursor: pointer;
+}
+
+.advancedDemo .dropzone .container-element {
+    margin: 19px;
+    background-color:#fff !important;
+}
+
+.advancedDemo .dropzone{
+    background-color:#fff !important;
+}
+
 
 </style>
 @endsection
@@ -67,11 +164,13 @@
 
 @section('content')
 
-<div class="row clearfix">
+<div class="row clearfix" ng-controller="settingsController">
 
 	<div class="col-md-12 col-lg-12 col-xs-12 col-sm-12">
 		<h4>General</h4>
 	</div>
+
+	<!-- SELECT TIMEZONE -->
 	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
 
 		<div class="card">
@@ -949,6 +1048,7 @@
 
 	</div>
 
+    <!-- IMPORT EMAIL -->
 	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
 
 		<div class="card">
@@ -971,16 +1071,105 @@
 
 	</div>
 
+		
+
+	 <!-- FILENAME FORMAT FOR DOWNLOADING -->
+	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+
+		<div class="card">
+		    <div class="advancedDemo">	
+			    <div ng-repeat="containers in model">
+			        <div class="dropzone box box-yellow">
+			        	
+						<ul dnd-list="containers"
+						    dnd-allowed-types="['container']">
+						    <li ng-repeat="container in containers">
+						        <div class="container-element box box-blue">
+						            <label>Drag and drop to customize download filename format</label>
+						            <ul dnd-list="container.items"
+						                dnd-allowed-types="['item']"
+						                dnd-horizontal-list="true"
+						                dnd-external-sources="true"
+						                class="itemlist">
+						                <li ng-repeat="item in container.items"
+						                    dnd-draggable="item"
+						                    dnd-type="'item'"
+						                    dnd-moved="container.items.splice($index, 1)">
+						                    <# item.label #>
+						                </li>
+						            </ul>
+						            <div class="clearfix"></div>
+						            <hr>
+					            	<button class="btn-flat btn_color main_color waves-effect lg-btn_x2 btn_no_folders" ng-click="saveFilenameFormat()">
+					            		<span class="lg-btn-tx">Save filename format</span>
+					            	</button>
+						        </div>
+						    </li>
+						</ul>
+
+			        </div>
+			    </div>
+			</div>    
+		</div>
+
+	</div>
+
+
 </div>
 
 @endsection
 
 @section('scripts')
-
+<script src="{{ asset('static/js/settings.js') }}"></script>
 <script type="text/javascript">
+
+//inject this app to rootApp
+var app = angular.module('app', ['dndLists']);
+
+app.controller('settingsController', function($scope, $http, $timeout) {
+
+     
+    $scope.saveFilenameFormat = function(){
+    	angular.forEach($scope.model, function(e){
+             angular.forEach(e, function(a){
+                 console.log(a.items);
+                 data = {
+                 	dataFormat: a.items
+                 }
+             });
+    	})
+
+	    $http.post('/settings/update_filename_format', data).success(function(data){
+	         if(data=="success"){
+	         	 swal("Success", "Filename format updated", "success");
+	         }else{
+	         	 swal("Error", "Something went wrong", "error");
+	         }
+	    });
+
+    } 
+
+	$scope.getFilenameFormat = function(){
+	  
+	    $http.get('/settings/get_d_filename_format').success(function(data){
+           // Initialize model
+		    $scope.model = [[]];
+		    angular.forEach(['move'], function() {
+		      var container = 
+		      {
+		      	items: data
+		      };
+		      $scope.model[0].push(container);
+		    });
+	    }); //end httpget
+	}
+
+	$scope.getFilenameFormat(); 
+	    
+});
+
 //copy clipboard
 $(document).on("change", ".t-zone", function() {
-
 	//your code here...
 	var placementFrom = $(this).data('placement-from');
 	var placementAlign = $(this).data('placement-align');
@@ -1000,9 +1189,7 @@ $(document).on("change", ".t-zone", function() {
 	    	showNotification(colorName, text, placementFrom, placementAlign, animateEnter, animateExit);
 	    }
 	}); //end ajax
-
 });
-
 
 function showNotification(colorName, text, placementFrom, placementAlign, animateEnter, animateExit) {
     if (colorName === null || colorName === '') { colorName = 'bg-black'; }
@@ -1039,6 +1226,9 @@ function showNotification(colorName, text, placementFrom, placementAlign, animat
             '</div>'
         });
 }
+
+
+
 
 </script>
 

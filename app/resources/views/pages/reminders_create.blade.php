@@ -111,6 +111,60 @@
    color:#017cff;
 }
 
+/* ------------table custom design -----------------*/
+
+.table-striped>tbody>tr:nth-child(odd)>td,
+.table-striped>tbody>tr:nth-child(odd)>th {
+   background-color: #fff;
+ }
+
+.table-striped>thead>tr:nth-child(odd)>th {
+   background-color: #ebedf8;
+ }
+.table-hover tbody tr:hover td{
+   background-color: #b1d5ff !important;
+   cursor: pointer;
+}
+
+.table-striped>tbody>tr:nth-child(even)>td,
+.table-striped>tbody>tr:nth-child(even)>th {
+   background-color: #ebedf8;
+}
+/*---------------------------------------------------*/
+
+/* --------- autocomplete ---------------------------*/
+.th-t {
+  background-color: #4ddb9f;
+}
+.th-f {
+  background-color: #ef5c8f;
+}
+.th-ft {
+  background-color: #fade45;
+}
+/*---------------------------------------------------*/
+
+.cstm_input {
+  background-color:#ebedf8;
+}
+
+.cstm_icon_btn {
+  padding:2px !important;
+  padding-left:5px !important;
+  padding-right:5px !important;
+  padding-top:0px !important;
+  margin-right:7px;
+}
+.cstm_icon_btn:hover {
+  background-color:  #017cff !important;
+  -webkit-transition: all .3s;
+     -moz-transition: all .3s;
+      -ms-transition: all .3s;
+       -o-transition: all .3s;
+          transition: all .3s;
+           color:#fff;
+}
+
 
 </style>
 @endsection
@@ -123,7 +177,7 @@
 @endsection
 
 @section('content')
-<div class="row clearfix" ng-app="reminder_app" ng-controller="reminder_controller" ng-click="clear()"><br>
+<div class="row clearfix" ng-controller="reminder_controller" ng-click="clear()"><br>
     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
 
         <div class="block-header">
@@ -154,25 +208,77 @@
             </div>
 
             <div class="body">
-
-                <form enctype="multipart/form-data" name="reminderForm"  ng-submit="saveReminder(); $event.preventDefault();">
-                    <div class="form-group">
-                        <div class="form-line">
-                            <input type="text" name="reminder_document" ng-model="reminders.reminder_document"  ng-model-options='{ debounce: 500 }' ng-change="attachDocument()" class="form-control" placeholder="Attach document.(optional)..search name here.">
-                        </div>
-                        <div class="row">
-                          <div class="col-md-12 col-sm-12 col-xs-12 col-lg-12 list-group-autocomplete " >
-                              <div class="list-group ">
-                                 <a  class="list-group-item d_ac_list" ng-click="selectAttach(doc.doc_id,doc.doc_ocr)" ng-repeat="doc in documents track by $index" ng-show="documents!=null && documents.length>0">
-                                      <# doc.doc_ocr #>
-                                </a>
-                                 <a  class="list-group-item d_ac_list ng-hide" ng-show="no_doc_found">
-                                      No document found..
-                                </a>
-                             </div>
+                <!-- Search input  -->
+                <input type="text" class="form-control search_inp cstm_input" placeholder="Search document."  ng-model-options='{ debounce: 1000 }' ng-change="onChangeInput()" ng-model="doc_keyword" ng-keydown="searchKeyPress($event)">
+                <div class="row cleafix" >
+                  <div class="col-md-12 col-sm-12 col-xs-12 col-lg-12 list-group-autocomplete " >
+                    <div class="list-group" style="margin-right:10px;">
+                      <!-- AUTCOMPLETE TAGS -->
+                      <a ng-click="searchDocuments(tag,'tag')" class="list-group-item th-t" ng-repeat="tag in ac_tags track by $index" ng-show="ac_tags!='not_found' && ac_tags!=null">
+                        <# tag #>
+                      </a>
+                      <!-- AUTCOMPLETE FOLDERS  -->
+                      <a ng-click="searchDocuments(folder.folder_name,'folder')" class="list-group-item  th-f" ng-repeat="folder in ac_folders track by $index" ng-show="ac_folders!='not_found' && ac_folders!=null">
+                        <# folder.folder_name #>
+                      </a>
+                      <!-- AUTCOMPLETE FULLTEXT -->
+                      <a ng-click="searchDocuments(fulltext,'fulltext')" class="list-group-item  th-ft" ng-repeat="fulltext in ac_fulltext track by $index" ng-show="ac_fulltext!='not_found' && ac_fulltext!=null">
+                        <# fulltext #>
+                      </a>
+                      <!-- NO RESULT FOUND -->
+                      <a  class="list-group-item  ng-hide" ng-show="no_result_found">
+                         No result found...
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                <!-- ------Search results table------- -->
+                <div class="table-responsive" style="margin-top:15px">                
+                  <table class="table table-hover ng-hide table-striped" ng-show="rm_table">
+                      <thead style="background-color:#ebedf8; color:#000; font-size:13px; ">
+                        <th>#</th>
+                        <th>Date</th>
+                        <th>Recipient</th>
+                        <th>Sender</th>
+                        <th>Category</th>
+                        <th>Actions</th>
+                      </thead>
+                      <tbody style="font-size:13px;">
+                        <tr ng-repeat="data in documents track by $index">
+                          <td><#$index+1#></td>
+                          <td><# data.date     | default #></td>
+                          <td><# data.receiver | default #></td>
+                          <td><# data.sender   | default #></td>
+                          <td><# data.category | default #></td>
+                          <td style="width:50px">
+                              <!-- View document page -->
+                              <button type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="View document" tooltip-top>
+                                <i class="material-icons cstm_icon_btn_ico">remove_red_eye</i>
+                              </button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <center>
+                      <div class="preloader ng-hide center-block" ng-show="rm_tb_preloader" style="margin-top:50px">
+                        <div class="spinner-layer pl-blue">
+                          <div class="circle-clipper left">
+                            <div class="circle"></div>
+                          </div>
+                          <div class="circle-clipper right">
+                            <div class="circle"></div>
                           </div>
                         </div>
-                    </div>
+                      </div>
+
+                      <div class="center-block ng-hide" ng-show="rm_tb_not_found" style="margin-top:50px">
+                        <h4 style="color:red">No document found.</h4>
+                      </div>
+                    </center>
+                </div>
+
+                <form enctype="multipart/form-data" name="reminderForm"  ng-submit="saveReminder(); $event.preventDefault();">
+                    <br>
                     <div class="form-group">
                         <div class="form-line">
                             <input type="text" name="reminder_title" ng-model="reminders.reminder_title"  class="form-control" placeholder="Reminder Title." required>
@@ -181,7 +287,7 @@
 
                      <div class="form-group">
                         <div class="form-line">
-                            <textarea rows="1" class="form-control no-resize auto-growth" name="reminder_message" ng-model="reminders.reminder_message"  id="notification_message" placeholder="Enter notification message...press ENTER to create new line." required></textarea>
+                            <textarea rows="1" class="form-control no-resize auto-growth" name="reminder_message" ng-model="reminders.reminder_message"  id="notification_message" placeholder="Message...press ENTER to create new line." required></textarea>
                         </div>
                     </div>
 
@@ -224,100 +330,190 @@ $(function () {
 
 });
 
-//used angular interpolate for syntax compatibility
-var app = angular.module('reminder_app', [], function($interpolateProvider) {
-    $interpolateProvider.startSymbol('<#');
-    $interpolateProvider.endSymbol('#>');
+//inject this app to rootApp
+var app = angular.module('app', []);
+
+app.filter('default', function(){
+   return function(data){
+       if(data==null){
+           data = "____";
+           return data;
+       }
+       return data;
+   }
 });
 
 app.controller('reminder_controller', function($scope, $http, $timeout, $q) {
 
 $scope.canceler = $q.defer();
+$scope.search_canceler = $q.defer();
+
 $scope.reminders = [];
 $scope.search_preloader = false;
-$scope.no_doc_found = false;
+$scope.rm_table = false;
+$scope.rm_tb_preloader = false;
+$scope.rm_tb_not_found = false;
 $scope.save_rm_btn = true;
-$scope.attach_doc_id = null;
 
 $scope.saveReminder = function(){
 
     $scope.wait();
     $scope.save_rm_btn = false;
-
     data = {
         save_reminder:true,
         rm_title:$scope.reminders.reminder_title,
         rm_message:$scope.reminders.reminder_message,
         rm_time:$scope.reminders.reminder_time
     }
-
     if($scope.attach_doc_id != '' && $scope.attach_doc_id != null && $scope.attach_doc_id != undefined){
         data.attach_doc_id = $scope.attach_doc_id;
     }
-
     $http.post('/reminder_save_update', data).success(function(data){
            window.location.replace('/reminders');
     });
-
 }
 
-$scope.attachDocument = function(){
-    // cancel all previous http request
-    $scope.canceler.resolve();
-    // reinit canceler. new request can be made.
-    $scope.canceler = $q.defer();
-    $scope.clearAttach();
-    $scope.search_preloader = true;
-    data = {
-         doc_keyword: $scope.reminders.reminder_document
-    }
-    $http({method:'POST',url:'/reminder_documents', data, timeout: $scope.canceler.promise}).success(function(data){
-         $scope.documents = data;
-         $scope.search_preloader = false;
-         if(data.length<=0){
-            $scope.no_doc_found = true;
-         }
-    });
-}
 
 $scope.wait = function(){
-
     $('.card').waitMe({
         effect: 'win8_linear',
         text: 'Please wait...',
         bg: 'rgba(255,255,255,0.90)',
         color: '#555'
     });
-
-}
-
-$scope.selectAttach = function(doc_id, doc_name){
-   $scope.reminders.reminder_document = doc_name;
-   $scope.attach_doc_id = doc_id;
-   $scope.clearAttach();
-}
-
-$scope.clear = function(){
-   if($scope.search_preloader==false){
-      $scope.clearAttach();
-   }
-}
-
-$scope.clearAttach = function(){
-   $scope.documents = null;
-   $scope.no_doc_found = false;
 }
 
 // on keypress check key
 $scope.searchKeyPress = function(keyEvent) {
-  //if key === 8 === backspace. clear autocomplete
-  if (keyEvent.which === 8){
-     $scope.clearAttach();
+
+  //if key == 13 == ENTER  search document.
+  if (keyEvent.which === 13){
+      //delay function for 1 second
+      $timeout( function()
+      {
+        // method to be executed;
+        $scope.searchDocuments($scope.doc_keyword,'no_filter');
+        $scope.search_preloader = false;
+      }, 1000); //end timeout.
   }
-}; // end searchKeyPress..
+  // key 8 = backspace. clear autocomplete
+  if (keyEvent.which === 8){
+    $scope.clear_autocomplete();
+    if($scope.doc_keyword==""){
+        //hide searching autocomplete preloader
+        $scope.search_preloader = false;
+        //hide not found 
+        $scope.rm_tb_not_found = false;
+    }
+  }
+};
+
+// clear autocomplete on search bar
+$scope.clear_autocomplete = function(){
+  $scope.ac_tags     = null;
+  $scope.ac_folders  = null;
+  $scope.ac_fulltext = null;
+  $scope.no_result_found = false;
+}
+
+$scope.preloader_table_data_show = function(){
+  $scope.rm_table = false;
+  $scope.rm_tb_preloader = true;
+  $scope.rm_tb_not_found = false;
+}
+
+$scope.preloader_table_data_hide = function(){
+  $scope.rm_table = true;
+  $scope.rm_tb_preloader = false;
+  $scope.rm_tb_not_found = false;
+}
+
+$scope.show_not_found = function(){
+  $scope.rm_table = false;
+  $scope.rm_tb_preloader = false;
+  $scope.rm_tb_not_found = true;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+//oninput change search autocomplete.
+$scope.onChangeInput = function(){
+    //cancel previous autocomplete post request.
+    $scope.canceler.resolve();
+    //reinit $q.defer make new autocomplete post request
+    $scope.canceler = $q.defer();
+    // check if search input has value
+    if($scope.doc_keyword!="" && $scope.doc_keyword!=null && $scope.doc_keyword!=undefined){
+        
+      $scope.search_preloader = true;
+      //clear dropdown autocomplete
+      $scope.clear_autocomplete();
+      //store keyword to data to be passed in post request
+      data = {
+          doc_keyword: $scope.doc_keyword
+      }
+      //make post request to get if keyword is found in documents tags,folder or page text.
+      $http({method:'POST',url:'/common_search/autocomplete', data, timeout: $scope.canceler.promise}).success(function(data){
+          //if notthing is found, show not found dropdown result.
+          if(data.tags=="not_found" && data.folders=="not_found" && data.fulltext=="not_found"){
+            //not found
+            $scope.no_result_found = true;
+          }else{
+            //store result to be displayed in autocomplete.
+            $scope.ac_tags     = data.tags;
+            $scope.ac_folders  = data.folders;
+            $scope.ac_fulltext = data.fulltext;
+          }
+          $scope.search_preloader = false;
+      });
+    }
+}
+
+// search document by selecting autocomplete
+$scope.searchDocuments = function(keyword,filter){
+    //hide search autocomplete preloader
+    $scope.clear_autocomplete();
+    //show table preloader
+    $scope.preloader_table_data_show();
+    //cancel autocomplete request
+    $scope.canceler.resolve(); 
+    //cancel previous selectSearch post request
+    $scope.search_canceler.resolve();
+    //reinit $q.defer to make new post request.
+    $scope.search_canceler = $q.defer();
+    //put selected autocomplete keyword to search bar
+    $scope.doc_keyword = keyword;
+
+    data = {
+       doc_keyword: keyword,
+       doc_filter:  filter
+    }
+    //filter = tag,folder,fulltext
+    $http({method:'POST',url:'/common_search/select_search', data, timeout: $scope.search_canceler.promise}).success(function(data){
+       
+       if(data=="error"){
+          $scope.show_not_found();
+       }else{
+          $scope.preloader_table_data_hide();
+          //pass result to scope documents to be rendered in table
+          $scope.documents = data;
+          //make documents table visible
+          $scope.documents_table = true;
+          //hide preloader
+          $scope.dashboard_preloader = false;
+          //output result in consolo -> remove this in production
+       }
+       console.log(data);
+    });
+}
+//---------------------------------------------------------------------------------------------------------------------------
 
 
-});
+
+
+
+
+}); //end controller
 
 </script>
 @endsection

@@ -1,11 +1,6 @@
 version: '3'
 services:
   paperyard:
-    build: .
-    container_name: paperyard
-    tty: true
     ports:
      - "80:80"
-
-
 

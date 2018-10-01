@@ -19,6 +19,7 @@ use Mail;
 use App\Mail\sendNotification;
 
 
+// cache controller composer dump-autoload
 class foldersController extends Controller
 {
     // FOLDER VIEWS
@@ -32,26 +33,70 @@ class foldersController extends Controller
     public function returnFolders(){
 
             try{
-
-              $folders = DB::table('folders')->where('folder_user_id', Auth::user()->id)
-              ->leftJoin('documents', 'folders.folder_id','=','documents.doc_folder_id')
-              ->leftJoin('document_pages', 'documents.doc_id', 'document_pages.doc_id')
-              ->select('folders.folder_name',
+                /*
+                   get users folders, 
+                   count number of documents inside folder,
+                   get latest id inside folder, get latest date of docs
+                */
+                $folders = DB::table('folders')->where('folder_user_id', Auth::user()->id)
+                ->leftJoin('documents', 'folders.folder_id','=','documents.doc_folder_id')
+                // ->leftJoin('document_pages', 'documents.doc_id', 'document_pages.doc_id')
+                ->select('folders.folder_name',
                        'folders.folder_id',
                        'folders.folder_user_id',
                        'folders.created_at as folder_date_created',
                        'documents.doc_id',
                        'documents.doc_org',
                        'documents.approved',
-                       DB::raw('max(document_pages.doc_page_thumbnail_preview) as thumb'),
-                       DB::raw('count(documents.doc_folder_id) as total_c'),
+                       // DB::raw('max(document_pages.doc_page_thumbnail_preview) as thumb'),
+                       DB::raw('count(documents.doc_id) as total_c'),
                        DB::raw('max(documents.doc_id) as latest_id'),
                        DB::raw('max(documents.created_at) as latest_date')
                        )
-              ->groupBy('folders.folder_name')
-              ->get();
+                ->groupBy('folders.folder_name')
+                ->get();
 
-                if(count($folders)>=1){
+                if(count($folders)>0){
+
+                    foreach($folders as $key=>$f){
+                        //change date format
+                        $n_date = new \DateTime($f->latest_date);
+                        $short_date = date_format($n_date,"y.m.d");
+                        $f->short_date = $short_date;
+                        //get image thumbnail for each latest document 
+                        if($f->latest_id!=null && $f->latest_id != ""){
+                            $doc_thumbnail = DB::table('document_pages')
+                            ->where('document_pages.doc_id', (int)$f->latest_id)
+                            ->select('doc_page_thumbnail_preview','doc_page_num','doc_id')
+                            ->orderBy('doc_page_num', 'DESC')
+                            ->groupBy('doc_id')
+                            ->first();
+                            $f->thumb = $doc_thumbnail->doc_page_thumbnail_preview;
+                        }else{
+                            $f->thumb = null;
+                        }
+                        
+                        $lc_datas = [0.1];
+                        //select counts of documents each week for line chart
+                        $docs = DB::table('documents')
+                        ->where('doc_folder_id', $f->folder_id)
+                        ->select(DB::raw('count(`doc_id`) as num_of_documents'))   
+                        ->groupBy(DB::raw('WEEK(created_at)'))
+                        ->groupBy(DB::raw('YEAR(created_at)'))
+                        ->get();
+
+                        if(count($docs)>0){
+                            foreach($docs as $d){
+                                array_push($lc_datas, $d->num_of_documents);
+                            }
+                            $f->line_chart_datas = $lc_datas;
+                        }else{
+                            $f->line_chart_datas = $lc_datas;
+                        }
+
+                    }
+
+                    // $docs_linechart_datas = DB::table('')
                     $json_response = json_encode($folders);
                     return $json_response;
                 }
@@ -102,20 +147,20 @@ class foldersController extends Controller
 
                 array_push($doc_idz, $dd->doc_id);
 
-                $file1 = 'static/documents_new/' .        $dd->doc_org;
+                $file1 = storage_path('app/documents_new') . '/' .        $dd->doc_org;
                 File::delete((string)$file1);
-                $file2 = 'static/documents_processing/' . $dd->doc_prc;
+                $file2 = storage_path('app/documents_processing') . '/' . $dd->doc_prc;
                 File::delete((string)$file2);
-                $file3 = 'static/documents_ocred/' .      $dd->doc_ocr;
+                $file3 = storage_path('app/documents_ocred') . '/' .      $dd->doc_ocr;
                 File::delete((string)$file3);
             }
 
             // DELETE IMAGE PREVIEWS
             $docs_pp = DB::table('document_pages')->whereIn('doc_id', $doc_idz)->get();
             foreach($docs_pp as $dp){
-                $file1 = 'static/documents_images/' . $dp->doc_page_image_preview;
+                $file1 = storage_path('app/documents_images') . '/' . $dp->doc_page_image_preview;
                 File::delete((string)$file1);
-                $file2 = 'static/documents_images/' . $dp->doc_page_thumbnail_preview;
+                $file2 = storage_path('app/documents_images') . '/' . $dp->doc_page_thumbnail_preview;
                 File::delete((string)$file2);
             }
 
@@ -162,92 +207,83 @@ class foldersController extends Controller
     // return documents from specific folder
     public function folderDocuments(Request $req){
 
-         // return folder for this user.
-         $folders = DB::table('folders')->where('folder_user_id', Auth::user()->id)->select('folders.folder_id','folders.folder_name')->get();
+        // return folder for this user.
+        $folders = DB::table('folders')->where('folder_user_id', Auth::user()->id)->select('folders.folder_id','folders.folder_name')->get();
         //return documents finished editing.
-         if(count($folders)<=0){
-            $folders = '';
-         }
-         $archive_docs = DB::table('documents')->where([
-             ['doc_user_id','=',Auth::user()->id],
-             ['process_status','=','ocred_final'],
-             ['is_archive','=',1],
-             ['doc_folder_id','=',$req->folder_id]
-         ])->get();
+        if(count($folders)<=0){
+        $folders = '';
+        }
+        $archive_docs = DB::table('documents')->where([
+         ['doc_user_id','=',Auth::user()->id],
+         ['process_status','=','ocred_final'],
+         ['is_archive','=',1],
+         ['doc_folder_id','=',$req->folder_id]
+        ])->get();
+
+        $archive_docs = $this->generateDownloadFormat($archive_docs);
         $json_response = json_encode(array('archive_docs' => $archive_docs,'folders'=>$folders));
         // # Return the response
         return $json_response;
 
     }
 
+     public function generateDownloadFormat($datas){
+        $format = "";
+        $ext = ".pdf";
+        $dash = "-";
+        $d_date = new \DateTime();
+        $date   = date_format($d_date, "ymd");
+
+        $arrFormat = explode(',',Auth::user()->download_filename_format);
+        foreach($datas as $key=>$d){
+            foreach($arrFormat as $key2=>$f){
+                if($f=="YYMMDD"){
+                    $format .= $date.$dash;
+                }
+                elseif($f=="doc_ocr"){
+                    $format .= substr($d->$f, 0, -14).$dash;
+                }
+                else{
+                   if($d->$f!=""){ 
+                        $format .= $d->$f.$dash;
+                   } 
+                }
+            }
+            //insert new object 
+            $d->download_format = substr($format, 0, -1).$ext;
+            $format = "";
+
+            if($d->date=="0000-00-00 00:00:00"){
+                $d->date = "N/D";
+            }else{
+              $n_date = new \DateTime($d->date);
+              $short_date = date_format($n_date,"d.m.Y");
+              $d->date = $short_date;
+            }
+        }
+        return $datas;  
+    }
+
+
+
+
 
     public function serverTest(){
+       
 
-         // DASHBOARD
-         // $test  = DB::table('documents')
-         // ->select(
-         //   'documents.created_at',
-         //    DB::raw('count(`doc_id`) as documents'),
-         //    DB::raw('DAYNAME(`created_at`) as day')
-         // )
-         // ->whereBetween('created_at', [\Carbon\Carbon::now()->startOfWeek(),\Carbon\Carbon::now()->endOfWeek()])
-         // ->groupBy(DB::raw('WEEKDAY(created_at)'))
-         // ->get();
+           $prs_stat = ['ocred_final','ocred_final_failed'];
+         //return no of archived docs for knob
+         $knob = DB::table('documents')->where([
+             ['doc_user_id','=',Auth::user()->id],
+             ['is_archive','=',1]
+         ])
+         ->whereIn('process_status',$prs_stat)
+         ->whereBetween('created_at', [\Carbon\Carbon::now()->startOfWeek(),\Carbon\Carbon::now()->endOfWeek()])
+         ->count();
 
-         // var_dump($test);
-
-
-         // SEARCH
-
-         // $years = DB::table('documents')
-         // ->select(
-         //     DB::raw('count(`doc_id`) as num_of_documents'),
-         //     DB::raw('MONTHNAME(`created_at`) as months'),
-         //     DB::raw('YEAR(created_at) as year')
-         // )
-         // ->groupBy(DB::raw('MONTH(created_at)'))
-         // ->groupBy(DB::raw('YEAR(created_at)'))
-         // ->get();
-
-         // $year_range = [];
-         // //get years
-         // $years = DB::table('documents')
-         // ->select(DB::raw('YEAR(created_at) as year'))
-         // ->groupBy(DB::raw('YEAR(created_at)'))
-         // ->get();
-
-         // foreach($years as $year){
-         //      array_push($year_range, $year->year);
-         // }
-
-         // foreach($year_range as $yr){
-         //      echo $yr . "<br>";
-         // }
-
-         // var_dump($years);
-
-
-        // $img = Image::make('static/documents_images/2-1-0IH1l.png');
-
-        // // rotate image 45 degrees clockwise
-        // $img->rotate(+90);
-        // $img->save('static/documents_images/xxxx-1.png');
-
-        // echo "success";
-
-        $folder_id = 1;
-        $qwe = $this->returnResult($folder_id);
-
+      
     }
 
-    public function returnResult($param){
-        $test = DB::table('documents')
-        ->where('doc_folder_id', $param)
-        ->select('documents.doc_ocr')
-        ->get();
-
-        return $test;
-    }
 
 
 

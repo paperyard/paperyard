@@ -19,7 +19,11 @@
 }
 
 .view2_div {
-	border: 2px solid #017cff; border-radius: 4px; margin-top: 10px; cursor: pointer;
+	border: 2px solid #b1d5ff; border-radius: 4px; margin-top: 10px; cursor: pointer;
+}
+
+.view2_div:hover {
+	border: 2px solid #017cff;
 }
 
 .view2_div img {
@@ -39,13 +43,26 @@
 	padding:10px;
 }
 
+.view3_container:hover {
+	-webkit-box-shadow: 0px 1px 5px 1px rgba(145,177,214,1);
+	-moz-box-shadow: 0px 1px 5px 1px rgba(145,177,214,1);
+	box-shadow: 0px 1px 5px 1px rgba(145,177,214,1);
+	cursor: pointer;
+}
+
+.view3_container:hover img{
+    border: 2px solid #017cff;
+} 
+
 .view3_div img {
 	width:130px;
-	border: 2px solid #017cff; border-radius: 2px;
+	border: 2px solid #b1d5ff; border-radius: 2px;
 }
+
 .view3_card_d {
 	top:0; position:absolute;
 }
+
 .view3_card_d li {
 	margin:10px;
 }
@@ -77,7 +94,7 @@
 
 .list-group-autocomplete{
    position:absolute !important;
-   z-index:100 !important;
+   z-index:5 !important;
 }
 
 .hideBarChart {
@@ -156,7 +173,83 @@
 }
 
 .tab_view_space {
-  margin-left:10px;
+  margin-left:15px;
+}
+
+.image{
+    position:relative;
+    overflow:hidden;
+    padding-bottom:120%;
+    margin-top:15px;
+}
+.image img{
+    position:absolute;
+    width:100%;
+    max-height:100%;
+    border:1px solid #b1d5ff;
+    border-radius: 5px;
+}
+
+.image img:hover{
+    border:1px solid #017cff;
+}
+
+/* ------------table custom design -----------------*/
+
+.table-striped>tbody>tr:nth-child(odd)>td,
+.table-striped>tbody>tr:nth-child(odd)>th {
+   background-color: #fff;
+ }
+
+.table-striped>thead>tr:nth-child(odd)>th {
+   background-color: #ebedf8;
+ }
+.table-hover tbody tr:hover td{
+   background-color: #b1d5ff !important;
+   cursor: pointer;
+}
+
+.table-striped>tbody>tr:nth-child(even)>td,
+.table-striped>tbody>tr:nth-child(even)>th {
+   background-color: #ebedf8;
+}
+
+/*---------------------------------------------------*/
+
+.cstm_input {
+	background-color:#ebedf8;
+}
+
+.canvasStyle {
+	width:100% !important; max-height:110px; margin-left:-20px;
+
+}
+
+@media handheld and (min-width: 1000px), 
+  screen and (min-width: 1000px){
+     .filter-m {
+        float:right;
+     }
+}
+
+@media handheld and (max-width: 500px), 
+  screen and (max-width: 500px){
+     .filter-txt-m{
+     
+     }
+}
+
+.fx_index {
+	z-index:2;
+}
+.q_btn {
+     color:#b1d5ff;
+     font-size:22px;
+     margin-left:5px;
+     cursor: pointer;
+}
+.q_btn:hover {
+     color:#017cff;
 }
 
 </style>
@@ -171,33 +264,38 @@
 
 
 @section('content')
-<div class="row" ng-app="search_doc" ng-controller="searc_doc_controller" ng-cloack ng-click="clearTypeHead()">
+<div class="row" ng-controller="searc_doc_controller" ng-cloack ng-click="clear_autocomplete()">
 
 
-	<div class="col-md-12">
-
-	   <h3 style="margin:0px; padding:0px" class="pull-left">Search</h3>
-
-	   <ul class="list-inline pull-right">
+	<div class="col-md-3 col-xs-12 col-sm-12 hidden-xs" style="margin-top:-3px !important">
+	   <h3 style="margin:0px; padding:0px" class="pull-left">Search<i class="fa fa-question-circle q_btn fx_index" data-toggle="modal" data-target="#largeModal"></i></h3>
+    </div>
+	<div class="col-md-5  filter-m">
+		<!-- Tablet | Desktop filter -->
+	    <ul class="list-inline  filter-m filter-txt-m">
 			<li>
                 <input ng-model="filter" ng-value="'no_filter'" name="no_filter" type="radio" id="radio_0" class="radio-col-grey"/>
 				<label for="radio_0">= No filter</label>
-
+             </li>
+            <li> 
 				<input ng-model="filter" ng-value="'full_text'" name="filter_g"  type="radio" id="radio_1" class="radio-col-yellow "/>
 				<label for="radio_1">= @lang('search_doc.full_text_tx')</label>
-
+             </li> 
+             <li> 
 				<input ng-model="filter" ng-value="'tag'" name="filter_g" type="radio" id="radio_2"  class="radio-col-green" />
 				<label for="radio_2">= @lang('search_doc.tag_tx')</label>
-
+             </li>
+             <li>
 				<input ng-model="filter" ng-value="'folder'" name="filter_g" type="radio" id="radio_3"  class="radio-col-red"/>
 				<label for="radio_3">= @lang('search_doc.f_folder_tx')</label>
 			</li>
 		</ul>
 
+
 	</div>
 
 	<div class="col-md-12">
-		<input type="text" class="form-control form-control-lg" id="usr" ng-model="keyword" ng-model-options='{ debounce: 1000 }' ng-change="autoComplete()" ng-keydown="myFunct($event)">
+		<input type="text" class="form-control input-lg cstm_input" id="usr" ng-model="keyword" ng-model-options='{ debounce: 1000 }' ng-change="autoComplete()" ng-keydown="myFunct($event)">
         <div class="row cleafix">
 	        <div class="col-md-3 ">
 		        <div class="list-group list-group-autocomplete">
@@ -218,11 +316,20 @@
 		</div>
 		<br>
 	</div>
-    	  <!-- preloader -->
-    <div class="col-md-12 ">
+    
+    <div class="col-md-12" style="max-height:120px;" >
+    	<table style="width:100%;" id="myChart" class="hideBarChart">
+    		 <tr  id="canvasHolder"></tr>
+    		 <tr>
+    		 	<td  ng-repeat="year in bar_year_range track by $index" ><label style="position:absolute; margin-top:-8px; font-weight: bold"><#year | short_year #></label></td>
+    		 </tr>
+    	</table>
+    </div>
 
+    <!-- preloader -->
+    <div class="col-md-12 ">
       <center>
-        <div class="preloader ng-hide center-block" ng-show="doc_loader" style="margin-top:100px">
+        <div class="preloader ng-hide center-block" ng-show="doc_loader">
             <div class="spinner-layer pl-blue">
                 <div class="circle-clipper left">
                     <div class="circle"></div>
@@ -233,21 +340,22 @@
             </div>
         </div>
 
-        <div class="center-block ng-hide" ng-show="not_found" style="margin-top:100px">
+        <div class="center-block ng-hide" ng-show="not_found">
         	 <h3 style="color:red">No document found.</h3>
         </div>
-      </center>
 
+        <div class="center-block ng-hide" ng-show="invalid_format">
+        	 <h3 style="color:red">Invalid search format.</h3>
+        </div>
+
+      </center>
     </div>
 
-   <div class="col-md-12" style="max-height:140px !important">
-   	    <canvas  id="myChart" style="width:100% !important; height:130px; padding:0px !important; margin-left:-10px !important;"></canvas>
-   </div>
 
 <div class="clearfix ng-hide" ng-show="doc_view">
 
 	<!-- VIEW NAVIGATIONS -->
-	<div class="col-md-12">
+	<div class="col-md-4 col-sm-12 col-xs-12 fx_index" style="margin-top:20px">
 		<ul class="list-inline ng-hide" ng-show="doc_view">
 			<li ng-click="selected='lg_view'">
 				<a href="#home_only_icon_title"     data-toggle="tab"><i class="fa  fa-th-large tab_view_icon" ng-class="{activeView: selected=='lg_view'}"></i></a>
@@ -264,16 +372,49 @@
 		</ul>
 	</div>
 
+    <!-- show total rows -->
+    <div class="col-md-2 pull-right col-xs-12 col-sm-12 fx_index" >Num. of documents
+      <select ng-model="entryLimit" class="form-control">
+	        <option>10</option>
+	        <option>20</option>
+	        <option>50</option>
+	        <option>100</option>
+	        <option>500</option>
+      </select>
+    </div>
+
+  	<div class="col-md-3 col-sm-12 col-xs-12 pull-right fx_index">
+          Sort by:
+          <select class="form-control" style="width: 100%;" ng-model="sort">
+				<option value="">None</option>
+				<option value="sender">Sender ascending</option>
+				<option value="-sender">Sender descending</option>
+				<option value="receiver">Receiver ascending</option>
+				<option value="-receiver">Receiver descending</option>
+				<option value="date">Date ascending</option>
+				<option value="-date">Date descending</option>
+				<option value="tags">Tags ascending</option>
+				<option value="-tags">Tags descending</option>
+				<option value="category">Category ascending</option>
+				<option value="-category">Category descending</option>
+				<option value="size">Size ascending</option>
+				<option value="-size">Size descending</option>
+				<option value="origin">Origin ascending</option>
+				<option value="-origin">Origin descending</option>
+          </select>
+    </div><!-- /.form-group -->  
+
 	<div class="col-md-12">
 		<div class="tab-content">
 			<!-- VIEW - FULL DOC VIEW  -->
 			<div role="tabpanel" class="tab-pane fade in active" id="home_only_icon_title" >
 				<div class="row " >
-					<div class="col-lg-4 col-md-4 col-sm-6 col-xs-12 doc_hvr" ng-repeat="doc1 in list1 track by $index">
+					<div class="col-lg-4 col-md-4 col-sm-6 col-xs-12 doc_hvr" ng-repeat="doc1 in filtered = (list | orderBy : sort )  | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit track by $index">
 						<a ng-href="/document/<#doc1.doc_id#>">
-							<div class="f_cover">
-								<img ng-src="/static/documents_images/<# doc1.doc_page_image_preview #>">
-							</div>
+							
+							 <div class="image">
+					              <img ng-src="/files/image/<# doc1.doc_page_image_preview #>" class="img img-responsive full-width"/>
+					          </div>
 						</a>
 					</div>
 				</div>
@@ -282,10 +423,10 @@
 			<div role="tabpanel" class="tab-pane fade" id="profile_only_icon_title">
 				<div class="row">
 
-					<div class="col-md-2 col-sm-6 col-xs-6 doc_hvr" ng-repeat="doc2 in list2 track by $index">
+					<div class="col-md-2 col-sm-6 col-xs-6 doc_hvr" ng-repeat="doc2 in filtered = (list | orderBy : sort )  | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit track by $index">
 					    <a ng-href="/document/<#doc2.doc_id#>">
 							<div class="view2_div">
-								<img ng-src="/static/documents_images/<# doc2.doc_page_thumbnail_preview #>">
+								<img ng-src="/files/image/<# doc2.doc_page_thumbnail_preview #>">
 							</div>
 						</a>
 					</div>
@@ -294,30 +435,33 @@
 			</div>
 			<!-- VIEW - TILE LIST VIEW -->
 			<div role="tabpanel" class="tab-pane fade" id="messages_only_icon_title">
-				<div class="row">
-
-					<div class="col-md-6 doc_hvr" ng-repeat="doc3 in list3 track by $index">
-					  <a ng-href="/document/<#doc3.doc_id#>">
-						<div class="card view3_container">
+				<div class="row" >
+					<div class="col-md-6 col-xs-12 col-sm-12 doc_hvr"ng-repeat="doc3 in filtered = (list | orderBy : sort )  | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit track by $index">
+					  
+					  <a ng-href="/document/<#doc3.doc_id#>" >
+						<div class="card view3_container"  style="margin-top:15px">
 							<table clas="table-responsive">
 								<tr>
 									<td>
 										<div class="view3_div">
-											<img ng-src="/static/documents_images/<# doc3.doc_page_thumbnail_preview #>">
+											<img ng-src="/files/image/<# doc3.doc_page_thumbnail_preview #>">
 										</div>
 									</td>
-									<td>
-										<div class="view_date">05.07.17</div>
+									<td style="color:#000">
+										<div class="view_date"><label><#doc3.date#></label></div>
 										<ul class="list-unstyled view3_card_d">
-											<li><b>e-plus DE </b></li>
-											<li>gefunden in rechnung@jannikkramer.de</li>
-											<li>Rechnung </li>
-											<li>Jannik Kramer </li>
+											<li><b><#doc3.sender#></b></li>
+											<li><#doc3.origin#></li>
+											<li><#doc3.category#> </li>
+											<li><#doc3.receiver#></li>
 										</ul>
 										<div class="view_tags">
-											<span class="badge bg-green">Steuern 2017</span>
-											<span class="badge bg-pink">Rechnungen</span>
-											<span class="badge bg-green">e-plus</span>
+											<span ng-repeat="tag in doc3.tags_array" > 
+												<span class="badge bg-green" ng-show="tag.length>0">
+													 <# tag #>
+												</span>
+											</span>	
+											<span class="badge bg-pink"><#doc3.folder_name#></span>
 										</div>
 
 									</td>
@@ -331,9 +475,9 @@
 			</div>
 			<!-- VIEW - TABLE VIEW -->
 			<div role="tabpanel" class="tab-pane fade" id="settings_only_icon_title">
-				<div class="row">
+				<div class="row" >
 					<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-						<div class="body table-responsive">
+						<div class="body table-responsive" style="margin-top:15px">
 							<table class="table table-striped table-hover">
 								<thead>
 									<tr>
@@ -343,32 +487,17 @@
 										<th>Tags</th>
 										<th>Größe</th>
 										<th>empfangen am</th>
-										<th><span class="pull-right">Actions</span></th>
 									</tr>
 								</thead>
 								<tbody>
-										 <tr ng-repeat="doc4 in list4 track by $index" >
-											<td><# doc4.sender #></td>
-											<td><# doc4.receiver #></td>
-											<td><# doc4.category #></td>
-											<td><# doc4.tags #></td>
-											<td><# doc4.size #></td>
-											<td><# doc4.date | default #></td>
-											<td>
-												<ul class="list-unstyled pull-right">
-							                        <li class="dropdown">
-							                            <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-							                                <i class="fa fa-edit fa-2x" style="color:#7e7e7e"></i>
-							                            </a>
-							                            <ul class="dropdown-menu pull-right">
-							                                <li ><a ng-href="/document/<#doc4.doc_id#>">View</a></li>
-							                                <li ng-click="deleteFolder(data.doc_id)"><a href="javascript:void(0);">Delete</a></li>
-							                            </ul>
-							                        </li>
-							                    </ul>
-											</td>
-										</tr>
-								      </a>
+									 <tr ng-click="editDoc(doc4.doc_id)" ng-repeat="doc4 in filtered = (list | orderBy : sort )  | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit track by $index">
+											<td><# doc4.sender   | default #></td>
+											<td><# doc4.receiver | default #></td>
+											<td><# doc4.category | default #></td>
+											<td><# doc4.tags 	 | default #></td>
+											<td><# doc4.size 	 | default #></td>
+											<td><# doc4.date 	 | default #></td>
+									</tr>
 								</tbody>
 							</table>
 						</div>
@@ -379,8 +508,99 @@
 		</div>
 	</div> <!-- // end row -->
 
+
+
+	<!-- show if document does not exist -->
+    <div class="col-md-12" ng-show="filteredItems == 0">
+        <div class="col-md-12">
+            <h4>No document found</h4>
+        </div>
+    </div>
+    <!-- Pagination -->
+    <div class="col-md-6 ng-hide" ng-show="filteredItems > 0">
+        <div pagination="" page="currentPage" on-select-page="setPage(page)" boundary-links="true" total-items="filteredItems" items-per-page="entryLimit" class="pagination-small" previous-text="&laquo;" next-text="&raquo;"></div>
+    </div>
+            <!-- show total number of found row -->
+    <div class="col-md-6" ng-show="filteredItems > 0">
+      <p style="color:#999; margin-top:20px" class="pull-right">Filtered <# filtered.length #> of <# totalItems #> total Documents</p>
+    </div>
+
 </div>
 <!-- CLEARFIX  -->
+
+
+<!-- Search Guide Modal -->
+<div class="modal fade" id="largeModal" tabindex="-1" role="dialog" style="margin-top:40px">
+    <div class="modal-dialog modal-lg" role="document" >
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="largeModalLabel">Custom search guides and rules.</h4>
+            </div>
+            <div class="modal-body" style="text-overflow: auto">
+                <p>Pressing enter when no input specified will return all your archived documents, filter must be in "no filter".</p>
+                <label>Valid column names to use.</label><br>
+						<span class="badge bg-light-blue">sender</span>
+						<span class="badge bg-light-blue">receiver</span>
+						<span class="badge bg-light-blue">tags</span>
+						<span class="badge bg-light-blue">category</span>
+						<span class="badge bg-light-blue">note</span>
+						<span class="badge bg-light-blue">date</span>
+						<span class="badge bg-light-blue">number_of_pages</span>
+						<span class="badge bg-light-blue">reminder</span>
+						<span class="badge bg-light-blue">tax_relevant</span><br><br>
+				<label>Valid operators</label><br>
+						<span class="badge bg-green">=</span>
+						<span class="badge bg-green">></span>
+						<span class="badge bg-green">>=</span>
+						<span class="badge bg-green"><</span>
+						<span class="badge bg-green"><=</span>
+						<span class="badge bg-green">!=</span><br><br>
+			    <label>Valid Binary operators</label><br>
+			    
+			    <span class="badge bg-orange">and</span>
+			    <span class="badge bg-orange">or</span>
+			    <span class="badge bg-orange">not</span>
+			    <span class="badge bg-orange">xor</span><br><br>
+       
+				<label>Column names that can only use operator</label>
+				<span class="badge bg-green">></span>
+				<span class="badge bg-green">>=</span>
+				<span class="badge bg-green"><</span>
+				<span class="badge bg-green"><=</span><br>
+
+				<span class="badge bg-light-blue">date</span>
+				<span class="badge bg-light-blue">number_of_pages</span>
+				<span class="badge bg-light-blue">reminder</span>
+				<span class="badge bg-light-blue">tax_relevant</span><br><br>
+
+                <label>When searching for date and reminder use format 	<span class="badge">YYYY-MM-DD</span></label><br>
+                <span>eg. date=2018-12-31, reminder>2018-12-31</span><br><br>
+
+                <label>When searching for tax_relevant, use this format.</label><br>
+                <p>eg. tax_relevant=2018, tax_relevant>2015.</p>
+
+                <hr>
+
+                <label>BASIC CUSTOM SEARCH FORMAT</label><br>
+                <label><span class="badge">COLUMN NAME, OPERATOR, VALUE</span></label><br>
+                <p>eg(single expression). sender=Till</p>
+
+                <label><span class="badge">COLUMN NAME, OPERATOR, VALUE, SPACE, COLUMN NAME, OPERATOR, VALUE</span></label><br>
+                <p>eg(multiple expression). sender=Till receiver=Jannik | the result is equivalent to query (where sender=Till and receiver=Jannik)</p>
+                <br><br>
+
+                <label>ADVANCE CUSTOM SEARCH FORMAT.</label><br>
+                <p>in advnace custom search you can use binary operations such as "and,or,not,xor"</p>
+                <label><span class="badge">COLUMN NAME, OPERATOR, VALUE, SPACE, BINARY OPERATOR, SPACE, COLUMN NAME, OPERATOR, VALUE</span></label><br>   
+                <p>eg. sender=Till or sender=Jannik</p>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link waves-effect" data-dismiss="modal">CLOSE</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 @endsection
@@ -389,47 +609,55 @@
 <script src="{{ asset('static/js/search_documents.js') }}"></script>
 
 <script type="text/javascript" differ>
-	//used angular interpolate for syntax compatibility
-var app = angular.module('search_doc', ['ui.bootstrap'], function($interpolateProvider) {
-    $interpolateProvider.startSymbol('<#');
-    $interpolateProvider.endSymbol('#>');
-});
+
+//inject this app to rootApp
+var app = angular.module('app', ['ui.bootstrap']);
 
 //custom filter for empty fields
 app.filter('default', function(){
     return function(data)
       {
-        if(data!=undefined || data!=null || data!=""){
+        if(data!=undefined && data!=null && data!=""){
             return data;
         }
         else
         {
-            data = "-";
+            data = "N/D";
             return data;
         }
       }
 });
+//convert year to short year.
+app.filter('short_year', function(){
+    return function(data)
+      {
+         return "'"+data.toString().slice(-2);
+      }
+});
 
-app.controller('searc_doc_controller', function($scope, $http, $timeout, $q) {
+// CUSTOM FILTERS
+app.filter('startFrom', function() {
+    return function(input, start) {
+        if(input) {
+            start = +start; //parse to int
+            return input.slice(start);
+        }
+        return [];
+    }
+});
 
 
+app.controller('searc_doc_controller', function($scope, $http, $timeout, $q, $compile) {
 // cancel previous http request
 // eg running autocomplete. if user press enter search. cancel all previous running http request.
 $scope.canceler = $q.defer();
 $scope.search_canceler = $q.defer();
-
 //active tab.
 $scope.selected='lg_view';
 //default filter
 $scope.filter  = 'no_filter';
-
 $scope.keyword = '';
-
-
-$scope.list1   = '';
-$scope.list2   = '';
-$scope.list3   = '';
-$scope.list4   = '';
+$scope.list   = '';
 
 //autocomplte no result
 $scope.autocomplte_no_result = false;
@@ -439,14 +667,21 @@ $scope.doc_view =   false;
 $scope.doc_loader = false;
 //not found status
 $scope.not_found =  false;
+//search format 
+$scope.invalid_format = false;
 
 
 //clear autocomplete
-$scope.clearTypeHead = function(){
+$scope.clear_autocomplete = function(){
 	$scope.find_tags    = null;
 	$scope.find_fText   = null;
 	$scope.find_folders = null;
 	$scope.autocomplte_no_result = false;
+}
+
+//edit document
+$scope.editDoc = function(doc_id){
+    window.location.replace('/document/'+doc_id);
 }
 
 //run function on key press
@@ -465,7 +700,7 @@ $scope.myFunct = function(keyEvent) {
 $scope.autoComplete = function(){
 
     // empty dropdown autocomplete.
-    $scope.clearTypeHead();
+    $scope.clear_autocomplete();
     //cancel previous autocomplete post request.
     $scope.canceler.resolve();
     //reinit $q.defer make new autocomplete post request
@@ -481,23 +716,37 @@ $scope.autoComplete = function(){
     $http({method:'POST',url:'/search/typhead', data, timeout: $scope.canceler.promise}).success(function(data){
          //store data if found
          if(data.tags!="not_found"){
-         	 $scope.find_tags = data.tags;
+             //if json_encode return object. convert to array 
+         	 if(typeof data.tags === 'object'){
+			     $scope.find_tags = Object.keys(data.tags).map(function(key){
+			          return data.tags[key];
+			     });
+
+			}else{
+			    $scope.find_tags = data.tags;
+			}
          }
          //store data if found
          if(data.folders!="not_found"){
-         	 $scope.find_folders = data.folders;
+         	if(typeof data.folders === 'object'){
+			     $scope.find_folders = Object.keys(data.folders).map(function(key){
+			          return data.folders[key];
+			     });
+
+			}else{
+			    $scope.find_folders = data.folders;
+			}
          }
          //store data if found
          if(data.fulltext!="not_found"){
-                
-				if(typeof data.fulltext === 'object'){
-				     $scope.find_fText = Object.keys(data.fulltext).map(function(key){
-				          return data.fulltext[key];
-				     });
+			if(typeof data.fulltext === 'object'){
+			     $scope.find_fText = Object.keys(data.fulltext).map(function(key){
+			          return data.fulltext[key];
+			     });
 
-				}else{
-				    $scope.find_fText = data.fulltext;
-				}
+			}else{
+			    $scope.find_fText = data.fulltext;
+			}
          }
 
          if(data.tags=="not_found" && data.folders=="not_found" && data.fulltext=="not_found"){
@@ -505,17 +754,15 @@ $scope.autoComplete = function(){
          	$scope.autocomplte_no_result = true;
          }
          console.log(data);
-
     });
 }
+
 
 $scope.reInit = function(){
     //add class to hide chart
     $('#myChart').addClass('hideBarChart');
     //hide current doc view
     $scope.doc_view = false;
-    //hide chart
-	$scope.bar_chart = false;
 
     $scope.canceler.resolve();
     //cancel previous selectSearch post request
@@ -523,41 +770,55 @@ $scope.reInit = function(){
     //reinit $q.defer to make new post request.
     $scope.search_canceler = $q.defer();
     //clear autocomplete
-	$scope.clearTypeHead();
+	$scope.clear_autocomplete();
 	//show search preloader
 	$scope.doc_loader = true;
 	//hide doc not found status.
 	$scope.not_found = false;
     //put selected autocomplete keyword to search bar
+    $scope.invalid_format = false;
 }
 
 $scope.docsFound = function(){
     $('#myChart').removeClass('hideBarChart');
-    //show barchart
-	$scope.bar_chart  = true;
 	//hide notfound status
     $scope.not_found  = false;
 	//show doc views
     $scope.doc_view   = true;
     //hide preloader
     $scope.doc_loader = false;
+    $scope.invalid_format = false;
     //create barchart
-    barChart();
+    $scope.makeBarchart();
+}
+
+$scope.formatNotValid = function(){
+	$('#myChart').addClass('hideBarChart');
+  	//show notfound status
+  	$scope.not_found  = false;
+  	//hide document view.
+  	$scope.doc_view   = false;
+  	//hide preloader
+    $scope.doc_loader = false;
+    //
+    $scope.invalid_format = true;
 }
 
 $scope.docsNotFound = function(){
     $('#myChart').addClass('hideBarChart');
-    //show barchart
-	$scope.bar_chart  = false;
   	//show notfound status
   	$scope.not_found  = true;
   	//hide document view.
   	$scope.doc_view   = false;
   	//hide preloader
     $scope.doc_loader = false;
+    //
+    $scope.invalid_format = false;
+
 }
 
-
+//================================================================================================================================================
+//search on select autocomplete
 $scope.selectAutocompleteSearch = function(keyword,filter){
     
     $scope.reInit();
@@ -577,142 +838,194 @@ $scope.selectAutocompleteSearch = function(keyword,filter){
 	    else{ 
 	        $scope.docsFound();         
 	        //store datas in different views
-	        $scope.list1 = data;
+	        $scope.list = data;
 			$scope.list2 = data;
 			$scope.list3 = data;
 			$scope.list4 = data;
 	    }
-	    console.log(data);
     });
 
 }
 
+// search when key enter pressed
 $scope.enterKeySearch = function(){
 
-    if($scope.keyword != ""){
-        
         $scope.reInit();
 	    //store datas for post request
 	    data = {
 	       keyword: $scope.keyword,
 	       filter:  $scope.filter
 	    }
+	    console.log($scope.keyword);
 	    //filter = tag,folder,fulltext
 	    $http({method:'POST',url:'/search/documents', data, timeout: $scope.search_canceler.promise}).success(function(data){
-            
-            if(data=="error"){
+            if(data=="error" || data.length==0){
                 $scope.docsNotFound();
             }
-            else{ 
+            else if(data=="invalid_format" || data.length==0){
+                $scope.formatNotValid();
+            }else{    	
                 $scope.docsFound();         
 		        //store datas in different views
-		        $scope.list1 = data;
-				$scope.list2 = data;
-				$scope.list3 = data;
-				$scope.list4 = data;
+		        $scope.list = data;
+
+				$scope.currentPage = 1; //current page
+				$scope.entryLimit = 10; //max no of items to display in a page
+				$scope.filteredItems = $scope.list.length; //Initially for no filter
+				$scope.totalItems = $scope.list.length;
 	        }
-	        console.log(data);
 	    });
-    }
+
 }
 
-
-//-- ================================================== BARCHART ================================================== -->
-
-// CUSTOM BARCHART
-randomScalingFactor = function() {
-  return Math.round(Math.random() * 100);
-}
-
-function getData() {
-  var dataSize = 27;
-  var evenBackgroundColor = 'rgba(0, 119, 255, 1)';
-  var oddBackgroundColor = 'rgba(177,213,255, 1)';
-  var months = ["January","Febuary","March","April","May","June","July","August","September","Octobor","November","December","January","Febuary","March","April","May","June","July","August","September","Octobor","November","December","January","Febuary","March","April","May","June","July","August","September","Octobor","November","December"];
-  var labels = [];
-
-  var scoreData = {
-    label: 'Documents:',
-    data: [],
-    backgroundColor: [],
-    borderColor: [],
-    borderWidth: 1,
-    hoverBackgroundColor: 'rgba(200, 200, 200, 1)',
-    hoverBorderColor: 'rgba(200, 200, 200, 1)',
-  };
-
-  for (var i = 0; i < dataSize; i++) {
-    scoreData.data.push(window.randomScalingFactor());
-    labels.push(months[i]);
-
-    if (i % 2 === 0) {
-      scoreData.backgroundColor.push(evenBackgroundColor);
-    } else {
-      scoreData.backgroundColor.push(oddBackgroundColor);
-    }
-  }
-
-  return {
-    labels: labels,
-    datasets: [scoreData],
-  };
+// set page number
+$scope.setPage = function(pageNo){
+    $scope.currentPage = pageNo;
 };
 
 
-barChart = function(){
+//==================================================================================================================================================
+//get barchart datas.
+$scope.getBarchartDatas = function(){
+    $http.get('/search/barchar_datas').success(function(data){
+    $scope.bar_year_range = data.year_range;
+    $scope.bar_mdr = data.mdr;
 
-  var chartData = getData();
-  console.dir(chartData);
+	    console.log('datas received');
+		           
+		var canvas_html = [];
+		var element =     [];
+		for(var i in data.year_range){         
+			canvas_html[i] = '<td><canvas id="myChart'+i+'" class="canvasStyle"></canvas></td>';
+			element[i] = angular.element(canvas_html[i]);
+			$compile(element[i])($scope);
+			angular.element('#canvasHolder').append(element[i]);
+		};
+		$scope.initiateBarDatas();
+	});   	
+}
 
-  if (this.myBar) {
-	this.myBar.destroy();
-  }
+$scope.getBarchartDatas();
 
-  myBar = new Chart(document.getElementById("myChart").getContext("2d"), {
-    type: 'bar',
-    data: chartData,
-    options: {
-      maintainAspectRatio: false,
-      title:{
-        display: false
-      },
-      legend: {
-        display: false
-      },
+$scope.initiateBarDatas = function(){
 
-      scales: {
-        yAxes: [{
-          ticks: {
-            beginAtZero: true,
-            autoSkip: false,
-            display:false
-          },
-           gridLines: {
-          display: false,
-          color: "white",
-            zeroLineColor: "white"
-        },
-        }],
-        xAxes: [{
-          ticks: {
-            beginAtZero: true,
-            autoSkip: false,
-            display:false
-          },
-          gridLines: {
-          display: false,
-          color: "white",
-            zeroLineColor: "white"
-        },
-        categoryPercentage: 1,
+	var data = $scope.bar_year_range;
+	$scope.generateBCD = [];
 
-        }]
-      }
-    }
-  });
-};
+	for (var i in data) {
+	  (function(i){
+	    $scope.generateBCD.push(function (callback) {
+
+	          var dataSize = $scope.bar_mdr[i]['month'].length;
+	          //colors of chart
+	          var evenBackgroundColor = 'rgba(0, 119, 255, 1)';
+	          var oddBackgroundColor =  'rgba(177,213,255, 1)';
+	          //labels of bar
+	          //months.
+
+	          var months =  $scope.bar_mdr[i]['month'];
+	          //array to store labels
+	          var labels = [];
+
+	          //
+	          var docDatas = {
+	            //Main label for data
+	            label: 'Documents:',
+	            //documents datas $scopes / here
+	            //documents.
+	            data: $scope.bar_mdr[i]['docs'],
+	            backgroundColor: [],
+	            borderColor: [],
+	            borderWidth: 1,
+	            //hover background oclors
+	            hoverBackgroundColor: 'rgba(200, 200, 200, 1)',
+	            hoverBorderColor: 'rgba(200, 200, 200, 1)',
+	          };
+
+	          //loop/push weeks labels and bar color
+	          for (var x = 0; x < dataSize; x++) {
+	            labels.push(months[x]);
+	            if (x % 2 === 0) {
+	              docDatas.backgroundColor.push(evenBackgroundColor);
+	            } else {
+	              docDatas.backgroundColor.push(oddBackgroundColor);
+	            }
+	          }
+
+	          return {
+	            labels: labels,
+	            datasets: [docDatas],
+	          };
+
+	    });
+	  })(i);
+	}
+} //initiateBarDatas
 
 
+$scope.myBar  = [];
+$scope.makeBarchart = function(){
+
+    var data = $scope.bar_year_range;
+    console.log('success');
+	for (var i in data) {
+	  // destroy previous created chart canvas.
+	  if($scope.myBar[i]) {
+	  $scope.myBar[i].destroy();
+	  }
+	  //loop
+	  $scope.myBar[i] = new Chart(document.getElementById("myChart"+i).getContext("2d"), {
+	      type: 'bar',
+	      data: $scope.generateBCD[i](),
+	      options: {
+	        maintainAspectRatio: false,
+	        title:{
+	          display: false
+	        },
+	        legend: {
+	          display: false
+	        },
+
+	        scales: {
+	          yAxes: [{
+	            ticks: {
+	              beginAtZero: true,
+	              autoSkip: false,
+	              display:false
+	            },
+	             gridLines: {
+	  	        display: false,
+	  	        color: "white",
+	              zeroLineColor: "white"
+	  	      },
+	          }],
+	          xAxes: [{
+	            ticks: {
+	              beginAtZero: true,
+	              autoSkip: false,
+	              display:false
+	            },
+	            gridLines: {
+	  	        display: false,
+	  	        color: "white",
+	              zeroLineColor: "white"
+	  	      },
+	  	      categoryPercentage: 1,
+
+	          }]
+	        }
+	      }
+	    });
+         console.log('success');
+	}; // end for loop
+
+}
+
+// END CONTROLLER
+});
+
+
+//-- ================================================   Barchart mod ================================================== -->
 
 // modefiy bars add border radius
 Chart.elements.Rectangle.prototype.draw = function() {
@@ -839,9 +1152,6 @@ Chart.elements.Rectangle.prototype.draw = function() {
     }
 };
 
-
-// END CONTROLLER
-});
 </script>
 
 @endsection

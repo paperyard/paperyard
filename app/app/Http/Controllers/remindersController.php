@@ -151,4 +151,6 @@ class remindersController extends Controller
     	 	return redirect('error_404');
     	 }
     }
+
+    
 }

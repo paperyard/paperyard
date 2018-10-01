@@ -1,6 +1,8 @@
 {
     "/static/js/app.js": "/static/js/app.js",
     "/static/css/core_mix.css": "/static/css/core_mix.css",
+    "/static/js/settings.js": "/static/js/settings.js",
+    "/static/js/register.js": "/static/js/register.js",
     "/static/js/dashboard.js": "/static/js/dashboard.js",
     "/static/css/inside_folder.css": "/static/css/inside_folder.css",
     "/static/js/inside_folder.js": "/static/js/inside_folder.js",

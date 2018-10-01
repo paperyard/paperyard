@@ -161,7 +161,7 @@ transform: scale(1.03) !important;
 @endsection
 
 @section('content')
-<div class="row" ng-app="customize_app" ng-controller="customize_controller">
+<div class="row" ng-controller="customize_controller">
 
     <span class="ng-hide" ng-show="document_pages">
       <!-- documents pages -->
@@ -171,7 +171,7 @@ transform: scale(1.03) !important;
                <label for="docp<#doc_p.doc_page_num#>">Page <#doc_p.doc_page_num#></label>
            </div>
           <div class="image ">
-              <img ng-src="/static/documents_images/<#doc_p.doc_page_image_preview#>" class="img img-responsive full-width"/>
+              <img ng-src="/files/image/<#doc_p.doc_page_image_preview#>" class="img img-responsive full-width"/>
           </div>
       </div>
      <!-- Material floating button -->
@@ -208,12 +208,9 @@ transform: scale(1.03) !important;
 @section('scripts')
 <script src="{{ asset('static/js/customize_pdf.js') }}"></script>
 <script type="text/javascript">
-//used angular interpolate for syntax compatibility
-var app = angular.module('customize_app', ['ngSanitize','ng-mfb'], function($interpolateProvider) {
-    $interpolateProvider.startSymbol('<#');
-    $interpolateProvider.endSymbol('#>');
-});
 
+//inject this app to rootApp
+var app = angular.module('app', ['ngSanitize','ng-mfb']);
 
 app.controller('customize_controller', function($scope, $http, $timeout) {
 

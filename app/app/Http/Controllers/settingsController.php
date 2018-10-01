@@ -32,4 +32,41 @@ class settingsController extends Controller
          // Note any method of class PDOException can be called on $err.
         }
     }
+
+    public function updateDownloadFilenameFormat(Request $req){
+        $arrFormat = [];
+        foreach($req->dataFormat as $key=>$f){
+            array_push($arrFormat,$f['value']);
+        }
+        $format = implode(',', $arrFormat);
+        $saveFormat = DB::table('users')->where('id', Auth::user()->id)->update(['download_filename_format'=>$format]);
+        if(count($saveFormat)>0){
+           return "success";
+        }
+
+    }
+
+    public function returnDownloadFilenameFormat(){
+        $user_dff = DB::table('users')->where('id', Auth::user()->id)->first();
+
+        $labelDatas = [];
+        $arrFormat = explode(',', $user_dff->download_filename_format); 
+        
+        foreach($arrFormat as $key=>$f){
+              
+              if($f=="doc_ocr"){
+                  $label = "Old Filename";
+              }else{
+                  $label = $f;
+              }
+              $data = array(
+                 "label" => ucwords($label),
+                 "value" => $f
+              );  
+              array_push($labelDatas,$data);                            
+        }
+
+        $json_response = json_encode($labelDatas);
+        return $json_response;
+    }
 }

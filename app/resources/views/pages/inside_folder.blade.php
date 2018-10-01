@@ -116,8 +116,12 @@
    background-color: #fff;
  }
 
+.table-striped>thead>tr:nth-child(odd)>th {
+   background-color: #ebedf8;
+ }
 .table-hover tbody tr:hover td{
-  background-color: #b1d5ff !important;
+   background-color: #b1d5ff !important;
+   cursor: pointer;
 }
 
 .table-striped>tbody>tr:nth-child(even)>td,
@@ -126,6 +130,17 @@
 }
 
 /*----------------------------------------------------------------------*/
+
+
+.ocr_success {
+    color:#017cff;
+}
+
+.ocr_failed {
+     color:red;
+}  
+
+
 </style>
 @endsection
 
@@ -138,7 +153,7 @@
 
 @section('content')
 
-<div class="row" ng-app="archive_app" ng-controller="archive_controller">
+<div class="row" ng-controller="inside_folder_controller">
 
     <ol class="breadcrumb breadcrumb-col-blue">
         <li><a href="javascript:void(0);">Home</a></li>
@@ -195,47 +210,50 @@
     <!-- table of documents -->
     <div class="col-md-12 ng-hide"  ng-show="doc_table">
         <div class="table-responsive" style="height:100%;">
-            <table class="table table-hover">
+            <table class="table table-hover table-striped">
                   <thead style="background-color:#ebedf8; color:#000; font-size:13px; ">
                     <th style="width:100px">
                         <input type="checkbox" id="archSelectAll" class="filled-in chk-col-blue"  ng-model="selectAll" ng-click="checkAll()" />
                         <label for="archSelectAll" style="margin-bottom:-12px" >#</label>
                     </th>
-                    <th>Document name</th>
+                    <th>Recipient</th>
                     <th>Sender</th>
-                    <th>Receiver</th>
-                    <th>Tags</th>
                     <th>Category</th>
+                    <th>OCRED</th>
+                    <th>Date</th>              
                     <th>Shared</th>
                     <th style="width:300px"> <span >Actions</span></th>
                   </thead>
                   <!-- | filter: dateRangeFilter('timestamp', dateFromTo) -->
-                  <tbody style="font-size:11px;">
+                  <tbody style="font-size:13px;">
                     <tr ng-repeat="data in filtered = (list | filter:search ) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit track by $index" >
                        <td>
                             <input type="checkbox" id="arch<#data.doc_id#>" class="filled-in chk-col-blue"  ng-click="selectDoc(data)" ng-model="data.select" />
                             <label for="arch<#data.doc_id#>"><#$index+1#></label>
                        </td>
-                        <td><# data.doc_ocr #></td>
-                        <td><# data.sender #></td>
-                        <td><# data.receiver #></td>
-                        <td><# data.tags #></td>
-                        <td><# data.category #></td>
+                          <td><# data.receiver | default #></td>
+                          <td><# data.sender   | default #></td>
+                          <td><# data.category | default #></td>
+                          <td ng-bind-html="data.process_status  | ocr_status "></td>
+                          <td><# data.date     | default #></td>    
                         <td>
                              <span ng-if="data.shared==1" class="sh_cl">YES</span>
                              <span ng-if="data.shared==0" class="sh_cl">NO</span>
                         </td>
                         <td>
                           <span>
+                            <!-- Edit documents datas -->
                             <a ng-href="/document/<#data.doc_id#>" style="text-decoration: none">
                               <button type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="Edit document" tooltip-top>
                                   <i class="material-icons cstm_icon_btn_ico">edit</i>
                               </button>
                             </a>
+                            <!-- Share documents -->
                             <button ng-click="shareDocument(data.doc_id)" ng-if="data.shared==0" type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="Share document" tooltip-top>
                                 <i class="material-icons cstm_icon_btn_ico">share</i>
                             </button>
-                            <a ng-href="/static/documents_ocred/<#data.doc_ocr#>" style="text-decoration: none" download>
+                            <!-- View/Download Ocred documents -->
+                            <a ng-href="/files/ocr/<#data.doc_ocr#>" style="text-decoration: none" download="<#data.download_format#>">
                             <button type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="View document" tooltip-top>
                                 <i class="material-icons cstm_icon_btn_ico">remove_red_eye</i>
                             </button>
@@ -243,7 +261,7 @@
 
                              <span ng-if="data.approved==0">
                               <!-- Download original document. -->
-                              <a ng-href="/static/documents_new/<#data.doc_org#>" style="text-decoration: none" download>
+                              <a ng-href="/files/org/<#data.doc_org#>" style="text-decoration: none"  download="<#data.download_format#>">
                                 <button type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="Download original file" tooltip-top>
                                   <i class="material-icons cstm_icon_btn_ico">file_download</i>
                                 </button>
@@ -294,11 +312,9 @@
 @section('scripts')
 
 <script type="text/javascript">
-//used angular interpolate for syntax compatibility
-var app = angular.module('archive_app', ['ui.bootstrap','ngSanitize'], function($interpolateProvider) {
-    $interpolateProvider.startSymbol('<#');
-    $interpolateProvider.endSymbol('#>');
-});
+
+//inject this app to rootApp
+var app = angular.module('app', ['ui.bootstrap','ngSanitize']);
 
 // custom directive for tooltip to work.  directive name tooltipTip.. dom attrib tooltip-top
 app.directive('tooltipTop', function() {
@@ -321,22 +337,29 @@ app.filter('startFrom', function() {
     }
 });
 
-app.filter('ocred_status', function(){
-    return function(data)
-      {
-        if(data=='ocred_final'){
-            data = "<b class='stat_ready'>"+"Ready"+"</b>";
-            return data;
-        }
-        else
-        {
-            data = '<b class="failed">'+'Failed'+'</b>';
-            return data;
-        }
-      }
+app.filter('default', function(){
+   return function(data){
+       if(data==null){
+           data = "N/D";
+           return data;
+       }
+       return data;
+   }
 });
 
-app.controller('archive_controller', function($scope, $http, $timeout) {
+app.filter('ocr_status', function(){
+   return function(data){
+       if(data=="ocred_final"){
+           data = "<b class='ocr_success'>"+"YES"+"</b>";
+           return data;
+       }else{
+           data = "<b class='ocr_failed'>"+"NO"+"</b>";
+           return data;
+       }
+   }
+});
+
+app.controller('inside_folder_controller', function($scope, $http, $timeout) {
 
 $scope.preloader = true;
 $scope.doc_table = false;

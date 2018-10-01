@@ -26,15 +26,17 @@ class DocumentsMigration extends Migration
             $table->boolean('shared');
             $table->boolean('approved')->default(0);
             $table->boolean('is_archive')->default(0);
+            $table->boolean('is_ocred')->default(0);
+            $table->integer('number_of_pages')->default(0);
             $table->string('sender')->nullable();
             $table->string('receiver')->nullable();
-            $table->string('date')->nullable();
+            $table->dateTime('date')->nullable();
             $table->string('tags')->nullable();
             $table->string('category')->nullable();
-            $table->string('memory')->nullable();
+            $table->dateTime('reminder')->nullable();
             $table->string('tax_relevant')->nullable();
             $table->string('note')->nullable();
-
+            $table->string('origin')->nullable();
             $table->timestamp('created_at')->default(\DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('updated_at')->default(\DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
         });

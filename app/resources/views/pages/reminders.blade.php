@@ -132,7 +132,7 @@
 @endsection
 
 @section('content')
-<div class="row" ng-app="reminders_app" ng-controller="reminders_controller">
+<div class="row" ng-controller="reminders_controller">
 
 @if(count($reminder_exist)>=1)
 
@@ -238,11 +238,8 @@ $(function () {
 
 });
 
-//used angular interpolate for syntax compatibility
-var app = angular.module('reminders_app', ['ng-mfb'], function($interpolateProvider) {
-    $interpolateProvider.startSymbol('<#');
-    $interpolateProvider.endSymbol('#>');
-});
+//inject this app to rootApp
+var app = angular.module('app', ['ng-mfb']);
 
 app.controller('reminders_controller', function($scope, $http, $timeout) {
 

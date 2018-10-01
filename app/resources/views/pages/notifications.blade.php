@@ -100,6 +100,12 @@
    color:#017cff;
 }
 
+/* ---------------- breadcrumb nav ----------------------*/
+
+.arrow-on-m {
+  width:40px !important;
+}
+
 </style>
 @endsection
 
@@ -127,7 +133,7 @@
 @section('content')
 
 @if(count($my_notifications)>=1)
-<div class="row clearfix">
+<div class="row clearfix" ng-controller="notification_controller">
 
 
         @if (session()->has('notif_save_success'))
@@ -155,15 +161,28 @@
             <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="margin-top:-15px">
                 <div class="card">
                     <div class="body">
-                       <div class="row clearfix">
+                       <div class="row clearfix" style="margin-bottom: -25px">
+
                           <div class="col-lg-6 col-md-6 col-xs-12 col-sm-12">
-                                <p>{{ $notify->notif_title }}</p>
+                                <label>{{ $notify->notif_title }}</label>
                           </div>
-                          <div class="col-lg-6 col-md-6 col-xs-12 col-sm-12">
-                                <span class="pull-right"  onclick="window.location='{{ url('notifications/edit/'.$notify->notif_id)   }}'">
-                                    <i class="fa fa-chevron-right notify-edit-icon" style="font-size:30px; color:#7e7e7e; margin-top: 15px"></i>
-                                </span>
-                                <br>
+                          <div class="col-lg-6 col-md-6 col-xs-12 col-sm-12 ">
+                
+                               <table style="width:100%;">
+                                   <tr>
+                                       <td >
+                                          <div style="height:80px">
+                                                <canvas id="myChart{{$notify->notif_id}}" style="width:100%"></canvas>
+                                          </div>
+                                       </td>
+                                       <td class="arrow-on-m">
+                                            <span class="pull-right"  onclick="window.location='{{ url('notifications/edit/'.$notify->notif_id)   }}'">
+                                                <i class="fa fa-chevron-right notify-edit-icon" style="font-size:30px; color:#7e7e7e;"></i>
+                                            </span>
+                                       </td>
+                                   </tr>
+                               </table>
+                      
                           </div>
                         </div>
                     </div>
@@ -200,50 +219,98 @@
 @endsection
 
 @section('scripts')
-<script src="{{ asset('static/js/notifications.js') }}"></script>
-<script src="{{ asset('static/js/bootstrap-material-datetimepicker.js') }}"></script>
+
+<script src="{{ asset('static/js/folders.js') }}"></script>
 <script type="text/javascript">
 
-$(function () {
-    //Textare auto growth
-    autosize($('textarea.auto-growth'));
-
-    //Datetimepicker plugin
-    $('.datetimepicker').bootstrapMaterialDatePicker({
-        format: 'YYYY-MM-DD HH:mm:ss',
-        clearButton: true,
-        shortTime: true,
-        weekStart: 1
-    });
-
-});
-
-//used angular interpolate for syntax compatibility
-var app = angular.module('notification_app', [], function($interpolateProvider) {
-    $interpolateProvider.startSymbol('<#');
-    $interpolateProvider.endSymbol('#>');
-});
+//inject this app to rootApp
+var app = angular.module('app', []);
 
 app.controller('notification_controller', function($scope, $http, $timeout) {
 
-$scope.saveNotification = function(){
-    var form = $('#notification_form');
-    var formdata = false;
-    if (window.FormData) {
-        formdata = new FormData(form[0]);
-    }
+$scope.getNotificationsLCD = function(){
+    $http.get('/notifications/line_chart_datas').success(function(data){
+         $scope.linechart_datas = data;
+         $scope.createChart();
+    });    
+}
+$scope.getNotificationsLCD();
 
-    $.ajax({
-        url: '/notifications/create',
-        data: formdata ? formdata : form.serialize(),
-        cache: false,
-        contentType: false,
-        processData: false,
-        type: 'POST',
-        success: function(data) {
-            console.log(data);
-        }
-    }); //end ajax
+$scope.createChart = function(){
+  
+  var lineCanvas  = [];
+  var makeDatas   = [];
+  var lineDatas   = [];
+  var lineChart   = [];
+  var maxVal      = [];
+
+  angular.forEach($scope.linechart_datas, function(value, key) {
+       lineCanvas[value.notification_id] = document.getElementById("myChart"+value.notification_id);
+       makeDatas[value.notification_id] = {
+          label: "",
+          data: value.notif_counts,
+          lineTension: 0.3,
+          fill: false,
+          borderColor: 'rgba(0, 119, 255, 1)',
+          backgroundColor: 'transparent',
+          pointBorderWidth: 0,
+          pointRadius:0,
+          borderWidth:4
+      };
+      lineDatas[value.notification_id] = {
+          labels: makeDatas[value.notification_id].data,
+          datasets: [makeDatas[value.notification_id]],
+      };
+      maxVal = Math.max.apply(Math, value.notif_counts);
+
+      lineChart[value.notification_id] = new Chart(lineCanvas[value.notification_id], {
+          type: 'line',
+          data: lineDatas[value.notification_id],
+          // options --------------------------------
+          options: {
+                  maintainAspectRatio: false,
+                  legend: {
+                      display: false,
+                  },
+                  tooltips: {
+                      enabled: false
+                  },
+                   scales: {
+                      yAxes: [{
+                        ticks: {
+                          beginAtZero: true,
+                          autoSkip: false,
+                          display:false,
+                          max: maxVal+0.2
+   
+                        },
+                         gridLines: {
+                          display: false,
+                          color: "white",
+                          zeroLineColor: "white"
+                        },
+                      }],
+                      xAxes: [{
+                        ticks: {
+                          beginAtZero: true,
+                          autoSkip: false,
+                          display:false,
+                            
+                        },
+                        gridLines: {
+                          display: false,
+                          color: "white",
+                          zeroLineColor: "white"
+                        },
+                        categoryPercentage: 1,
+
+                      }]
+                    }
+          }
+          // options --------------------------------
+      });
+      console.log('linechart data created');
+  });
 }
 
 });
