@@ -271,16 +271,10 @@ class foldersController extends Controller
     public function serverTest(){
        
 
-           $prs_stat = ['ocred_final','ocred_final_failed'];
-         //return no of archived docs for knob
-         $knob = DB::table('documents')->where([
-             ['doc_user_id','=',Auth::user()->id],
-             ['is_archive','=',1]
-         ])
-         ->whereIn('process_status',$prs_stat)
-         ->whereBetween('created_at', [\Carbon\Carbon::now()->startOfWeek(),\Carbon\Carbon::now()->endOfWeek()])
-         ->count();
+           $update = DB::table('users')->where('id', Auth::user()->id)
+           ->update(['name'=>'John']);
 
+           echo $update;
       
     }
 

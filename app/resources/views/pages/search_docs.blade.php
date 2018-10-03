@@ -314,6 +314,7 @@ text-indent: 15px;
   position: absolute;
   cursor: pointer;
   right:0%;
+  top:0;
 }
 
 .inside_close {  
@@ -435,7 +436,7 @@ text-indent: 15px;
 		 <div class="row clearfix" >
 			 <div class="col-md-12 col-xs-12 col-sm-12 ss_list_index" >
                    <div class="list-group" ng-class="{true: 'card'}[ss_list.length > 1]" ng-show="ss_list!=null && ss_list.length>0 && ss_list_show">
-                   	    <div class="list-group-item" style="padding:0px; marign:0px" ng-repeat="data in ss_list track by $index">
+                   	    <div class="list-group-item" style="padding:0px; margin:0px" ng-repeat="data in ss_list track by $index">
 				            <span class="ss_list_a" ng-click="queSavedSearch(data)"><span><# data.ss_name #></span></span>
 				            <span class="list_btn_container">
 									<span class="inside_close ic_edit waves-effect"  ng-click="renameSaveSearch(data.ss_id,data.ss_name)"><i class="fa fa-edit"></i></span>

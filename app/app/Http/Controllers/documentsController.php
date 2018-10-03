@@ -177,7 +177,8 @@ class documentsController extends Controller
                   $to_edit_docs = DB::table('documents')->where([
                      ['doc_user_id','=',Auth::user()->id],
                      ['is_archive','=',0],
-                     ['is_ocred','=',1]
+                     ['is_ocred','=',1],
+                     ['process_status','=','ocred_final']
                   ])->select('documents.doc_id')->first();
                   if(count($to_edit_docs)>0){
                       return $to_edit_docs->doc_id;
@@ -190,7 +191,8 @@ class documentsController extends Controller
                   $to_edit_docs = DB::table('documents')->where([
                      ['doc_user_id','=',Auth::user()->id],
                      ['is_archive','=',0],
-                     ['is_ocred','=',0]
+                     ['is_ocred','=',0],
+                     ['process_status','=','ocred_final_failed']
                   ])->select('documents.doc_id')->first();
                   if(count($to_edit_docs)>0){
                       return $to_edit_docs->doc_id;
