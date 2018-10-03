@@ -513,7 +513,6 @@ app.controller('folders_controller', function($scope, $http, $timeout, $compile)
 	            	if(data=="success_deleted"){
 	                	swal("Deleted!", "Your folder has been deleted.", "success");
 	                	$scope.getFolders();
-
 	                }
 	            }
 	        }); //end ajax

@@ -64,6 +64,14 @@ Route::get('/share/{user_name}/{share_hash}/{password}', 'shareDocumentControlle
             Route::post('/search/documents',                    'searchDocumentController@searchDocument');
             Route::post('/search/typhead',                      'searchDocumentController@typeHead');
 
+            //Search save routes ========================================================================================
+            Route::get('/ss_user',                              'saveSearchController@userSavedSearch');
+            Route::post('/ss_save',                             'saveSearchController@saveSearch');
+            Route::post('/ss_rename',                           'saveSearchController@renameSaveSearch');
+            Route::post('/ss_delete',                           'saveSearchController@deleteSaveSearch');
+
+            //===========================================================================================================
+
             //common search routes =====================================================================================
             Route::post('/common_search/autocomplete',          'commonSearchDocumentCOntroller@autoComplete');
             Route::post('/common_search/select_search',          'commonSearchDocumentCOntroller@selectAutoCompleteSearch');
@@ -122,7 +130,6 @@ Route::get('/share/{user_name}/{share_hash}/{password}', 'shareDocumentControlle
             Route::get( '/return_archives',                      'documentsController@returnArchives');
 
             //Upload documents  =========================================================================================
-
             Route::get( '/upload_documents',                    'uploadDocumentController@index');
             Route::post('/upload_documents',                    'uploadDocumentController@fileUpload');
 

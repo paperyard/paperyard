@@ -95,6 +95,7 @@
 .list-group-autocomplete{
    position:absolute !important;
    z-index:5 !important;
+   cursor:pointer;
 }
 
 .hideBarChart {
@@ -218,6 +219,14 @@
 
 .cstm_input {
 	background-color:#ebedf8;
+	border-top-right-radius: 0px;
+	border-bottom-right-radius: 0px;
+
+	outline: none;
+	border: none !important;
+	-webkit-box-shadow: none !important;
+	-moz-box-shadow: none !important;
+	box-shadow: none !important;
 }
 
 .canvasStyle {
@@ -251,6 +260,118 @@
 .q_btn:hover {
      color:#017cff;
 }
+
+
+
+.cstm-srch-btn {
+   color:#017cff;
+   font-size:18px;
+}
+
+.input-group{
+  display: table;
+  width:100%;
+
+}
+.input-group > div{
+  display: table-cell;
+  vertical-align: middle;  /* needed for Safari */
+}
+
+.input-group-icon{
+  background:#ebedf8;
+  color: #017cff;
+  padding: 0 12px;
+  border-left:2px solid #ccc;
+}
+
+.inp-g-hv:hover {
+	background-color:#dcdeef;
+}
+.input-group-area{
+  width:100%;
+}
+
+.input-group input{
+  border: 0;
+  display: block;
+  width: 100%;
+  padding: 8px;
+border-top-left-radius: 3px !important;
+border-bottom-left-radius: 3px !important;
+text-indent: 15px;
+}
+
+.input-group input:focus {
+  
+  outline:none !important;
+ border-color: inherit !important;
+  -webkit-box-shadow: none !important;
+  box-shadow: none !important;
+}
+
+.list_btn_container {
+  position: absolute;
+  cursor: pointer;
+  right:0%;
+}
+
+.inside_close {  
+	 position: relative;
+	 padding: 10.5px 13.5px;
+	 background-color:#999;
+	 border-right:1px solid #ccc;
+}
+
+.ic_edit {
+	 background-color:#017cff !important;
+	 margin-right:-3px;
+	 color:#fff;
+}
+.ic_edit:hover {
+    background-color:#3295ff !important;
+}
+
+.ic_trash {
+	 background-color:#ff9c1c !important;
+	 color:#fff;
+}
+
+.ic_trash:hover {
+	 background-color:#fca535 !important;
+	 color:#fff;
+}
+
+.ic_edit i {
+	font-size:17px;
+}
+
+.ic_trash i {
+	font-size:17px;
+}
+
+.ss_list_a {
+	width:100%; padding:10px; display:inline-block;
+}
+.ss_list_a:hover {
+	background-color:#b1d5ff;
+}
+
+.ss_list_index {
+	position:absolute;
+	z-index:5 !important;
+}
+
+.tags_list_a {
+	 width:100%; padding:10px; display:inline-block;
+	 background-color: #4ddb9f;
+}
+
+.tags_list_a:hover {
+	 background-color:#29c684
+}
+
+
 
 </style>
 @endsection
@@ -295,25 +416,68 @@
 	</div>
 
 	<div class="col-md-12">
-		<input type="text" class="form-control input-lg cstm_input" id="usr" ng-model="keyword" ng-model-options='{ debounce: 1000 }' ng-change="autoComplete()" ng-keydown="myFunct($event)">
-        <div class="row cleafix">
-	        <div class="col-md-3 ">
-		        <div class="list-group list-group-autocomplete">
-		            <a  ng-click="selectAutocompleteSearch(tag,'tag')" class="list-group-item th-t typeHeadCstm" ng-repeat="tag in find_tags track by $index" ng-show="find_tags!=null && find_tags.length>0">
-			            <# tag #>
-			        </a>
-			        <a  ng-click="selectAutocompleteSearch(folder.folder_name,'folder')" class="list-group-item th-f typeHeadCstm" ng-repeat="folder in find_folders track by $index" ng-show="find_folders!=null && find_folders.length>0">
-                        <# folder.folder_name #>
-			        </a>
-			        <a  ng-click="selectAutocompleteSearch(text,'full_text')" class="list-group-item th-ft typeHeadCstm" ng-repeat="text in find_fText track by $index" ng-show="find_fText!=null && find_fText.length>0">
-			            <# text #>
-			        </a>
-			        <a  class="list-group-item typeHeadCstm ng-hide" ng-show="autocomplte_no_result">
-			            No result found..
-			        </a>
-			    </div>
+      
+    
+    <!-- search input | buttons container -->
+     <div>
+		<div class="input-group" style="margin-bottom:0px;">
+		  <div class="input-group-area">
+		 	<input type="text" class="form-control input-lg cstm_input InputAddOn-field" id="usr" ng-click="ss_list_show=false; tags_list_show = false" ng-model="keyword" ng-model-options='{ debounce: 1000 }' ng-change="autoComplete()" ng-keydown="myFunct($event)">
+		  </div>
+
+		  	<div class="input-group-icon  waves-effect inp-g-hv ng-hide" ng-show="ss_tag_btn" ng-click="tags_list_show = !tags_list_show; ss_list_show = false"><i class="glyphicon glyphicon-tags cstm-srch-btn" style="color:#017cff;"></i></div>
+			<div class="input-group-icon  waves-effect inp-g-hv ng-hide" ng-show="ss_list_btn" ng-click="ss_list_show = !ss_list_show; tags_list_show = false"><i class="glyphicon glyphicon-list cstm-srch-btn" style="color:#017cff;"></i></div>
+			<div class="input-group-icon  waves-effect inp-g-hv ng-hide" ng-show="ss_btn" style="border-top-right-radius: 3px;border-bottom-right-radius: 3px !important" ng-click="saveSearched()">
+				 <i class="glyphicon glyphicon-floppy-disk cstm-srch-btn" style="color:#017cff;"></i>
 		    </div>
 		</div>
+		<!-- Ssave search list -->
+		 <div class="row clearfix" >
+			 <div class="col-md-12 col-xs-12 col-sm-12 ss_list_index" >
+                   <div class="list-group" ng-class="{true: 'card'}[ss_list.length > 1]" ng-show="ss_list!=null && ss_list.length>0 && ss_list_show">
+                   	    <div class="list-group-item" style="padding:0px; marign:0px" ng-repeat="data in ss_list track by $index">
+				            <span class="ss_list_a" ng-click="queSavedSearch(data)"><span><# data.ss_name #></span></span>
+				            <span class="list_btn_container">
+									<span class="inside_close ic_edit waves-effect"  ng-click="renameSaveSearch(data.ss_id,data.ss_name)"><i class="fa fa-edit"></i></span>
+									<span class="inside_close ic_trash waves-effect" ng-click="deleteSaveSearch(data.ss_id)"><i class="fa fa-trash"></i></span>
+				            </span>
+				        </div>
+                   </div>	
+			 </div>
+		</div>
+		<!-- tags list -->
+		 <div class="row clearfix" >
+			 <div class="col-md-12 col-xs-12 col-sm-12 ss_list_index" >
+                   <div class="list-group" ng-class="{true: 'card'}[tags_list.length > 1]" ng-show="tags_list!=null && tags_list.length>0 && tags_list_show">
+                   	    <div class="list-group-item" style="padding:0px; marign:0px" ng-repeat="tags in tags_list track by $index">
+				            <span class="tags_list_a"><span><# tags #></span></span>
+				        </div>
+                   </div>	
+			 </div>
+		</div>
+	</div>	
+
+
+        <div class="row clearfix">
+	        <div class="col-md-3 ">
+			        <div class="list-group list-group-autocomplete" ng-class="{true: 'card'}[find_tags.length > 1 || find_folders.length > 1 || find_fText.length > 1]">
+			            <a  ng-click="selectAutocompleteSearch(tag,'tag')" class="list-group-item th-t typeHeadCstm" ng-repeat="tag in find_tags track by $index" ng-show="find_tags!=null && find_tags.length>0">
+				            <# tag #>
+				        </a>
+				        <a  ng-click="selectAutocompleteSearch(folder.folder_name,'folder')" class="list-group-item th-f typeHeadCstm" ng-repeat="folder in find_folders track by $index" ng-show="find_folders!=null && find_folders.length>0">
+	                        <# folder.folder_name #>
+				        </a>
+				        <a  ng-click="selectAutocompleteSearch(text,'full_text')" class="list-group-item th-ft typeHeadCstm" ng-repeat="text in find_fText track by $index" ng-show="find_fText!=null && find_fText.length>0">
+				            <# text #>
+				        </a>
+				        <a  class="list-group-item typeHeadCstm ng-hide" ng-show="autocomplte_no_result">
+				            No result found..
+				        </a>
+				    </div>
+			    </div>
+		</div>
+
+		
 		<br>
 	</div>
     
@@ -457,7 +621,7 @@
 										</ul>
 										<div class="view_tags">
 											<span ng-repeat="tag in doc3.tags_array" > 
-												<span class="badge bg-green" ng-show="tag.length>0">
+												<span class="badge bg-green">
 													 <# tag #>
 												</span>
 											</span>	
@@ -657,7 +821,9 @@ $scope.selected='lg_view';
 //default filter
 $scope.filter  = 'no_filter';
 $scope.keyword = '';
-$scope.list   = '';
+$scope.list   = [];
+$scope.tags_list = [];
+
 
 //autocomplte no result
 $scope.autocomplte_no_result = false;
@@ -670,6 +836,14 @@ $scope.not_found =  false;
 //search format 
 $scope.invalid_format = false;
 
+//-----save search--------
+$scope.save_search_data = [];
+$scope.ss_tag_btn = false;
+$scope.ss_list_btn = false;
+$scope.ss_btn = false;
+$scope.ss_list_show = false;
+$scope.tags_list_show = false;
+
 
 //clear autocomplete
 $scope.clear_autocomplete = function(){
@@ -677,6 +851,8 @@ $scope.clear_autocomplete = function(){
 	$scope.find_fText   = null;
 	$scope.find_folders = null;
 	$scope.autocomplte_no_result = false;
+	//hide save search list when typing
+
 }
 
 //edit document
@@ -698,7 +874,9 @@ $scope.myFunct = function(keyEvent) {
 
 //on keypress run autocomplete
 $scope.autoComplete = function(){
-
+    
+	$scope.ss_list_show = false;
+	$scope.tags_list_show = false;
     // empty dropdown autocomplete.
     $scope.clear_autocomplete();
     //cancel previous autocomplete post request.
@@ -711,7 +889,6 @@ $scope.autoComplete = function(){
    	  keyword:$scope.keyword,
    	  autocomplte_filter:$scope.filter
     }
-    console.log($scope.filter);
     //send post request.
     $http({method:'POST',url:'/search/typhead', data, timeout: $scope.canceler.promise}).success(function(data){
          //store data if found
@@ -753,7 +930,7 @@ $scope.autoComplete = function(){
          	//not result.
          	$scope.autocomplte_no_result = true;
          }
-         console.log(data);
+
     });
 }
 
@@ -763,7 +940,6 @@ $scope.reInit = function(){
     $('#myChart').addClass('hideBarChart');
     //hide current doc view
     $scope.doc_view = false;
-
     $scope.canceler.resolve();
     //cancel previous selectSearch post request
     $scope.search_canceler.resolve();
@@ -777,6 +953,13 @@ $scope.reInit = function(){
 	$scope.not_found = false;
     //put selected autocomplete keyword to search bar
     $scope.invalid_format = false;
+    //hide saved search list
+    $scope.ss_list_show = false;
+    $scope.tags_list_show = false;
+    //empty list 
+    $scope.list = [];
+    $scope.tags_list = [];
+
 }
 
 $scope.docsFound = function(){
@@ -800,8 +983,10 @@ $scope.formatNotValid = function(){
   	$scope.doc_view   = false;
   	//hide preloader
     $scope.doc_loader = false;
-    //
     $scope.invalid_format = true;
+	//empty list 
+	$scope.list = [];
+	$scope.tags_list = [];
 }
 
 $scope.docsNotFound = function(){
@@ -812,10 +997,207 @@ $scope.docsNotFound = function(){
   	$scope.doc_view   = false;
   	//hide preloader
     $scope.doc_loader = false;
-    //
     $scope.invalid_format = false;
-
+    //empty list 
+    $scope.list = [];
+    $scope.tags_list = [];
 }
+
+//-=======================================  SAVE SEARCH ==================================================
+
+  $scope.ss_list_check = [];
+  $scope.getSaveSearches = function(){
+  	  $scope.ss_list = [];
+  	  $http.get('/ss_user').success(function(data){
+           $scope.ss_list = data;
+
+           if($scope.ss_list.length>0 && $scope.ss_list!=null){
+               $scope.ss_list_btn = true;
+           }
+
+           angular.forEach(data, function(value, key) {
+		      this.push(value.ss_name.toUpperCase());
+	       }, $scope.ss_list_check);
+  	  });
+  }
+
+  $scope.getSaveSearches();
+
+  $scope.storeSaveSearchDatas = function(kw,ft){
+ 
+      $scope.save_search_data = [];
+      $scope.save_search_data.splice(0,0,kw);
+      $scope.save_search_data.splice(1,0,ft);
+
+      if($scope.list.length>0 && $scope.list!=null){
+      	 $scope.ss_btn = true;
+      }else{
+      	 $scope.ss_btn = false;
+      }
+      console.log($scope.save_search_data);
+  }
+
+  $scope.toggleTagsList = function(){
+
+	  console.log("tags_list:" + $scope.tags_list);
+	  if($scope.tags_list.length>0 && $scope.tags_list!=null){
+	       $scope.ss_tag_btn = true;
+	  }else{
+	       $scope.ss_tag_btn = false;
+	  }
+  }
+
+  //save search result
+  $scope.saveSearched = function(){
+    swal({
+        title: "Save searched documents",
+        text: "Please name your save search:",
+        type: "input",
+        showCancelButton: true,
+        closeOnConfirm: false,
+        animation: "slide-from-top",
+        inputPlaceholder: "Save search name"
+    }, function (inputValue) {
+        if (inputValue === false) return false;
+        if (inputValue === "") {
+            swal.showInputError("You need to write something!"); return false
+        }
+        if($scope.ss_list_check.includes(inputValue.toUpperCase())==true ){
+            swal.showInputError("Save search name exist"); return false
+        }
+        $scope.save_search_data.splice(2,0,inputValue); 
+        $.ajax({
+            url: '/ss_save',
+            data: {
+                ss_datas: $scope.save_search_data
+            },
+            type: 'POST',
+            success: function(data) {
+            	if(data=="success"){
+                	swal("Success", "New save search created","success");
+                	$scope.getSaveSearches();
+                }
+            }
+        }); //end ajax
+    });
+  }
+
+  $scope.renameSaveSearch = function(ss_id,ss_name){
+
+  	swal({
+        title: "Rename save search",
+        text: "Enter new name:",
+        type: "input",
+        input: 'ss_name',
+        inputValue: ss_name,
+        showCancelButton: true,
+        closeOnConfirm: false,
+        animation: "slide-from-top",
+        inputPlaceholder: "Save search name"
+    }, function (ss_new_name) {
+        if (ss_new_name === false) return false;
+        if (ss_new_name === "") {
+            swal.showInputError("You need to write something!"); return false;
+        }
+        if($scope.ss_list_check.includes(ss_new_name.toUpperCase())==true ){
+            swal.showInputError("Name already exist"); return false
+        }
+        ss_data = [ss_id,ss_new_name];
+        $.ajax({
+            url: '/ss_rename',
+            data: { ss_data },
+            type: 'POST',
+            success: function(data) {
+            	if(data=="success_renamed"){
+                	swal("Success", "Save search name changed to: " + ss_new_name, "success");
+                	$scope.getSaveSearches();
+                } 
+            }
+        }); //end ajax
+    });
+
+  }
+
+    //delete saveSearch
+    $scope.deleteSaveSearch = function(ss_id){
+
+	    swal({
+	        title: "Delete Saved Search",
+	        text: "Are you sure you want to delete this saved search?",
+	        type: "warning",
+	        showCancelButton: true,
+	        confirmButtonColor: "#DD6B55",
+	        confirmButtonText: "Yes, delete it!",
+	        cancelButtonText: "No, cancel please!",
+	        closeOnConfirm: false,
+	        closeOnCancel: false
+	    }, function (isConfirm) {
+	        if (isConfirm) {
+	            //ajax send post delete with id.
+	             $.ajax({
+		            url: '/ss_delete',
+		            data: {
+		                ss_id: ss_id
+		            },
+		            type: 'POST',
+		            success: function(data) {
+		            	if(data=="success_deleted"){
+		            		console.log(data);
+		                    $scope.getSaveSearches();
+		                }
+		               swal("Deleted!", "Your folder has been deleted.", "success");
+		            }
+		        }); //end ajax
+	        } else {
+	            swal("Cancelled", "Nothing is deleted.", "error");
+	        }
+	    });
+
+	 }
+
+
+  $scope.queSavedSearch = function(data){
+
+  	$scope.reInit();
+    //store datas for post request
+    data = {
+       keyword: data['ss_keyword'],
+       filter:  data['ss_filter']
+    }
+    //filter = tag,folder,fulltext
+    $http({method:'POST',url:'/search/documents', data, timeout: $scope.search_canceler.promise}).success(function(data){
+        if(data=="error"){
+	        $scope.docsNotFound();
+	    }
+	    else{ 
+	        $scope.docsFound();         
+	        //store datas in different views
+		    $scope.list = data.doc_datas;
+		    $scope.tags_list = data.doc_tags;
+		    $scope.currentPage = 1; //current page
+			$scope.entryLimit = 10; //max no of items to display in a page
+			$scope.filteredItems = $scope.list.length; //Initially for no filter
+			$scope.totalItems = $scope.list.length;
+
+			$scope.toggleTagsList();
+	    }
+    });
+  	  
+  }
+
+
+
+//-----------------------------------------------------
+
+
+
+
+
+
+
+
+
+
 
 //================================================================================================================================================
 //search on select autocomplete
@@ -838,10 +1220,16 @@ $scope.selectAutocompleteSearch = function(keyword,filter){
 	    else{ 
 	        $scope.docsFound();         
 	        //store datas in different views
-	        $scope.list = data;
-			$scope.list2 = data;
-			$scope.list3 = data;
-			$scope.list4 = data;
+		    $scope.list = data.doc_datas;
+		    $scope.tags_list = data.doc_tags;
+		    $scope.currentPage = 1; //current page
+			$scope.entryLimit = 10; //max no of items to display in a page
+			$scope.filteredItems = $scope.list.length; //Initially for no filter
+			$scope.totalItems = $scope.list.length;
+
+            $scope.toggleTagsList();
+			$scope.storeSaveSearchDatas($scope.keyword,$scope.filter);
+
 	    }
     });
 
@@ -849,14 +1237,13 @@ $scope.selectAutocompleteSearch = function(keyword,filter){
 
 // search when key enter pressed
 $scope.enterKeySearch = function(){
-
+        
         $scope.reInit();
 	    //store datas for post request
 	    data = {
 	       keyword: $scope.keyword,
 	       filter:  $scope.filter
 	    }
-	    console.log($scope.keyword);
 	    //filter = tag,folder,fulltext
 	    $http({method:'POST',url:'/search/documents', data, timeout: $scope.search_canceler.promise}).success(function(data){
             if(data=="error" || data.length==0){
@@ -867,13 +1254,20 @@ $scope.enterKeySearch = function(){
             }else{    	
                 $scope.docsFound();         
 		        //store datas in different views
-		        $scope.list = data;
 
+		        $scope.list = data.doc_datas;
+		        $scope.tags_list = data.doc_tags;
 				$scope.currentPage = 1; //current page
 				$scope.entryLimit = 10; //max no of items to display in a page
 				$scope.filteredItems = $scope.list.length; //Initially for no filter
 				$scope.totalItems = $scope.list.length;
+
 	        }
+
+            $scope.toggleTagsList();
+            $scope.storeSaveSearchDatas($scope.keyword,$scope.filter);
+
+
 	    });
 
 }
@@ -885,14 +1279,16 @@ $scope.setPage = function(pageNo){
 
 
 //==================================================================================================================================================
+
+
+
+
 //get barchart datas.
 $scope.getBarchartDatas = function(){
     $http.get('/search/barchar_datas').success(function(data){
     $scope.bar_year_range = data.year_range;
     $scope.bar_mdr = data.mdr;
-
-	    console.log('datas received');
-		           
+      
 		var canvas_html = [];
 		var element =     [];
 		for(var i in data.year_range){         
@@ -967,7 +1363,7 @@ $scope.myBar  = [];
 $scope.makeBarchart = function(){
 
     var data = $scope.bar_year_range;
-    console.log('success');
+
 	for (var i in data) {
 	  // destroy previous created chart canvas.
 	  if($scope.myBar[i]) {
@@ -1016,7 +1412,7 @@ $scope.makeBarchart = function(){
 	        }
 	      }
 	    });
-         console.log('success');
+
 	}; // end for loop
 
 }

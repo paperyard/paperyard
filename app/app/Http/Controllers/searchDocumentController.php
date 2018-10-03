@@ -138,7 +138,6 @@ class searchDocumentController extends Controller
     }
     // autocomplete ==================================================================================================
     
-
     // Search documents  =============================================================================================
     public function searchDocument(Request $req){
          
@@ -179,18 +178,26 @@ class searchDocumentController extends Controller
 
 
         if(count($docs)>0 && $docs!="invalid_format"){
-
+            
+            $doc_tags = [];
             foreach($docs as $d){                
                 if($d->date=="0000-00-00 00:00:00"){
                     $d->date = "N/D";
                 }else{
-                  $n_date = new \DateTime($d->date);
-                  $short_date = date_format($n_date,"d.m.Y");
-                  $d->date = $short_date;
+                    $n_date = new \DateTime($d->date);
+                    $short_date = date_format($n_date,"d.m.Y");
+                    $d->date = $short_date;
+                }
+                //get tags
+                if(count($d->tags_array)>0){
+                   $arr_tags = array_merge($doc_tags,$d->tags_array);
+                   $doc_tags = $arr_tags;
                 }
             }
-            $json_response = json_encode($docs);
+            $unique_tags = array_unique($doc_tags);
+            $json_response = json_encode(array('doc_datas'=>$docs,'doc_tags'=>$unique_tags));
             return $json_response;
+
         }
         else if($docs=="invalid_format"){
             return "invalid_format";
@@ -201,6 +208,7 @@ class searchDocumentController extends Controller
 
 
     }
+
 
     // return all documnets ======================================================
     public function returnAllDocuments(){
@@ -781,6 +789,8 @@ class searchDocumentController extends Controller
                 $fname = storage_path('app/documents_ocred') . '/' . $d->doc_ocr;
                 $fsize = filesize($fname);
                 $d->size = $this->FileSizeConvert($fsize);
+                $tagsArr = explode(",",$d->tags);
+                $d->tags_array = $tagsArr;
             }
             return $documents;
         }else{
@@ -832,6 +842,8 @@ class searchDocumentController extends Controller
                     $fname = storage_path('app/documents_ocred') . '/' . $d->doc_ocr;
                     $fsize = filesize($fname);
                     $d->size = $this->FileSizeConvert($fsize);
+                    $tagsArr = explode(",",$d->tags);
+                    $d->tags_array = $tagsArr;
                 }
                 return $documents;
             }else{
@@ -880,6 +892,8 @@ class searchDocumentController extends Controller
                 $fname = storage_path('app/documents_ocred') . '/' . $d->doc_ocr;
                 $fsize = filesize($fname);
                 $d->size = $this->FileSizeConvert($fsize);
+                $tagsArr = explode(",",$d->tags);
+                $d->tags_array = $tagsArr;
             }
             return $documents;
         }else{
