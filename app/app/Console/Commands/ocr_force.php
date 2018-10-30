@@ -32,7 +32,7 @@ class ocr_force extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Run when artisan ocr:new failed, execute command [decrypt,ocr_force,remove_blank_pages]';
 
     /**
      * Create a new command instance.
@@ -52,109 +52,173 @@ class ocr_force extends Command
     public function handle()
     {
 
-            // get failed documents.
-            $time = time();
-            $documents = DB::table('documents')
-            ->where("t_process", '<=', $time)
-            ->where("process_status", "failed")
-            ->get();
+      // get failed documents.
+      $time = time();
+      $documents = DB::table('documents')
+      ->where("t_process", '<=', $time)
+      ->where("process_status", "failed")
+      ->get();
 
-            // If failed documents found. rerun ocr with force
-            if(count($documents)>0){
+      // If failed documents found. rerun ocr with force
+      if(count($documents)>0){
 
-                    // store failed docs ids to array
-                    $rerun_doc_ids = [];
-                    foreach($documents as $upd){
-                      array_push($rerun_doc_ids, $upd->doc_id);
-                    }
-                    // change status of "failed" docs to "rerun_failed" 
-                    DB::table('documents')
-                    ->whereIn('doc_id', $rerun_doc_ids)
-                    ->update(['process_status' => 'rerun_failed']);
+            // store failed docs ids to array
+            $rerun_doc_ids = [];
+            foreach($documents as $upd){
+              array_push($rerun_doc_ids, $upd->doc_id);
+            }
+            // change status of "failed" docs to "rerun_failed" 
+            DB::table('documents')
+            ->whereIn('doc_id', $rerun_doc_ids)
+            ->update(['process_status' => 'rerun_failed']);
 
-                    // rerun force ocr on each docs
-                    foreach($documents as $key=>$d){
+            // rerun force ocr on each docs
+            foreach($documents as $key=>$d){
 
-                          //location of original doc.
-                          $document_src[$key] = "storage/app/documents_new/" . $d->doc_org;
-                          //location for where the document with applied ocr will be stored.
-                          $document_dst[$key] = "storage/app/documents_ocred/" . $d->doc_ocr;
+                //location of original doc. ------------------------------------------------------------------------------------
+                $document_src[$key] = "storage/app/documents_new/$d->doc_org";
+                //location for where the document with applied ocr will be stored.
+                $document_dst[$key] = "storage/app/documents_ocred/$d->doc_ocr";
+                //decrypted doc
+                $decrypted_doc                = "decrypted-$d->doc_org";
+                $decrypted_document_src[$key] = "storage/app/documents_processing/$decrypted_doc";
+                //---------------------------------------------------------------------------------------------------------------
 
+                //flags for ocrmypdf. flags are available ata ocrmypdf documentation.
+                $flag_ocr[$key]        = "ocrmypdf --output-type pdf -l deu+eng --tesseract-timeout 3600 --skip-big 5000 --force-ocr --rotate-pages --deskew";
+                //qpdf decrypt flag
+                $flag_decrypt[$key]    = "qpdf --decrypt";
 
-                          //decrypted doc
-                          $decrypted_doc = "decrypted-" . $d->doc_org;
-                          $decrypted_document_src[$key] = "storage/app/documents_new/" . $decrypted_doc;
+                //decrypt document
+                $process_decrypt[$key] = "$flag_decrypt[$key] $document_src[$key] $decrypted_document_src[$key]";
+                //process param for running ocr with force
+                $process_ocr[$key]     = "$flag_ocr[$key] $decrypted_document_src[$key] $document_dst[$key]";
+                //---------------------------------------------------------------------------------------------------------------
 
-                          //flags for ocrmypdf. flags are available ata ocrmypdf documentation.
-                          $params1[$key] = "ocrmypdf --output-type pdf -l deu+eng --tesseract-timeout 3600 --skip-big 5000 --force-ocr --rotate-pages --deskew";
-                           //img2pdf flags
-                          $params2[$key] = "img2pdf --output";
-                          //qpdf dycrpy flag
-                          $params3[$key] = "qpdf --decrypt";
+                //decrypt pdf using QPDF
+                $this->decrypt_QPDF($process_decrypt[$key]);
 
-                          //process param for running ocr with force
-                          $process_ocr[$key] = $params1[$key]     . " " . $decrypted_document_src[$key] . " " . $document_dst[$key];
-                          $p_id1[$key] = (string)$process_ocr[$key];
-                          
-                          //decrypt document
-                          $process_decrypt[$key] = $params3[$key] . " " . $document_src[$key] . " " . $decrypted_document_src[$key];
-                          $p_id4[$key] = (string)$process_decrypt[$key];
+                //check if file is decrypted
+                if(file_exists($decrypted_document_src[$key])){
+                    //remove blank pages.
+                    $this->remove_blank_pages($decrypted_document_src[$key]);
+                    //force ocr doc
+                    $this->force_ocr($process_ocr[$key],$d->doc_org);
+                    //delete temporary decrypted doc
+                    File::delete((string)$decrypted_document_src[$key]);
+                }
+                else{
+                    DB::table('documents')->where('doc_org', $d->doc_org)->update(['process_status'=>'password_protected']);
+                }//end if file exist
+                
+           }//end foreach
 
-                        // PDF
-                        if(strtoupper(substr($d->doc_org, -3))=="PDF"){
-
-                            // start decryption process
-                            $dec_process[$key] = new Process($p_id4[$key]);
-                            $dec_process[$key]->disableOutput();
-                            $dec_process[$key]->start();
-                            $dec_process[$key]->wait();
-
-                            //check if file is decrypted
-                            if(file_exists($decrypted_document_src[$key])){
-                                    //run ocr force on decrypted doc
-                                    $process[$key] = new Process($p_id1[$key]);
-                                    $process[$key]->setTimeout(9000000);
-                                    $process[$key]->enableOutput();
-                                    $process[$key]->start();
-                                    $process[$key]->wait();
-
-                                    //check if getErrorOuput has ERROR. (getErrorOutput will ouput 'INFO','WARNING' and 'ERROR').
-                                    //we will only store ERROR logs.
-                                    //stripos is case-insensitive.
-                                    $check_if_has_error = stripos($process[$key]->getErrorOutput(), 'error');
-                                    
-                                    //if "error" string found. process has error.
-                                    if ($check_if_has_error !== false){
-                                        //error found. update process status to failed.
-                                        DB::table('documents')->where([
-                                          ['doc_org', '=', $d->doc_org]
-                                        ])->update(['process_status'=>'failed_force']);
-                                        //forced+location+name+time of error log
-                                        $error_log = "storage/app/symfony_process_error_logs/" ."forced-". $d->doc_org . "-" . time();
-                                        //outpout error
-                                        echo $process[$key]->getErrorOutput();
-                                        //store error log in file
-                                        file_put_contents($error_log, $process[$key]->getErrorOutput());
-                                    }else{
-                                        //process success
-                                        DB::table('documents')->where([
-                                           ['doc_org', '=', $d->doc_org]
-                                        ])->update(['process_status'=>'ocred','is_ocred'=>1]);
-                                    }
-                            }
-                            else{
-                                DB::table('documents')->where([
-                                   ['doc_org', '=', $d->doc_org]
-                                ])->update(['process_status'=>'failed_decrypting']);
-                                echo "failed decrypting";
-                            }//end if file exist
-                        
-                        }//end if strtoupper
-
-                   }//end foreach
-
-              }//end if count > 0
+        }//end if count > 0
 
     }//end handle function
-  
+
+    // decrypt document using qpdf ==========================================================================================
+    
+    public function decrypt_QPDF($prc_decrypt){
+        // start decryption process
+        $decrypt_process = new Process($prc_decrypt);
+        $decrypt_process->setTimeout(86400);
+        $decrypt_process->enableOutput();
+        $decrypt_process->start();
+        $decrypt_process->wait();
+    }
+
+    // force ocr  ===========================================================================================================
+    
+    public function force_ocr($prc_ocr, $doc_org){
+
+        //run ocr force on decrypted doc
+        $force_process = new Process($prc_ocr);
+        $force_process->setTimeout(86400);
+        $force_process->enableOutput();
+        $force_process->start();
+        $force_process->wait();
+        //check if getErrorOuput has ERROR. (getErrorOutput will ouput 'INFO','WARNING' and 'ERROR').
+        //stripos is case-insensitive.
+        $check_if_has_error = stripos($force_process->getErrorOutput(), 'error');
+    
+        //if "error" string found. process has error.
+        if ($check_if_has_error !== false){
+            //error found. update process status to failed.
+            DB::table('documents')->where([
+              ['doc_org', '=', $doc_org]
+            ])->update(['process_status'=>'failed_force']);
+            //forced+location+name+time of error log
+            $error_log = "storage/app/symfony_process_error_logs/" ."forced-". $doc_org . "-" . time();
+            //outpout error
+            echo $force_process->getErrorOutput();
+            //store error log in file
+            file_put_contents($error_log, $force_process->getErrorOutput());
+        }else{
+            //process success
+            DB::table('documents')->where([
+               ['doc_org', '=', $doc_org]
+            ])->update(['process_status'=>'ocred','is_ocred'=>1]);
+        }
+    }
+    //-------------------------------------------------------------------------------------------------------------------------
+
+    public function remove_blank_pages($file){
+
+      echo "remove page \n";
+      #------------------------------------------------------------ 
+      $pdf = new Pdf($file);
+      //get total number of document page
+      $total_pages = $pdf->getNumberOfPages();
+
+      //storage pages to be remove.
+      $remove_pages = [];
+      #----------------------------------------------------------------------------------------------
+      $doc_output =   "storage/app/documents_processing".'/'."rm_output-" . str_random(5) . ".pdf";
+
+      //check each page for empty pages.
+      for($pageNum = 1; $pageNum<=$total_pages; $pageNum ++){
+            //make temporary image from pdf to check if it is blank.
+            $tempo_name  =  time() . str_random(5) . ".png";
+            #-------------------------------------------------------------
+            $tempo_image =  "storage/app/documents_processing/$tempo_name";
+            //make image per doc page
+            $pdf->setPage($pageNum)->saveImage($tempo_image);
+
+            //image magic flag, check amount of devaition.
+            //number less than deviation is consider a blank page.
+            $img_magic_flag = "identify -format %[standard-deviation] $tempo_image";
+            $deviation = 4000;
+
+            $process = new Process($img_magic_flag);
+            $process->enableOutput();
+            $process->setTimeout(86400);
+            $process->start();
+            $process->wait();
+
+            if((int)$process->getOutput()<=$deviation){
+                array_push($remove_pages, $pageNum);
+            }
+            //remove temporary image.
+            File::delete((string)$tempo_image);
+      }
+
+      //start removing empty pages.
+      if($total_pages>count($remove_pages)){
+
+            $page_range  =  range(1, $total_pages);
+            //the difference in array will not be deleted.
+            $safe_pages  =  array_diff($page_range, $remove_pages);
+            $safe_pages  =  implode(" ",$safe_pages);
+            //pdf toolkit flags
+            $rm_pages_flags = "pdftk $file cat $safe_pages output $doc_output && mv $doc_output $file";
+            $process = new Process($rm_pages_flags);
+            $process->enableOutput();
+            $process->setTimeout(86400);
+            $process->start();
+            $process->wait();
+      }
+
+    }
+
 }

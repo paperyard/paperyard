@@ -54,9 +54,8 @@ Route::get('/share/{user_name}/{share_hash}/{password}', 'shareDocumentControlle
             //dashboard routes =========================================================================================
             Route::get('/dashboard',                            'dashboardController@index');
             Route::get('/get_docs_edit_archive',                'dashboardController@toEditDocs');
-            Route::post('/dashboard/search_auto_complete',      'dashboardController@searchAutoComplete');
-            Route::post('/dashboard/select_search',             'dashboardController@selectSearchDocuments');
-            Route::post('/dashboard/enter_search',              'dashboardController@enterSearchDocuments');
+            Route::view('/failed_ocr_documents',                'pages/failed_documents');
+            Route::get('/ocr_failed_documents',                 'dashboardController@return_ocr_failed_documents');
 
             //search document routes ===================================================================================
             Route::get('/search',                               'searchDocumentController@index');
@@ -70,11 +69,10 @@ Route::get('/share/{user_name}/{share_hash}/{password}', 'shareDocumentControlle
             Route::post('/ss_rename',                           'saveSearchController@renameSaveSearch');
             Route::post('/ss_delete',                           'saveSearchController@deleteSaveSearch');
 
-            //===========================================================================================================
 
             //common search routes =====================================================================================
-            Route::post('/common_search/autocomplete',          'commonSearchDocumentCOntroller@autoComplete');
-            Route::post('/common_search/select_search',          'commonSearchDocumentCOntroller@selectAutoCompleteSearch');
+            Route::post('/common_search/autocomplete',          'commonSearchDocumentController@autoComplete');
+            Route::post('/common_search/search',                'commonSearchDocumentController@searchDocuments');
 
             //notifications routes =====================================================================================
             Route::get('/notifications',                        'notificationsController@index');
@@ -87,11 +85,18 @@ Route::get('/share/{user_name}/{share_hash}/{password}', 'shareDocumentControlle
             //Reminders route  =========================================================================================
             Route::get('/reminders',                            'remindersController@index');
             Route::get('/get_reminders',                        'remindersController@getReminders');
-            Route::get('/reminders/edit/{reminder_id}',         'remindersController@editReminder');
-            Route::get('/reminder/create',                      'remindersController@createReminder');
-            Route::post('/reminder_documents',                  'remindersController@reminderDocuments');
-            Route::post('/reminder_save_update',                'remindersController@save_updateReminder');
-            Route::post('/reminder_delete',                     'remindersController@deleteReminder');
+            Route::get('/reminders/new',                        'remindersController@newReminder');
+            Route::post('/reminders/create',                    'remindersController@makeReminder');
+            Route::get('/reminder/edit/{reminder_id}',          'remindersController@editReminder');
+            Route::post('/reminders/get_to_edit',               'remindersController@getToEditReminder');
+            Route::post('/reminders/doc_view',                  'remindersController@getTaskListForDocView');
+
+            Route::post('/reminders/update',                    'remindersController@updateReminder');
+            Route::post('/reminders/delete',                    'remindersController@deleteReminder');
+            Route::post('/reminders/task_complete',             'remindersController@taskComplete');
+
+            Route::post('/reminders/autocomplete',              'remindersController@autoComplete');
+            Route::post('/reminders/search',                    'remindersController@searchDocuments');
 
 			//folders routes ===========================================================================================
 			Route::get( '/folders',                             'foldersController@index');
@@ -107,27 +112,27 @@ Route::get('/share/{user_name}/{share_hash}/{password}', 'shareDocumentControlle
             Route::post('/folders/show_documents',              'foldersController@folderDocuments');
 
             //documents routes =========================================================================================
-            Route::post('/document/delete',                      'documentsController@deleteDocument');
-            Route::post('/document/approve',                     'documentsController@approveDocument');
-            Route::get( '/document/{doc_id}',                    'documentsController@viewDocument');
-            Route::post('/document/update',                      'documentsController@updateDocument');
-            Route::post('/document/share',                       'documentsController@shareDocument');
+            Route::post('/document/delete',                     'documentsController@deleteDocument');
+            Route::post('/document/approve',                    'documentsController@approveDocument');
+            Route::get( '/document/{doc_id}',                   'documentsController@viewDocument');
+            Route::post('/document/update',                     'documentsController@updateDocument');
+            Route::post('/document/share',                      'documentsController@shareDocument');
 
             // customize pdf ===================================================================================
-            Route::get( '/customize_pdf/{doc_id}',               'customizePdfController@index');
-            Route::post( '/getDocPages',                         'customizePdfController@returnCustomizeDoc');
-            Route::post('cstm_removeDocPages',                   'customizePdfController@removeDocPages');
-            Route::post('cstm_rotateDocPages',                   'customizePdfController@rotateDocPages');
+            Route::get( '/customize_pdf/{doc_id}',              'customizePdfController@index');
+            Route::post('/getDocPages',                         'customizePdfController@returnCustomizeDoc');
+            Route::post('cstm_removeDocPages',                  'customizePdfController@removeDocPages');
+            Route::post('cstm_rotateDocPages',                  'customizePdfController@rotateDocPages');
 
             // merge pdf ===================================================================================
-            Route::get('/merge_pdf',                             'mergeDocumentController@index');
-            Route::post('/merge_docs_autocomplete',              'mergeDocumentController@mdAutocomplete');
-            Route::post('/merge_doc_select',                     'mergeDocumentController@selectDoc');
-            Route::post('/mergeDocuments',                       'mergeDocumentController@mergeDocuments');
+            Route::get('/merge_pdf',                            'mergeDocumentController@index');
+            Route::post('/merge_docs_autocomplete',             'mergeDocumentController@mdAutocomplete');
+            Route::post('/merge_doc_select',                    'mergeDocumentController@selectDoc');
+            Route::post('/mergeDocuments',                      'mergeDocumentController@mergeDocuments');
 
             // archive documents =======================================================================================
-            Route::get( '/archives',                             'documentsController@archives');
-            Route::get( '/return_archives',                      'documentsController@returnArchives');
+            Route::get( '/archives',                            'documentsController@archives');
+            Route::get( '/return_archives',                     'documentsController@returnArchives');
 
             //Upload documents  =========================================================================================
             Route::get( '/upload_documents',                    'uploadDocumentController@index');
@@ -137,52 +142,85 @@ Route::get('/share/{user_name}/{share_hash}/{password}', 'shareDocumentControlle
             Route::post('/move_folders',                        'documentsController@moveFolders');
 
             //testing ##################################################################################################
-            Route::get('/server_test',                           'foldersController@serverTest');
-
-            Route::get('/mail_test', function(){
-                     return new App\Mail\sendNotification();
-            });
-
+            Route::get('/server_test',                          'foldersController@serverTest');
             // #########################################################################################################
 
-            // Share document ------------------------------------------------------------------------------------------
-
+            // Share document ================================================================================================
             Route::get('/share',                                'shareDocumentController@index');
             Route::get('/share/get_shared_documents',           'shareDocumentController@returnSharedDocs');
             Route::post('/share/remove_shared',                 'shareDocumentController@removeShared');
             Route::post('/share/generate_password',             'shareDocumentController@generatePassword');
 
-            // Settings ------------------------------------------------------------------------------------------------
+            // Settings ======================================================================================================
 			Route::get('/settings',                             'settingsController@index');
             Route::post('/settings/change_timezone',            'settingsController@changeTimeZone');
             Route::get('/settings/get_d_filename_format',       'settingsController@returnDownloadFilenameFormat');
             Route::post('/settings/update_filename_format',     'settingsController@updateDownloadFilenameFormat');
 
-            // ---------------------------------------------------------------------------------------------------------
+            // Address Book ==================================================================================================
+            Route::get('/address_book/create',                  'addressBookController@create_index');
+            Route::post('/address_book/save',                   'addressBookController@saveAddressBook');
+            
+            Route::get('/address_book',                         'addressBookController@addressBook');
+            Route::get('/address_book/list',                    'addressBookController@addressBookList');
+            Route::post('/address_book/possible_recipient',     'addressBookController@updatePossibleRecipient');
+            
+            Route::get('/address_book/edit/{ab_id}',            'addressBookController@editAddressBook');
+            Route::post('/address_book/update',                 'addressBookController@updateAddressBook');
+            
+            Route::get('/address_book/create_child/{parent_id}', 'addressBookController@createChildPage');
+            Route::post('/address_book/save_created_child',      'addressBookController@saveCreatedChild');
 
-            // user account settings -------------------------------------------------------------------------------------
+            Route::post('/address_book/delete',                 'addressBookController@deleteAddressBook');
 
+            // Address Book search ===========================================================================================
+            Route::post('/address_book/auto_complete',          'addressBookController@autoComplete');
+            Route::post('/address_book/search_address',         'addressBookController@searchAddress');
+
+
+            // user account settings =========================================================================================
             Route::get('/account_settings',                     'userController@accountSettings');
             Route::post('/account_settings/email_update',       'userController@emailUpdate');
             Route::post('/account_settings/passowrd_update',    'userController@passwordUpdate');
 
-            // Files routes --------------------------------------------------------------------------------------------
+            // IMAP -=========================================================================================================
+            Route::get('/imap/new_credential',                  'imap_controller@index');
+            Route::post('/imap/save_new_credentials',           'imap_controller@saveCredentials');
+            Route::get('/imap/list_of_credentials',             'imap_controller@returnCredentials');
+            Route::post('/imap/delete_credentials',             'imap_controller@removeCredentials');
 
-            Route::get('/files/{type}/{filename}',               'filesController@index');
+            // FTP ============================================================================================================
+            Route::get('/ftp_create_credentials',                      'ftp_controller@index');
+            Route::post('/ftp_create_credentails/new_credential',      'ftp_controller@saveNewCredentails');
+            Route::get('/ftp_create_credentials/list_of_credentials',  'ftp_controller@returnFTPCredentials');   
+            Route::post('/ftp_create_credentails/delete',              'ftp_controller@deleteFTPCredentials');
+            //--connect--
+            Route::get('/ftp_connect/{ftp_id}',                        'ftp_controller@connectFTP'); 
+            Route::post('/ftp_connect/ftp_files',                      'ftp_controller@FTP_connect_get_files'); 
+            Route::post('/ftp_connect/download_files',                 'ftp_controller@downloadFiles'); 
 
-            Route::get('/files_public/{type}/{filename}',        'filesController@publicFiles');
+
+
+            // Files routes ===================================================================================================
+            Route::get('/files/{type}/{filename}',              'filesController@index');
+            Route::get('/files_public/{type}/{filename}',       'filesController@publicFiles');
+
+
+
+
+            Route::get('/demo', function () {
+                return new App\Mail\reminder();
+            });
+
 
     
         });
-        // USERS  routes -------------------------------------------------------------------------------------------------
+        // USERS  routes =====================================================================================================
 
-        // ADMIN  routes -------------------------------------------------------------------------------------------------
-
+        // ADMIN  routes =====================================================================================================
         Route::group(['middleware' => 'auth_admin'], function () {
-
             //admin home route ---------------------------------------
             Route::get('/admin_dashboard',                      'adminController@index');
-
         });
         // ADMIN  routes -------------------------------------------------------------------------------------------------
 

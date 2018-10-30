@@ -37,6 +37,8 @@ class DocumentsMigration extends Migration
             $table->string('tax_relevant')->nullable();
             $table->string('note')->nullable();
             $table->string('origin')->nullable();
+            $table->integer('sender_address_id')->nullable();
+            $table->integer('receiver_address_id')->nullable();
             $table->timestamp('created_at')->default(\DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('updated_at')->default(\DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
         });

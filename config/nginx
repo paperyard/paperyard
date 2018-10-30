@@ -14,6 +14,14 @@ server {
     #max post size
     client_max_body_size 100M;
 
+    #timeout 
+    proxy_connect_timeout 1259200s;
+    proxy_send_timeout 1259200s;
+    proxy_read_timeout 1259200s;
+    uwsgi_connect_timeout 1259200s;
+    uwsgi_read_timeout 1259200s;
+    fastcgi_read_timeout 1259200s;
+
     location /static/ {
        autoindex off;
        root /var/www/html/public;

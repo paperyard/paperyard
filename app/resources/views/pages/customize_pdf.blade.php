@@ -162,46 +162,42 @@ transform: scale(1.03) !important;
 
 @section('content')
 <div class="row" ng-controller="customize_controller">
-
-    <span class="ng-hide" ng-show="document_pages">
-      <!-- documents pages -->
-      <div class="col-md-3 col-sm-6 cstm hvr-grow" ng-repeat="doc_p in doc_pages">
-          <div class="caption ">
-               <input type="checkbox" class="filled-in chk-col-blue"  id="docp<#doc_p.doc_page_num#>" ng-model="doc_p.select" />
-               <label for="docp<#doc_p.doc_page_num#>">Page <#doc_p.doc_page_num#></label>
-           </div>
-          <div class="image ">
-              <img ng-src="/files/image/<#doc_p.doc_page_image_preview#>" class="img img-responsive full-width"/>
-          </div>
+  <span class="ng-hide" ng-show="document_pages">
+    <!-- documents pages -->
+    <div class="col-md-3 col-sm-6 cstm hvr-grow" ng-repeat="doc_p in doc_pages">
+      <div class="caption ">
+        <input type="checkbox" class="filled-in chk-col-blue"  id="docp<#doc_p.doc_page_num#>" ng-model="doc_p.select" />
+        <label for="docp<#doc_p.doc_page_num#>">Page <#doc_p.doc_page_num#></label>
       </div>
-     <!-- Material floating button -->
-      <nav mfb-menu position="br" effect="zoomin"
-        active-icon="fa fa-times" resting-icon="fa fa-plus"
-        toggling-method="click" >
-        <button mfb-button icon="fa fa fa-trash" label="Remove page"  ng-click="removePages()"></button>
-        <button mfb-button icon="fa fa-chevron-left" label="Rotate left 90*"    ng-click="rotatePages('rl90')"></button>
-        <button mfb-button icon="fa fa-chevron-right" label="Rotate right 90*"  ng-click="rotatePages('rr90')"></button>
-        <button mfb-button icon="fa fa-refresh" label="Rotate 180*"   ng-click="rotatePages('rf180')"></button>
-      </nav>
-
-    </span>
-
-    <!-- preloader -->
-    <div class="col-md-12">
-        <center>
-          <div class="preloader ng-hide center-block" ng-show="preloader" style="margin-top:150px">
-              <div class="spinner-layer pl-blue">
-                  <div class="circle-clipper left">
-                      <div class="circle"></div>
-                  </div>
-                  <div class="circle-clipper right">
-                      <div class="circle"></div>
-                  </div>
-              </div>
-          </div>
-        </center>
+      <div class="image ">
+        <img ng-src="/files/image/<#doc_p.doc_page_image_preview#>" class="img img-responsive full-width"/>
+      </div>
     </div>
-
+    <!-- Material floating button -->
+    <nav mfb-menu position="br" effect="zoomin"
+      active-icon="fa fa-times" resting-icon="fa fa-plus"
+      toggling-method="click" >
+      <button mfb-button icon="fa fa fa-trash" label="Remove page"  ng-click="removePages()"></button>
+      <button mfb-button icon="fa fa-chevron-left" label="Rotate left 90*"    ng-click="rotatePages('rl90')"></button>
+      <button mfb-button icon="fa fa-chevron-right" label="Rotate right 90*"  ng-click="rotatePages('rr90')"></button>
+      <button mfb-button icon="fa fa-refresh" label="Rotate 180*"   ng-click="rotatePages('rf180')"></button>
+    </nav>
+  </span>
+  <!-- preloader -->
+  <div class="col-md-12">
+    <center>
+    <div class="preloader ng-hide center-block" ng-show="preloader" style="margin-top:150px">
+      <div class="spinner-layer pl-blue">
+        <div class="circle-clipper left">
+          <div class="circle"></div>
+        </div>
+        <div class="circle-clipper right">
+          <div class="circle"></div>
+        </div>
+      </div>
+    </div>
+    </center>
+  </div>
 </div>
 @endsection
 

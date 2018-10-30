@@ -34,7 +34,7 @@ class ocr_txt_img extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'extract images and text content from PDF to be used for displaying and searching keywords';
     /**
      * Create a new command instance.
      *
@@ -122,9 +122,6 @@ class ocr_txt_img extends Command
                                      //save success.
                                      //check if user has notifications for this document
                                      $this->CheckNotifications($d->doc_user_id, $d->doc_id, $d->doc_ocr);
-                                     //remove empty pages.
-                                     
-                                     //$this->removeEmptyPages($prcs);
 
                                 } //save doc success
 
@@ -235,82 +232,5 @@ class ocr_txt_img extends Command
 
     }
 
-    public function removeEmptyPages($doc_ids){
-
-                $rm_pages = DB::table('document_pages')
-                ->whereIn('document_pages.doc_id', $doc_ids)
-                ->where('doc_page_text', "")
-                ->join('documents', 'document_pages.doc_id', '=', 'documents.doc_id')
-                ->select(
-                    'documents.doc_ocr',
-                    'documents.doc_id',
-                    'documents.is_ocred as iss_ocred',
-                    'document_pages.doc_page_image_preview',
-                    'document_pages.doc_page_thumbnail_preview',
-                     DB::raw('group_concat(`doc_page_num`) as remove_pages')
-                 )
-                ->having('iss_ocred', '=', 1)
-                ->groupBy('document_pages.doc_id')
-                ->get();
-
-                $iss_ocred_ids = [];
-
-                //if doc with empty page found.
-                if(count($rm_pages)>=1){
-                    foreach($rm_pages as $key=>$rm){
-                        //document ocr location
-                        $doc_ocred =    'storage/app/documents_ocred/'  . $rm->doc_ocr;
-                        //output
-                        $doc_output =   'storage/app/documents_ocred/'  . "rm_output-" . str_random(5) . ".pdf";
-                        // remove empty page from document ============================
-                        // total number of pages..
-                        $pdf = new Pdf($doc_ocred);
-                        $max_page = $pdf->getNumberOfPages();
-
-                        // doc pages for pdftk cat.
-                        $doc_pages = range(1, $max_page);
-
-                        //convert concatenated string to array
-                        $arr = explode(",",$rm->remove_pages);
-
-                        //doc_pages eg [1,2,3]  $arr[2,3]
-                        $remove_pages = array_diff($doc_pages,$arr);
-                        //safe pages
-                        $safe_pages =  implode(" ",$remove_pages);
-                        //use pdftk to remove doc page then ouput to new pdf. use && to move content of new pdf to orig pdf.
-                        $params[$key] = "pdftk $doc_ocred cat $safe_pages output $doc_output && mv $doc_output $doc_ocred";
-
-                        $process[$key] = new Process($params[$key]);
-                        $process[$key]->disableOutput();
-                        $process[$key]->start();
-                        $process[$key]->wait();
-
-                        array_push($iss_ocred_ids, $rm->doc_id);
-                    }
-                }
-
-                //delete document images and thumbnail
-                $deleteImages = DB::table('document_pages')
-                ->whereIn('doc_id', $iss_ocred_ids)
-                ->where('doc_page_text', "")
-                ->select('document_pages.doc_page_image_preview','document_pages.doc_page_thumbnail_preview')
-                ->get();
-
-                foreach($deleteImages as $img){
-                    //doc page image preview location
-                    $doc_image =    'storage/app/documents_images/' . $img->doc_page_image_preview;
-                    File::delete((string)$doc_image);
-                    //doc page image thumbnail location
-                    $doc_thumbnail = 'storage/app/documents_images/' . $img->doc_page_thumbnail_preview;
-                    File::delete((string)$doc_thumbnail);
-                }
-
-                //delete doc pages from database.
-                $deleteDatas = DB::table('document_pages')
-                ->whereIn('doc_id', $iss_ocred_ids)
-                ->where('doc_page_text', "")
-                ->delete();
-
-
-    }
+  
 }

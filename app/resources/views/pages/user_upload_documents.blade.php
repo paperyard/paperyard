@@ -122,6 +122,7 @@ var animateExit = '';
 Dropzone.options.myAwesomeDropzone = {
   paramName: "file", // The name that will be used to transfer the file
   maxFilesize: 100, // MB
+  timeout: 0,
   acceptedFiles: ".png,.jpg,.bmp,.jpeg,.pdf",
   init: function() {
     this.on("success", function(file, response) {

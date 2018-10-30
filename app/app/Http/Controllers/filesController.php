@@ -45,10 +45,9 @@ class filesController extends Controller
 				$default_path = storage_path('app/documents_ocred') . '/' . 'default.pdf';
 			}
 
-
 		    $validate = DB::table('documents')
 		    ->where('doc_user_id', Auth::user()->id)
-		    ->join('document_pages','documents.doc_id','=','document_pages.doc_id')
+		    ->leftJoin('document_pages','documents.doc_id','=','document_pages.doc_id')
 		    //when type is image
 		    ->when($t_image, function ($query, $t_image) {
 	            return $query->where('document_pages.doc_page_image_preview', $t_image)

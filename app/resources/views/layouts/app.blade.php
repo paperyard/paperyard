@@ -109,34 +109,57 @@
     }
 
 
+
+html {
+  height: 100%;
+}
+
+body {
+  position: relative;
+  min-height: 89%;
+}
+
+
+
+.footer {
+  position: absolute;
+  margin-top:5px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color:#fff;
+  text-align: right;
+  padding-right:30px;
+  border-top:1px solid #ccc;
+}
+
 </style>
 @yield('custom_style')
 
 </head>
 
-<body style="background-color:#fff" ng-app="rootApp" ng-controller="rootController">
-    <div id="app">
-        <!-- Page Loader -->
-        <div class="page-loader-wrapper">
-            <div class="loader">
-                <div class="preloader">
-                    <div class="spinner-layer pl-light-blue">
-                        <div class="circle-clipper left">
-                            <div class="circle"></div>
-                        </div>
-                        <div class="circle-clipper right">
-                            <div class="circle"></div>
-                        </div>
+<body style="background-color:#fff;" ng-app="rootApp" ng-controller="rootController">
+<div id="app">
+    <!-- Page Loader -->
+    <div class="page-loader-wrapper">
+        <div class="loader">
+            <div class="preloader">
+                <div class="spinner-layer pl-light-blue">
+                    <div class="circle-clipper left">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="circle-clipper right">
+                        <div class="circle"></div>
                     </div>
                 </div>
-                <p>PAPERYARD </p>
             </div>
+            <p>PAPERYARD </p>
         </div>
-        <!-- #END# Page Loader -->
-        <div class="overlay"></div>
-        <!-- #END# Overlay For Sidebars -->
-
-        <!-- Top Bar -->
+    </div>
+    <!-- #END# Page Loader -->
+    <div class="overlay"></div>
+    <!-- #END# Overlay For Sidebars -->
+    <!-- Top Bar -->
     <nav class="navbar" style="background-color:white!important;">
         <div class="container-fluid">
             <div class="navbar-header">
@@ -147,189 +170,151 @@
                 </a>
                 <div style="position: absolute; left: 50%;" class="visible-sm visible-xs">
                     <div style="position: relative; left: -50%; ">
-                          <h4 style="color:#017cff; margin-top:15px">Paperyard</h4>
+                        <h4 style="color:#017cff; margin-top:15px">Paperyard</h4>
                     </div>
                 </div>
-
             </div>
             <div style="position: absolute; left: 50%;" class="hidden-sm hidden-xs">
                 <div style="position: relative; left: -50%; margin-top:18px">
-
                     @if(View::hasSection('breadcrumb_nav'))
-                       @yield('breadcrumb_nav')
+                    @yield('breadcrumb_nav')
                     @else
-                       <h4 style="color:#017cff; margin-top:25px;">Paperyard</h4>
+                    <h4 style="color:#017cff; margin-top:25px;">Paperyard</h4>
                     @endif
-
                 </div>
             </div>
-
             <div class="collapse navbar-collapse" id="navbar-collapse">
-            <center>
+                <center>
                 <ul class="nav navbar-nav navbar-right" style="margin-right:0px;">
-                        <!-- Tasks -->
-                        <li class="dropdown" >
-                            <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button">
-                                <i class="material-icons custom_nav_icons">person</i>
-                                <span class="label-count"></span>
-                            </a>
-                            <ul class="dropdown-menu m-drop-menu">
-                                 <li class="header">{{ Auth::user()->name }}</li>
-                                    <li class="body">
-                                        <ul class="menu list-unstyled">
-                                            <li onclick="window.location='{{ url('account_settings') }}'">
-                                                <a href="#" class="ac_set_txt"><label>Account settings</label></a>
-                                            </li>
-                                            <li class="lang-txt">
-                                                <a href="#" class="ac_set_txt">
-                                                     <label>Select @lang('home.c_language_tx')</label>
-                                                </a>
-                                            </li>
-                                             <li onclick="window.location='{{ url('language/ge') }}'">
-                                                <a href="#" class="ac_set_txt">
-                                                    <span>German</span>
-                                                    <img src="{{asset('static/img/language/german_flag.png')}}"  class="lang_flags pull-right">
-                                                </a>
-                                            </li>
-                                             <li onclick="window.location='{{ url('language/en') }}'">
-                                                <a href="#" class="ac_set_txt">
-                                                    <span>English</span>
-                                                     <img src="{{asset('static/img/language/america_flag.png')}}" class="lang_flags pull-right">
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="{{ route('logout') }}"
-                                                    onclick="event.preventDefault();
-                                                    document.getElementById('logout-form').submit();" class="ac_set_txt">
-                                                    <label>{{ __('Logout') }}</label>
-                                                </a>
-
-                                                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                                                    @csrf
-                                                </form>
-                                            </li>
-
-                                        </ul>
+                    <!-- Tasks -->
+                    <li class="dropdown" >
+                        <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button">
+                            <i class="material-icons custom_nav_icons">person</i>
+                            <span class="label-count"></span>
+                        </a>
+                        <ul class="dropdown-menu m-drop-menu">
+                            <li class="header">{{ Auth::user()->name }}</li>
+                            <li class="body">
+                                <ul class="menu list-unstyled">
+                                    <li onclick="window.location='{{ url('account_settings') }}'">
+                                        <a href="#" class="ac_set_txt"><label>Account settings</label></a>
                                     </li>
-                            </ul>
-                        </li>
-                        <!-- #END# Tasks -->
-                         <!-- Notifications  ADD ON FEATURE http://shrestha-manoj.blogspot.com/2014/06/can-angularjs-have-multiple-ng-app.html-->
-                        <!-- <li class="dropdown">
-                            <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button">
-                                <i class="material-icons custom_nav_icons">notifications</i>
-                                <span class="label-count" style="background-color:red !important; color:white!important">3</span>
-                            </a>
-                            <ul class="dropdown-menu m-drop-menu">
-                                <li class="header">NOTIFICATIONS</li>
-                                <li class="body">
-                                    <ul class="menu list-unstyled">
-                                        <li>
-                                            <a href="javascript:void(0);">
-                                                <div class="icon-circle bg-light-blue">
-                                                    <i class="material-icons">picture_as_pdf</i>
-                                                </div>
-                                                <div class="menu-info">
-                                                    <h4>3 new document received.</h4>
-                                                    <p>
-                                                        <i class="material-icons">access_time</i> 14 mins ago
-                                                    </p>
-                                                </div>
-                                            </a>
-                                        </li>
-
-                                    </ul>
-                                </li>
-                                <li class="footer">
-                                    <a href="javascript:void(0);">View All Notifications</a>
-                                </li>
-                            </ul>
-                        </li> -->
-                        <!-- #END# Notifications -->
-
-                    </ul>
-            </center>
+                                    <li class="lang-txt">
+                                        <a href="#" class="ac_set_txt">
+                                            <label>Select @lang('home.c_language_tx')</label>
+                                        </a>
+                                    </li>
+                                    <li onclick="window.location='{{ url('language/ge') }}'">
+                                        <a href="#" class="ac_set_txt">
+                                            <span>German</span>
+                                            <img src="{{asset('static/img/language/german_flag.png')}}"  class="lang_flags pull-right">
+                                        </a>
+                                    </li>
+                                    <li onclick="window.location='{{ url('language/en') }}'">
+                                        <a href="#" class="ac_set_txt">
+                                            <span>English</span>
+                                            <img src="{{asset('static/img/language/america_flag.png')}}" class="lang_flags pull-right">
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('logout') }}"
+                                            onclick="event.preventDefault();
+                                            document.getElementById('logout-form').submit();" class="ac_set_txt">
+                                            <label>{{ __('Logout') }}</label>
+                                        </a>
+                                        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                                            @csrf
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+                </center>
             </div>
         </div>
     </nav>
-
-        <!-- Left Sidebar -->
-        <section id="leftsidebar" class="sidebar" style="width:110px;">
-            <!-- Menu -->
-            <div class="menu" style="margin-top:20px">
-                <ul class="list cstm_lst">
-                    <li data-toggle="tooltip" data-placement="right" title="" data-original-title="Dashboard">
-                        <a href="/dashboard" class="waves-effect waves-blue @yield('active_dashboard')">
-                            <span class="fa fa-dashboard router_link_icon"></span>
-                        </a>
-                    </li>
-                    <li data-toggle="tooltip" data-placement="right" title="" data-original-title="Search Documents">
-                        <a href="/search" class="waves-effect waves-blue @yield('active_search')">
-                            <span class="fa fa-search router_link_icon" ></span>
-                        </a>
-                    </li>
-                    <li data-toggle="tooltip" data-placement="right" title="" data-original-title="Notifications">
-                        <a href="/notifications" class="waves-effect waves-blue @yield('active_notification')">
-                            <span class="fa fa-bell router_link_icon" ></span>
-                        </a>
-                    </li>
-                    <li data-toggle="tooltip" data-placement="right" title="" data-original-title="Reminders">
-                        <a href="/reminders" class="waves-effect waves-blue @yield('active_reminder')">
-                            <span class="fa fa-calendar-check-o router_link_icon" ></span>
-                        </a>
-                    </li>
-                    <li data-toggle="tooltip" data-placement="right" title="" data-original-title="Folders">
-                        <a href="/folders" class="waves-effect waves-blue @yield('active_folder')">
-                            <span class="fa fa-folder-open router_link_icon" ></span>
-                        </a>
-                    </li>
-                    <li data-toggle="tooltip" data-placement="right" title="" data-original-title="Shared Documents">
-                        <a href="/share" class="waves-effect waves-blue @yield('active_share')">
-                            <span class="fa fa-share-alt router_link_icon" ></span>
-                        </a>
-                    </li>
-                    <li data-toggle="tooltip" data-placement="right" title="" data-original-title="System Settings">
-                        <a href="/settings" class="waves-effect waves-blue @yield('active_settings')">
-                            <span class="fa fa-gears router_link_icon"></span>
-                        </a>
-                    </li>
-                    <li data-toggle="tooltip" data-placement="right" title="" data-original-title="Upload Documents">
-                        <a href="/upload_documents" class="waves-effect waves-blue @yield('active_upload')">
-                            <span class="fa fa fa-upload router_link_icon"></span>
-                        </a>
-                    </li>
-
-
-                </ul>
-            </div>
-            <!-- #Menu -->
-        </section>
-        <!-- #END# Left Sidebar -->
-        <section class="content x_1 m_tab_view">
-
-            <div class="container-fluid">
-                <div class="row" style="margin-bottom:10px">
-                    <div class="col-md-12 col-sm-12 col-xs-12 ">
-                        <h3 style="margin:0px; padding:0px" class="pull-left">@yield('page_title')</h3>
-
-                        @if(View::hasSection('search_page_filter'))
-                           @yield('search_page_filter')
-                        @endif
-                        @if(View::hasSection('new_notification_btn'))
-                           @yield('new_notification_btn')
-                        @endif
-                        @if(View::hasSection('doc_pages'))
-                           @yield('doc_pages')
-                        @endif
-                        @if(View::hasSection('notification_del_btn'))
-                           @yield('notification_del_btn')
-                        @endif
-                    </div>
+    <!-- Left Sidebar -->
+    <section id="leftsidebar" class="sidebar" style="width:110px;">
+        <!-- Menu -->
+        <div class="menu" style="margin-top:20px">
+            <ul class="list cstm_lst">
+                <li data-toggle="tooltip" data-placement="right" title="" data-original-title="Dashboard">
+                    <a href="/dashboard" class="waves-effect waves-blue @yield('active_dashboard')">
+                        <span class="fa fa-dashboard router_link_icon"></span>
+                    </a>
+                </li>
+                <li data-toggle="tooltip" data-placement="right" title="" data-original-title="Search Documents">
+                    <a href="/search" class="waves-effect waves-blue @yield('active_search')">
+                        <span class="fa fa-search router_link_icon" ></span>
+                    </a>
+                </li>
+                <li data-toggle="tooltip" data-placement="right" title="" data-original-title="Notifications">
+                    <a href="/notifications" class="waves-effect waves-blue @yield('active_notification')">
+                        <span class="fa fa-bell router_link_icon" ></span>
+                    </a>
+                </li>
+                <li data-toggle="tooltip" data-placement="right" title="" data-original-title="Reminders">
+                    <a href="/reminders" class="waves-effect waves-blue @yield('active_reminder')">
+                        <span class="fa fa-calendar-check-o router_link_icon" ></span>
+                    </a>
+                </li>
+                <li data-toggle="tooltip" data-placement="right" title="" data-original-title="Folders">
+                    <a href="/folders" class="waves-effect waves-blue @yield('active_folder')">
+                        <span class="fa fa-folder-open router_link_icon" ></span>
+                    </a>
+                </li>
+                <li data-toggle="tooltip" data-placement="right" title="" data-original-title="Shared Documents">
+                    <a href="/share" class="waves-effect waves-blue @yield('active_share')">
+                        <span class="fa fa-share-alt router_link_icon" ></span>
+                    </a>
+                </li>
+                <li data-toggle="tooltip" data-placement="right" title="" data-original-title="System Settings">
+                    <a href="/settings" class="waves-effect waves-blue @yield('active_settings')">
+                        <span class="fa fa-gears router_link_icon"></span>
+                    </a>
+                </li>
+                <li data-toggle="tooltip" data-placement="right" title="" data-original-title="Upload Documents">
+                    <a href="/upload_documents" class="waves-effect waves-blue @yield('active_upload')">
+                        <span class="fa fa fa-upload router_link_icon"></span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <!-- #Menu -->
+    </section>
+    <!-- #END# Left Sidebar -->
+    <section class="content x_1 m_tab_view" style="height:100%">
+        <!-- Page content -->
+        <div class="container-fluid" style="padding-bottom: 20px">
+            <div class="row" style="margin-bottom:10px">
+                <div class="col-md-12 col-sm-12 col-xs-12 ">
+                    <h3 style="margin:0px; padding:0px" class="pull-left">@yield('page_title') <# test #></h3>
+                    @if(View::hasSection('search_page_filter'))
+                    @yield('search_page_filter')
+                    @endif
+                    @if(View::hasSection('new_notification_btn'))
+                    @yield('new_notification_btn')
+                    @endif
+                    @if(View::hasSection('doc_pages'))
+                    @yield('doc_pages')
+                    @endif
+                    @if(View::hasSection('notification_del_btn'))
+                    @yield('notification_del_btn')
+                    @endif
                 </div>
-                @yield('content')
             </div>
-        </section>
-    </div>
+            @yield('content')
+        </div>
+        <!-- Footer -->
+        <div class="footer">
+            <label>v 0.3.7</label>
+        </div>
+    </section>
+    </div> <!-- /app -->
+
+
     <!-- defer ensures that DOM is loaded before executing scripts -->
     <script src="{{ asset('static/js/core_mix.js') }}"></script>
     <script type="text/javascript">
@@ -358,8 +343,8 @@
 
         });
 
-
     </script>
     @yield('scripts')
 </body>
+
 </html>

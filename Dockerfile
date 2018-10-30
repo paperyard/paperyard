@@ -17,6 +17,9 @@ RUN apt-get -y install nginx
 RUN apt-get -y install php7.1-cli php7.1-cgi php7.1-fpm php7.1-mbstring php7.1-xml php7.1-zip php7.1-imagick
 # php-fpm php-common php-mbstring php-xmlrpc php-soap php-gd php-xml php-mysql php-cli php-mcrypt php-zip
 
+# Install extensions for IMAP
+RUN apt-get -y install php*-imap php*-mcrypt
+
 # install mariadb
 RUN apt-get -y install mariadb-server mariadb-client
 
@@ -26,6 +29,9 @@ RUN apt-get -y install curl
 RUN apt-get -y install cron
 RUN apt-get -y install git
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+#install ImageMagic for checking Blank pages.
+RUN apt-get -y install imagemagick
 
 # install nodejs
 # RUN curl -sL https://deb.nodesource.com/setup_8.x | bash -

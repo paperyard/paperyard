@@ -185,14 +185,14 @@
                             <!-- document edit -->
                             <a ng-href="/document/<#data.doc_id#>" style="text-decoration: none">
                               <button type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="Edit document" tooltip-top>
-                                  <i class="material-icons cstm_icon_btn_ico">edit</i>
+                                  <i class="material-icons">edit</i>
                               </button>
                             </a>
-
-                            <!-- download document -->
-                            <a ng-href="/files/ocr/<#data.doc_ocr#>" style="text-decoration: none" download="<#data.download_format#>">
+                  
+                            <!-- View Document in PDF viewer -->
+                            <a ng-href="/files/ocr/<#data.doc_ocr#>" style="text-decoration: none" target="_blank">
                             <button type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="View document" tooltip-top>
-                                <i class="material-icons cstm_icon_btn_ico">remove_red_eye</i>
+                                <i class="material-icons">remove_red_eye</i>
                             </button>
                             </a>
 
@@ -200,25 +200,25 @@
                               <!-- Download original document. -->
                               <a ng-href="/files/org/<#data.doc_org#>" style="text-decoration: none" download="<#data.download_format#>">
                                 <button type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="Download original file" tooltip-top>
-                                  <i class="material-icons cstm_icon_btn_ico">file_download</i>
+                                  <i class="material-icons">file_download</i>
                                 </button>
                               </a>
                               <!-- Approved document. delete original -->
                               <button ng-click="approveDocument(data.doc_id,data.doc_org)" type="button" class="btn btn-default waves-effect cstm_icon_btn doc-upd-btn" data-toggle="tooltip" title="" data-original-title="Approve document" tooltip-top id="deleteDocBtn<#doc.doc_id#>">
-                                <i class="material-icons cstm_icon_btn_ico">check</i>
+                                <i class="material-icons">check</i>
                               </button>
                             </span>
 
                             <!-- customize document -->
                             <a ng-href="/customize_pdf/<#data.doc_id#>" style="text-decoration: none">
                             <button type="button" class="btn btn-default waves-effect cstm_icon_btn doc-upd-btn" data-toggle="tooltip" title="" data-original-title="Customize document" tooltip-top>
-                              <i class="material-icons cstm_icon_btn_ico">build</i>
+                              <i class="material-icons">build</i>
                             </button>
                             </a>
 
                             <!-- delete document  -->
                             <button ng-click="deleteDocument(data.doc_id)" type="button" class="btn btn-default waves-effect cstm_icon_btn doc-upd-btn" data-toggle="tooltip" title="" data-original-title="Delete document" tooltip-top id="deleteDocBtn<#doc.doc_id#>">
-                                <i class="material-icons cstm_icon_btn_ico">delete_forever</i>
+                                <i class="material-icons">delete_forever</i>
                             </button>
 
                           </span>

@@ -34,7 +34,7 @@ class ocr_reminder extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'check for reminders, notify users through email';
 
     /**
      * Create a new command instance.
@@ -53,53 +53,64 @@ class ocr_reminder extends Command
      */
     public function handle()
     {
-        //get all users that has reminders
+        
+        // rm_process_status, [new_reminder,processing_reminder,reminded]
+        // get all users that has reminders
         $reminders = DB::table('reminders')
-        ->where('reminder_status','standby')
-        ->join('users','reminders.reminder_user_id','=','users.id')
-        ->leftJoin('documents','reminders.reminder_document_id','documents.doc_id')
-        ->select('reminders.*','users.user_timezone','users.id','users.email','users.name','documents.doc_ocr')
+        ->where('rm_process_status','new_reminder')
+        ->join('users','reminders.rm_user_id','=','users.id')
+        ->leftJoin('documents','reminders.rm_doc_id','documents.doc_id')
+        ->select('reminders.*','users.user_timezone','users.id','users.email','users.name','documents.doc_ocr','documents.reminder')
         ->get();
 
-        $rm_ids = [];
-        foreach($reminders as $rm){
-             array_push($rm_ids, $rm->reminder_id);
-        }
+        if(count($reminders)>0){
+                // get all ids to be change in status
+                $rm_ids = [];
+                foreach($reminders as $rm){
+                     array_push($rm_ids, $rm->rm_id);
+                     // attach related task in reminder
+                     $task_list = DB::table('reminders_tasks')
+                     ->where('reminder_id', $rm->rm_id)
+                     ->get();
+                     if(count($task_list)>0){
+                         $rm->task_list = $task_list;
+                     }
+                }
 
-        DB::table('reminders')->whereIn('reminder_id', $rm_ids)
-        ->update(['reminder_status'=>'processing']);
+                DB::table('reminders')->whereIn('rm_id', $rm_ids)
+                ->update(['rm_process_status'=>'processing_reminder']);
 
 
-        foreach($reminders as $reminder){
+                foreach($reminders as $reminder){
 
-               // set user time zone.
-               date_default_timezone_set($reminder->user_timezone);
-               // set reminder shedule.
-               $schedule_reminder = $reminder->reminder_schedule;
-               $user_datetime = date("Y-m-d H:i:s");
+                       // set user time zone.
+                       date_default_timezone_set($reminder->user_timezone);
+                       // set reminder shedule.
+                       $schedule_reminder = $reminder->reminder;
+                       $user_datetime = date("Y-m-d H:i:s");
 
-               if($schedule_reminder <= $user_datetime){
-                    // send email
-                    // update reminder status to activated.
-                    $rm_datas = array(
-                        "user_name"=>$reminder->name,
-                        "reminder_title"=>$reminder->reminder_title,
-                        "reminder_document"=>$reminder->doc_ocr,
-                        "reminder_message"=>$reminder->reminder_message
-                    );
-                    // send mail
-                    Mail::to($reminder->email)->send(new reminder($rm_datas));
-                    // update reminder to activated
-                    DB::table('reminders')->where('reminder_id', $reminder->reminder_id)
-                    ->update(['reminder_status'=>'activated']);
-               }else{
-                    // update reminder status back to standby;
-                    DB::table('reminders')->where('reminder_id', $reminder->reminder_id)
-                    ->update(['reminder_status'=>'standby']);
+                       if($schedule_reminder <= $user_datetime){
+                            // send email
+                            // update reminder status to activated.
+                            $rm_datas = array(
+                                "user_name"=>$reminder->name,
+                                "reminder_title"=>$reminder->rm_title,
+                                "reminder_document"=>$reminder->doc_ocr,
+                                "reminder_task_list"=>$reminder->task_list
+                            );
+                            // send mail
+                            Mail::to($reminder->email)->send(new reminder($rm_datas));
+                            // update reminder to activated
+                            DB::table('reminders')->where('rm_id', $reminder->rm_id)
+                            ->update(['rm_process_status'=>'reminded']);
+                       }else{
+                            // update reminder status back to standby;
+                            DB::table('reminders')->where('rm_id', $reminder->rm_id)
+                            ->update(['rm_process_status'=>'new_reminder']);
 
-               }
-        }
-
+                       }
+                }
+        } //end if count
 
     }
 }

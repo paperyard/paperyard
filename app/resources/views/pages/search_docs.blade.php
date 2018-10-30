@@ -450,7 +450,7 @@ text-indent: 15px;
 		 <div class="row clearfix" >
 			 <div class="col-md-12 col-xs-12 col-sm-12 ss_list_index" >
                    <div class="list-group" ng-class="{true: 'card'}[tags_list.length > 1]" ng-show="tags_list!=null && tags_list.length>0 && tags_list_show">
-                   	    <div class="list-group-item" style="padding:0px; marign:0px" ng-repeat="tags in tags_list track by $index">
+                   	    <div class="list-group-item" style="padding:0px; margin:0px" ng-repeat="tags in tags_list track by $index">
 				            <span class="tags_list_a"><span><# tags #></span></span>
 				        </div>
                    </div>	
@@ -601,7 +601,7 @@ text-indent: 15px;
 			<!-- VIEW - TILE LIST VIEW -->
 			<div role="tabpanel" class="tab-pane fade" id="messages_only_icon_title">
 				<div class="row" >
-					<div class="col-md-6 col-xs-12 col-sm-12 doc_hvr"ng-repeat="doc3 in filtered = (list | orderBy : sort )  | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit track by $index">
+					<div class="col-md-6 col-xs-12 col-sm-12 doc_hvr" ng-repeat="doc3 in filtered = (list | orderBy : sort )  | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit track by $index">
 					  
 					  <a ng-href="/document/<#doc3.doc_id#>" >
 						<div class="card view3_container"  style="margin-top:15px">
@@ -621,8 +621,8 @@ text-indent: 15px;
 											<li><#doc3.receiver#></li>
 										</ul>
 										<div class="view_tags">
-											<span ng-repeat="tag in doc3.tags_array" > 
-												<span class="badge bg-green">
+											<span ng-repeat="tag in doc3.tags_array" ng-show="doc3.tags!=null"> 
+												<span class="badge bg-green" >
 													 <# tag #>
 												</span>
 											</span>	
@@ -1190,16 +1190,6 @@ $scope.docsNotFound = function(){
 
 //-----------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
 //================================================================================================================================================
 //search on select autocomplete
 $scope.selectAutocompleteSearch = function(keyword,filter){
@@ -1262,6 +1252,8 @@ $scope.enterKeySearch = function(){
 				$scope.entryLimit = 10; //max no of items to display in a page
 				$scope.filteredItems = $scope.list.length; //Initially for no filter
 				$scope.totalItems = $scope.list.length;
+
+				console.log($scope.tags_list);
 
 	        }
 

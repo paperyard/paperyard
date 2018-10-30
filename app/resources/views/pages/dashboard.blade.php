@@ -12,13 +12,13 @@
 
 .mg-icon_1 {
    color: #017cff;
-   font-size:90px;
-   margin-top:10px;
+   font-size:60px;
+   margin-top:20px;
 }
 .mg-icon_2 {
    color: #b1d5ff;
-   font-size:90px;
-   margin-top:10px;
+   font-size:60px;
+   margin-top:20px;
 }
 
 @media screen and (max-width:500px) {
@@ -169,6 +169,11 @@
 
 .cstm_input {
   background-color:#ebedf8;
+  outline: none;
+  border: none !important;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+  box-shadow: none !important;
 }
 
 .ocr_success {
@@ -204,15 +209,15 @@
         <div class="col-md-12 col-sm-12 col-xs-12 col-lg-12 list-group-autocomplete " >
           <div class="list-group ">
             <!-- AUTCOMPLETE TAGS -->
-            <a ng-click="selectSearchDoc(tag,'tag')" class="list-group-item th-t" ng-repeat="tag in ac_tags track by $index" ng-show="ac_tags!='not_found' && ac_tags!=null">
+            <a ng-click="searchDocuments(tag,'tag')" class="list-group-item th-t" ng-repeat="tag in ac_tags track by $index" ng-show="ac_tags!='not_found' && ac_tags!=null">
               <# tag #>
             </a>
             <!-- AUTCOMPLETE FOLDERS  -->
-            <a ng-click="selectSearchDoc(folder.folder_name,'folder')" class="list-group-item  th-f" ng-repeat="folder in ac_folders track by $index" ng-show="ac_folders!='not_found' && ac_folders!=null">
+            <a ng-click="searchDocuments(folder.folder_name,'folder')" class="list-group-item  th-f" ng-repeat="folder in ac_folders track by $index" ng-show="ac_folders!='not_found' && ac_folders!=null">
               <# folder.folder_name #>
             </a>
             <!-- AUTCOMPLETE FULLTEXT -->
-            <a ng-click="selectSearchDoc(fulltext,'fulltext')" class="list-group-item  th-ft" ng-repeat="fulltext in ac_fulltext track by $index" ng-show="ac_fulltext!='not_found' && ac_fulltext!=null">
+            <a ng-click="searchDocuments(fulltext,'fulltext')" class="list-group-item  th-ft" ng-repeat="fulltext in ac_fulltext track by $index" ng-show="ac_fulltext!='not_found' && ac_fulltext!=null">
               <# fulltext #>
             </a>
             <!-- NO RESULT FOUND -->
@@ -240,7 +245,7 @@
               <div class="body ">
                 <ul class="list-group" >
                   <a ng-href="/document/<#oldest_doc.doc_id | default_id #>" style="text-decoration: none !important">
-                    <button type="button" class="list-group-item cstm_list_g waves-effect waves-blue">@lang('dashboard.to_edit_tx')
+                    <button type="button" class="list-group-item cstm_list_g waves-effect waves-blue"><label>@lang('dashboard.to_edit_tx')</label>
                       <span class="badge bg-light-blue doc_num_stat ng-hide" ng-show="num_to_edit"><# num_edit #></span>
                       <div class="preloader ng-hide pull-right pl-size-xs preload_custm_loc" ng-show="num_data_preloader">
                         <div class="spinner-layer pl-blue">
@@ -255,7 +260,7 @@
                     </button>
                   </a>
                   <a ng-href="/archives" style="text-decoration: none !important">
-                    <button type="button" class="list-group-item cstm_list_g waves-effect waves-blue">@lang('dashboard.This_whole_week_tx')
+                    <button type="button" class="list-group-item cstm_list_g waves-effect waves-blue"><label>@lang('dashboard.This_whole_week_tx')</label>
                       <span class="badge bg-light-blue doc_num_stat ng-hide" ng-show="num_to_archive"><# archive #></span>
                       <div class="preloader ng-hide pull-right pl-size-xs preload_custm_loc" ng-show="num_data_preloader">
                         <div class="spinner-layer pl-blue">
@@ -280,7 +285,7 @@
               <div class="body ">
                 <ul class="list-group" >
                   <a ng-href="" style="text-decoration: none !important">
-                    <button type="button" class="list-group-item cstm_list_g waves-effect waves-blue">Documents being processed
+                    <button type="button" class="list-group-item cstm_list_g waves-effect waves-blue"><label>Documents being processed</label>
                       <span class="badge bg-light-blue doc_num_stat ng-hide" ng-show="num_to_edit"><# queueDocs #></span>
                       <div class="preloader ng-hide pull-right pl-size-xs preload_custm_loc" ng-show="num_data_preloader">
                         <div class="spinner-layer pl-blue">
@@ -294,9 +299,9 @@
                       </div>
                     </button>
                   </a>
-                  <a ng-href="/document/<#doc_failed.doc_id | default_id#>" style="text-decoration: none !important">
-                    <button type="button" class="list-group-item cstm_list_g waves-effect waves-blue">Failed OCRED documents
-                      <span class="badge bg-red doc_num_stat_failed ng-hide" ng-show="num_to_archive"><# failedDocs#></span>
+                  <a href="failed_ocr_documents" style="text-decoration: none !important">
+                    <button type="button" class="list-group-item cstm_list_g waves-effect waves-blue"><label>Failed OCRED documents</label>
+                      <span class="badge bg-red doc_num_stat ng-hide" ng-show="num_to_archive"><# failedDocs#></span>
                       <div class="preloader ng-hide pull-right pl-size-xs preload_custm_loc" ng-show="num_data_preloader">
                         <div class="spinner-layer pl-blue">
                           <div class="circle-clipper left">
@@ -386,46 +391,29 @@
               </div>
             </div>
 
-            <!-- Merge documents -->
-            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-              <a ng-href="/merge_pdf" style="text-decoration: none !important">
-                <div class="card dashboard_card">
-                  <div class="container-fluid " style="padding-top:10px">
-                    <div style="width:100%">
-                      <table style="width:100% !important; border:0px">
-                        <tr>
-                          <th colspan="3">
-                            <span style="float:right; top:0; color:#000">Merge documents </span>
-                          </th>
-                        </tr>
-                        <tr>
-                          <td>
-                            <i class="fa fa-file-text-o mg-icon_1" style="margin-right:10px"></i>
-                            <i class="fa fa-file-text-o mg-icon_2 hidden-xs hidden-sm"></i>
-
-                          </td>
-                          <td>
-                            <i class="fa fa-chevron-left merge_sm_chevron" style="font-size:50px !important; color:#ccc"></i>
-                          </td>
-                          <td>
-                            <span style="float:right; top:0">
-                              <i class="fa fa-file-text-o mg-icon_1 hidden-xs hidden-sm" ></i>
-                              <i class="fa fa-file-text-o mg-icon_2" style="margin-left:10px"></i>
-                            </span>
-                          </td>
-                        </tr>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </a>
-            </div>
-            <!--/Merge documents -->
 
             <!-- EMPTY -->
             <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
               <div class="card dashboard_card">
                 <div class="body">
+                   <ul class="list-group" >
+                      <a href="/merge_pdf" style="text-decoration: none !important">
+                        <button type="button" class="list-group-item cstm_list_g waves-effect waves-blue"><label>Merge documents</label></button>
+                      </a>
+                      <a href="/address_book" style="text-decoration: none !important">
+                        <button type="button" class="list-group-item cstm_list_g waves-effect waves-blue"><label>Manage Address Books</label></button>
+                      </a>
+                    </ul>
+                </div>
+              </div>
+            </div>
+
+
+            <!-- EMPTY -->
+            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+              <div class="card dashboard_card">
+                <div class="body">
+
                 </div>
               </div>
             </div>
@@ -459,8 +447,8 @@
                   <i class="material-icons cstm_icon_btn_ico">edit</i>
                 </button>
               </a>
-              <!-- Download ocred document -->
-              <a ng-href="/files/ocr/<#data.doc_ocr#>" style="text-decoration: none" download="<#data.download_format#>">
+              <!-- View Document in PDF viewer -->
+              <a ng-href="/files/ocr/<#data.doc_ocr#>" style="text-decoration: none" target="_blank">
                 <button type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="View document" tooltip-top>
                   <i class="material-icons cstm_icon_btn_ico">remove_red_eye</i>
                 </button>
@@ -568,29 +556,29 @@ app.filter('ocr_status', function(){
 
 app.controller('dashboard_controller', function($scope, $http, $timeout, $q) {
 
-// cancel previous http request
-// eg running autocomplete. if user press enter search. cancel all previous running http request.
-$scope.canceler = $q.defer();
-$scope.search_canceler = $q.defer();
-//search autocomplete preloader
-$scope.searchAutoCompLoader = false;
+    // cancel previous http request
+    // eg running autocomplete. if user press enter search. cancel all previous running http request.
+    $scope.canceler = $q.defer();
+    $scope.search_canceler = $q.defer();
+    //search autocomplete preloader
+    $scope.searchAutoCompLoader = false;
 
-//show/hide numbers of documents to edit.
-$scope.num_to_edit =         false;
-//show/hide numbers of archive documents.
-$scope.num_to_archive =      false;
-//show/hide preloader for documents numeric values
-$scope.num_data_preloader =   true;
+    //show/hide numbers of documents to edit.
+    $scope.num_to_edit =         false;
+    //show/hide numbers of archive documents.
+    $scope.num_to_archive =      false;
+    //show/hide preloader for documents numeric values
+    $scope.num_data_preloader =   true;
 
 
-//show/hide dashboard cards.
-$scope.dashboard_grid =      true;
-//show/hide dashboard preloader.
-$scope.dashboard_preloader = false;
-//show/hide not found div.
-$scope.not_found =           false;
-//show hide documents table result.
-$scope.documents_table =     false;
+    //show/hide dashboard cards.
+    $scope.dashboard_grid =      true;
+    //show/hide dashboard preloader.
+    $scope.dashboard_preloader = false;
+    //show/hide not found div.
+    $scope.not_found =           false;
+    //show hide documents table result.
+    $scope.documents_table =     false;
 
 
 // clear autocomplete on search bar
@@ -646,8 +634,7 @@ $scope.getNumToEditArchive = function(){
        $scope.weekDays = data.week;
        //set docs count each week days.
        $scope.docCounts  =  data.bar_datas;
-       
-       console.log(data);
+
        $scope.makeBarChart();
   });
 }
@@ -673,7 +660,7 @@ $scope.searchKeyPress = function(keyEvent) {
       $timeout( function()
       {
         // method to be executed;
-        $scope.searchDocuments();
+            $scope.searchDocuments($scope.doc_keyword,'no_filter')
       }, 1000); //end timeout.
   }
   // key 8 = backspace. clear autocomplete
@@ -685,6 +672,7 @@ $scope.searchKeyPress = function(keyEvent) {
 
   }
 };
+
 
 // show autocomplete
 $scope.onChangeInput = function(){
@@ -709,7 +697,7 @@ $scope.onChangeInput = function(){
             doc_keyword: $scope.doc_keyword
         }
         //make post request to get if keyword is found in documents tags,folder or page text.
-        $http({method:'POST',url:'/dashboard/search_auto_complete', data, timeout: $scope.canceler.promise}).success(function(data){
+        $http({method:'POST',url:'/common_search/autocomplete', data, timeout: $scope.canceler.promise}).success(function(data){
             //if notthing is found, show not found dropdown result.
             if(data.tags=="not_found" && data.folders=="not_found" && data.fulltext=="not_found"){
               //not found
@@ -725,48 +713,10 @@ $scope.onChangeInput = function(){
     }
 }
 
-// search document by selecting autocomplete
-$scope.selectSearchDoc = function(keyword,filter){
-    //hide search autocomplete preloader
-    $scope.searchAutoCompLoader = false;
-    //cancel previous selectSearch post request
-    $scope.search_canceler.resolve();
-    //reinit $q.defer to make new post request.
-    $scope.search_canceler = $q.defer();
-    //put selected autocomplete keyword to search bar
-    $scope.doc_keyword = keyword;
-    //show preloader
-    $scope.show_preloader();
-    //clear autocomplete
-    $scope.clear_autocomplete();
-    //store datas to be passed on post request.
-    console.log(keyword);
-    data = {
-       doc_keyword: keyword,
-       doc_filter:  filter
-    }
-    //filter = tag,folder,fulltext
-    $http({method:'POST',url:'/dashboard/select_search', data, timeout: $scope.search_canceler.promise}).success(function(data){
-       
-       if(data=="error"){
-          $scope.doc_not_found();
-       }else{
-          //pass result to scope documents to be rendered in table
-          $scope.documents = data;
-          //make documents table visible
-          $scope.documents_table = true;
-          //hide preloader
-          $scope.dashboard_preloader = false;
-          //output result in consolo -> remove this in production
-       }
-       console.log(data);
-    });
-
-}
 
 
 // search documents function
-$scope.searchDocuments = function(){
+$scope.searchDocuments = function(keyword,filter){
     //hide search autocomplete preloader
     $scope.searchAutoCompLoader = false;
     //clear autocomplete
@@ -774,20 +724,21 @@ $scope.searchDocuments = function(){
     //cancel previous autocomplete post request.
     $scope.canceler.resolve();
     //reinit $q.defer make new autocomplete post request
-    // $scope.canceler = $q.defer();
+    //$scope.canceler = $q.defer();
+    $scope.doc_keyword = keyword;  
     //-------------------------------------------------
     //cancel previous selectSearch post request
     $scope.search_canceler.resolve();
     //reinit $q.defer to make new post request.
     $scope.search_canceler = $q.defer();
+    $scope.show_preloader();
 
-    //run search if input is not empty
-    if($scope.doc_keyword!=""){
-      $scope.show_preloader();
-      data = {
-         doc_keyword: $scope.doc_keyword
-      }
-      $http({method:'POST',url:'/dashboard/enter_search', data, timeout: $scope.search_canceler.promise}).success(function(data){        
+    data = {
+        doc_keyword: keyword,
+        doc_filter: filter
+    }
+ 
+    $http({method:'POST',url:'/common_search/search', data, timeout: $scope.search_canceler.promise}).success(function(data){        
          if(data=="error"){
              $scope.doc_not_found();
          }else{
@@ -797,11 +748,11 @@ $scope.searchDocuments = function(){
              $scope.documents_table = true;
              //hide preloader
              $scope.dashboard_preloader = false;
-             //output result in consolo -> remove this in production
              console.log(data);
          }
+
       }); //end http
-    }//end if
+
 
 }//end searchDocuments.
 
@@ -809,6 +760,7 @@ $scope.searchDocuments = function(){
 // delete document
 $scope.deleteDocument = function(doc_id){
 
+    var doc_ids = [doc_id];
     swal({
       title: "Delete document?",
       text: "You will not be able to recover this document after you delete.",
@@ -823,10 +775,12 @@ $scope.deleteDocument = function(doc_id){
       if(isConfirm) {
          //ajax send post delete with id.
          $('.doc-upd-btn').attr("disabled", "disabled");
+
+
          $.ajax({
             url: '/document/delete',
             data: {
-                doc_id: doc_id
+                doc_id: doc_ids
             },
             type: 'POST',
             success: function(data) {

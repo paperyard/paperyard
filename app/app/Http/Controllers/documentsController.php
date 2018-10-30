@@ -18,65 +18,63 @@ class documentsController extends Controller
    // VIEW DOCUMENT
    public function viewDocument($doc_id){
            
-   	      // session()->put('lst_opened_doc', $doc_id);
-   	      $document = DB::table('documents')->where([
+          // session()->put('lst_opened_doc', $doc_id);
+          $document = DB::table('documents')->where([
              ['doc_id', '=', $doc_id],
              ['doc_user_id', '=', Auth::user()->id]
-   	      ])->get();
+          ])->first();
 
-   	      if(count($document)>0){
+          if(count($document)>0){
+              //store viewed docs
+              $this->viewedDocs($doc_id);
+                  
+              if($document->is_archive==1){
+                //convert DateTime to d.m.Y format
+                if($document->date!=null){
+                  $n_date = new \DateTime($document->date);
+                  $short_date = date_format($n_date,"d.m.Y");
+                  $document->date = $short_date;
+                }
 
-                  //STORE TO PREVIEWS VIEWD TABLE
-                  $pv = DB::table('documents_viewed')->where([
-                      ['view_user_id', '=', Auth::user()->id]
-                  ])->count();
-                  //if > 8 delete oldest;
-                  if($pv>8){
-                      $v_docs = DB::table('documents_viewed')->where('view_user_id', Auth::user()->id)->orderBy('view_id', 'asc')->first();
-                      DB::table('documents_viewed')->where('view_id', $v_docs->view_id)->delete();
-                  }else{
-                      //save to previously viewed doc
-                      DB::table('documents_viewed')->where([
-                          ['view_user_id', '=', Auth::user()->id]
-                      ])->insert([
-                            'view_doc_id'=>$doc_id,
-                            'view_user_id'=>Auth::user()->id,
-                            "created_at" =>  \Carbon\Carbon::now(), # \Datetime()
-                            "updated_at" => \Carbon\Carbon::now(),  # \Datetime()
-                      ]);
-                  }
-                  foreach($document as $d){
-                      if($d->is_archive==1){
-                        //convert DateTime to d.m.Y format
-                        if($d->date=="0000-00-00 00:00:00"){
-                            $d->date = "";
-                        }else{
-                          $n_date = new \DateTime($d->date);
-                          $short_date = date_format($n_date,"d.m.Y");
-                          $d->date = $short_date;
-                        }
+                if($document->reminder!=null){
+                  $n_date = new \DateTime($document->reminder);
+                  $short_date = date_format($n_date,"d.m.Y");
+                  $document->reminder = $short_date;
+                }
 
-                        if($d->reminder=="0000-00-00 00:00:00"){
-                            $d->reminder = "";
-                        }else{
-                          $n_date = new \DateTime($d->date);
-                          $short_date = date_format($n_date,"d.m.Y");
-                          $d->reminder = $short_date;
-                        }
+              }  
+              // get document pages image
+              $document_pages = DB::table('document_pages')->where('doc_id', $doc_id)->get();
 
-                      }  
-                  }
-                  // get document pages image
-                  $document_pages = DB::table('document_pages')->where([
-    		             ['doc_id', '=', $doc_id]
-    		   	      ])->get();
+              // RETURN DOCUMENTS DATAS AND IMAGES
+              return view('pages/document_view')->with(compact('document','document_pages'));
+          }else{
+             return redirect('/dashboard');
+          }
+  }
 
-                  // RETURN DOCUMENTS DATAS AND IMAGES
-		              return view('pages/document_view')->with(compact('document','document_pages'));
-   	      }else{
-   	      	 return redirect('/dashboard');
-   	      }
-   }
+  public function viewedDocs($doc_id){
+
+      date_default_timezone_set(Auth::user()->user_timezone);
+      //STORE TO PREVIEWS VIEWD TABLE
+      $pv = DB::table('documents_viewed')->where([
+          ['view_user_id', '=', Auth::user()->id]
+      ])->count();
+      //if > 8 delete oldest;
+      if($pv>8){
+          $v_docs = DB::table('documents_viewed')->where('view_user_id', Auth::user()->id)->orderBy('view_id', 'asc')->first();
+          DB::table('documents_viewed')->where('view_id', $v_docs->view_id)->delete();
+      }else{
+          //save to previously viewed doc
+          DB::table('documents_viewed')->where('view_user_id', Auth::user()->id)
+          ->insert([
+              'view_doc_id'=>$doc_id,
+              'view_user_id'=>Auth::user()->id,
+              "created_at" =>  \Carbon\Carbon::now(), # \Datetime()
+              "updated_at" => \Carbon\Carbon::now(),  # \Datetime()
+          ]);
+      }
+  }
 
   // DELETE DOCUMENT
   public function deleteDocument(Request $req){
@@ -92,7 +90,7 @@ class documentsController extends Controller
 
              // DELETE DOCUMENTS FILES
              foreach($doc as $d){
-             	   $file1 = storage_path('app/documents_new') . '/' . $d->doc_org;
+                 $file1 = storage_path('app/documents_new') . '/' . $d->doc_org;
                  File::delete((string)$file1);
                  $file2 = storage_path('app/documents_processing') . '/' . $d->doc_prc;
                  File::delete((string)$file2);
@@ -115,6 +113,11 @@ class documentsController extends Controller
              // DELETE DOCUMENT PAGES FROM DATABASE
              DB::table('document_pages')
              ->whereIn('doc_id', $req->doc_id)
+             ->delete();
+
+             // DELETE DOCUMENTS VIEWED
+             DB::table('documents_viewed')
+             ->whereIn('view_doc_id', $req->doc_id)
              ->delete();
 
              return "deleted_01";
@@ -144,28 +147,31 @@ class documentsController extends Controller
     // UPDATE DOCUMENTS DATAS.
     public function updateDocument(Request $req){
 
-        try {
+          // return $req->all();
 
+
+        try {
           // set user time zone.
           date_default_timezone_set(Auth::user()->user_timezone);
-          
-
           $req->reminder = $this->formatDate($req->reminder);
-         
+
 
           $update = DB::table('documents')->where([
                ['doc_id', '=',$req->doc_id],
                ['doc_user_id', '=', Auth::user()->id]
             ])->update([
-            	'sender'=>$req->doc_sender,
-            	'receiver'=>$req->doc_receiver,
-            	'date'=> $this->formatDate($req->doc_date),
-            	'tags'=>$req->doc_tags,
-            	'category'=>$req->doc_category,
-            	'reminder'=>$this->formatDate($req->doc_reminder),
-            	'tax_relevant'=>$req->doc_tax_r,
-            	'note'=>$req->doc_notes,
-              'is_archive'=>1
+              'sender'=>$req->doc_sender,
+              'receiver'=>$req->doc_receiver,
+              'date'=> $this->formatDate($req->doc_date),
+              'tags'=>$req->doc_tags,
+              'category'=>$req->doc_category,
+              'reminder'=>$this->formatDate($req->doc_reminder),
+              'tax_relevant'=>$req->doc_tax_r,
+              'note'=>$req->doc_notes,
+              'is_archive'=>1,
+              'sender_address_id'=>$req->sender_address_id,
+              'receiver_address_id'=>$req->receiver_address_id,
+              'updated_at' => \Carbon\Carbon::now(),  # \Datetime()
             ]);
           //if update is succes check if there is still doc to edit.
           if($update>0){
@@ -222,8 +228,7 @@ class documentsController extends Controller
           $newDate = $dateTime->format('Y-m-d 00:00:00');
           return $newDate;
         }else{
-          $newDate = "0000-00-00 00:00:00";
-          return $newDate; 
+          return $date; 
         }
     }
 
@@ -267,12 +272,8 @@ class documentsController extends Controller
         // return folder for this user.
          $folders = DB::table('folders')->where('folder_user_id', Auth::user()->id)->select('folders.folder_id','folders.folder_name')->get();
         //return documents finished editing.
-         if(count($folders)>0){
+         $folders = count($folders)>0? $folders:'';
 
-         }else{
-            $folders = '';
-         }
-         
          $prs_stat = ['ocred_final','ocred_final_failed'];
 
          $archive_docs = DB::table('documents')->where([
@@ -322,9 +323,7 @@ class documentsController extends Controller
             $format = "";
 
             //date format
-            if($d->date=="0000-00-00 00:00:00"){
-                $d->date = "N/D";
-            }else{
+            if($d->date!=null){
               $n_date = new \DateTime($d->date);
               $short_date = date_format($n_date,"d.m.Y");
               $d->date = $short_date;
@@ -336,7 +335,7 @@ class documentsController extends Controller
           return $json_response;
     }
 
-
+    
     public function moveFolders(Request $request){
 
         try {

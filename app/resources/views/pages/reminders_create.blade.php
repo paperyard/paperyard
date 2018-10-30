@@ -6,7 +6,6 @@
 
 @section('custom_style')
 <link href="{{ asset('static/css/reminders.css') }}" rel="stylesheet">
-<link href="{{ asset('static/css/bootstrap-material-datetimepicker.css') }}" rel="stylesheet">
 <style type="text/css" media="screen">
 
 /* ------------------paperyard custom button ---------------------------*/
@@ -165,6 +164,41 @@
            color:#fff;
 }
 
+.cstm_input {
+  background-color:#ebedf8;
+  outline: none;
+  border: none !important;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+  box-shadow: none !important;
+}
+
+.list_btn_container {
+  position: absolute;
+  cursor: pointer;
+  right:0%;
+  top:0;
+}
+.inside_close {  
+   position: relative;
+   padding: 10.5px 13.5px;
+   background-color:#999;
+}
+
+.ic_trash {
+   background-color:#ff9c1c !important;
+   color:#fff;
+}
+
+.ic_trash:hover {
+   background-color:#fca535 !important;
+   color:#fff;
+}
+
+.list-group-item:hover {
+  background-color:#b1d5ff !important;
+}
+
 
 </style>
 @endsection
@@ -183,8 +217,7 @@
         <div class="block-header">
             <h2>
                 Note!
-                <small>date/time is based on settings timezone.
-                default is Europe/Paris. Go to system settings to change your preferred timezone.</small>
+                <small>You can only search for documents that have a reminder date specified.</small>
             </h2>
         </div>
 
@@ -237,7 +270,8 @@
                   <table class="table table-hover ng-hide table-striped" ng-show="rm_table">
                       <thead style="background-color:#ebedf8; color:#000; font-size:13px; ">
                         <th>#</th>
-                        <th>Date</th>
+                        <th>Date(d.m.y)</th>
+                        <th>Reminder(d.m.y)</th>  
                         <th>Recipient</th>
                         <th>Sender</th>
                         <th>Category</th>
@@ -245,16 +279,25 @@
                       </thead>
                       <tbody style="font-size:13px;">
                         <tr ng-repeat="data in documents track by $index">
-                          <td><#$index+1#></td>
+                          <td>
+                              <input type="checkbox" id="arch<#data.doc_id#>" class="filled-in chk-col-blue"  ng-model="data.select" ng-click="selectThisDocument($index)"/>
+                              <label for="arch<#data.doc_id#>"><#$index+1#></label>
+                          </td>
                           <td><# data.date     | default #></td>
+                          <td><# data.reminder | default #></td>
                           <td><# data.receiver | default #></td>
                           <td><# data.sender   | default #></td>
                           <td><# data.category | default #></td>
                           <td style="width:50px">
                               <!-- View document page -->
-                              <button type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="View document" tooltip-top>
-                                <i class="material-icons cstm_icon_btn_ico">remove_red_eye</i>
-                              </button>
+                              <a data-fancybox="gallery<#data.doc_id#>" href="/files/image/<#data.doc_page_image_preview#>">  
+                                <button type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="View document" tooltip-top>
+                                  <i class="material-icons cstm_icon_btn_ico">remove_red_eye</i>
+                                </button>
+                              </a> 
+                             <span class="ng-hide" ng-repeat="imgs in data.image_list track by $index"> 
+                                <a ng-if="$index!=0" data-fancybox="gallery<#data.doc_id#>" href="/files/image/<#imgs.doc_page_image_preview#>">qwe</a>
+                             </span>   
                           </td>
                         </tr>
                       </tbody>
@@ -277,33 +320,50 @@
                     </center>
                 </div>
 
-                <form enctype="multipart/form-data" name="reminderForm"  ng-submit="saveReminder(); $event.preventDefault();">
-                    <br>
+                <form enctype="multipart/form-data" name="reminderForm" >
+                    <hr style="border:2px solid #b1d5ff">
+                    <!-- REMINDER TITLE -->
                     <div class="form-group">
                         <div class="form-line">
-                            <input type="text" name="reminder_title" ng-model="reminders.reminder_title"  class="form-control" placeholder="Reminder Title." required>
+                            <input type="text" name="reminder_title" ng-model="reminder.reminder_title"  class="form-control" placeholder="Reminder title." required>
                         </div>
                     </div>
 
-                     <div class="form-group">
-                        <div class="form-line">
-                            <textarea rows="1" class="form-control no-resize auto-growth" name="reminder_message" ng-model="reminders.reminder_message"  id="notification_message" placeholder="Message...press ENTER to create new line." required></textarea>
-                        </div>
+                    <!-- REMINDER TASK LIST -->
+                    <div class="block-header">
+                        <h2>
+                            Task list.            
+                        </h2>
                     </div>
+                    <div class="list-group">
+                         <a  class="list-group-item" ng-repeat="task in reminder.taskList track by $index" style=" word-wrap: break-word; margin-top:10px">
+                            <span style="padding-right:30px"><b style="margin-right:10px"><# $index+1#></b><# task.task_name #></span>
+                            <span class="list_btn_container" ng-click="removeTask($index)">
+                                  <span class="inside_close ic_trash waves-effect"><i class="fa fa-trash"></i></span>
+                            </span>
+                         </a>
+                    </div>  
 
-                    <div class="form-group">
-                        <div class="form-line">
-                            <input type="text" name="reminder_time" ng-model="reminders.reminder_time" class="datetimepicker form-control" placeholder="Schedule this reminder." required>
-                        </div>
+                    <!-- NEW TASK INPUT -->
+                     <div class="input-group">
+                         <div class="form-line">
+                            <input type="text" name="new_task" ng-model="reminder.new_task"  class="form-control" placeholder="New task.." ng-keydown="keypressNewTask($event)">
+                         </div>
+                         <span class="input-group-addon">
+                              <button class="btn btn-primary active-red" type="button" style="margin-top:-7px" ng-click="addTask()"><i class="fa fa-plus" style="margin-bottom:6px"></i></button>
+                         </span>
+                         <br>
                     </div>
+                    
+                    <!-- SUBMIT BUTTOn -->
                      <div class="form-group">
                         <div class="pull-right">
-                            <button class="btn-flat btn_color main_color waves-effect lg-btn_x2 ng-hide" type="submit" ng-show="save_rm_btn"><span class="lg-btn-tx">Save reminder</span></button>
+                             <button class="btn-flat btn_color main_color waves-effect lg-btn_x2 ng-hide" type="button" ng-show="save_rm_btn" ng-click="check_saveReminder(); "><span class="lg-btn-tx">Save reminder</span></button>
                          </div>
                          <br>
                     </div>
-                </form>
 
+                </form>
             </div>
 
         </div>
@@ -313,22 +373,8 @@
 
 @section('scripts')
 <script src="{{ asset('static/js/reminders.js') }}"></script>
-<script src="{{ asset('static/js/bootstrap-material-datetimepicker.js') }}"></script>
 <script type="text/javascript">
 
-$(function () {
-    //Textare auto growth
-    autosize($('textarea.auto-growth'));
-
-    //Datetimepicker plugin
-    $('.datetimepicker').bootstrapMaterialDatePicker({
-        format: 'YYYY-MM-DD HH:mm:ss',
-        clearButton: true,
-        shortTime: true,
-        weekStart: 1
-    });
-
-});
 
 //inject this app to rootApp
 var app = angular.module('app', []);
@@ -336,52 +382,141 @@ var app = angular.module('app', []);
 app.filter('default', function(){
    return function(data){
        if(data==null){
-           data = "____";
+           data = "N/D";
            return data;
        }
        return data;
    }
 });
 
+
 app.controller('reminder_controller', function($scope, $http, $timeout, $q) {
 
 $scope.canceler = $q.defer();
 $scope.search_canceler = $q.defer();
 
-$scope.reminders = [];
 $scope.search_preloader = false;
 $scope.rm_table = false;
 $scope.rm_tb_preloader = false;
 $scope.rm_tb_not_found = false;
+//save button model, true = show.
 $scope.save_rm_btn = true;
 
+
+$scope.reminder = [];
+//selected documents datas
+$scope.reminder.selectedDocument = [];
+//array where reminder task list stored
+$scope.reminder.taskList = [];
+
+
+//create reminder==================================
+
+//select documents based on passed document id
+$scope.selectThisDocument = function(doc_id){
+    //unselect all checkboxes
+    angular.forEach($scope.documents, function(data) {
+          data.select = false;
+    });
+    //select document that has the passed id
+    $scope.documents[doc_id]['select'] = true;
+    //store datas to selected document
+    $scope.reminder.selectedDocument  = $scope.documents[doc_id];
+}
+
+//add new task
+$scope.addTask = function(){
+  if($scope.reminder.new_task!=null && $scope.reminder.new_task!="")
+  {
+    $scope.reminder.taskList.push({'task_name':$scope.reminder.new_task});
+    $scope.reminder.new_task = null;
+  }
+  else{
+    swal("eror", "Please add a task", "error");
+  }
+}
+
+//remove created task
+$scope.removeTask = function(index){
+   $scope.reminder.taskList.splice(index, 1);
+}
+
+//save new reminder
 $scope.saveReminder = function(){
-
+    
     $scope.wait();
-    $scope.save_rm_btn = false;
     data = {
-        save_reminder:true,
-        rm_title:$scope.reminders.reminder_title,
-        rm_message:$scope.reminders.reminder_message,
-        rm_time:$scope.reminders.reminder_time
+       reminder_title  : $scope.reminder.reminder_title,
+       reminder_doc_id : $scope.reminder.selectedDocument.doc_id,
+       reminder_tasks  : $scope.reminder.taskList
     }
-    if($scope.attach_doc_id != '' && $scope.attach_doc_id != null && $scope.attach_doc_id != undefined){
-        data.attach_doc_id = $scope.attach_doc_id;
-    }
-    $http.post('/reminder_save_update', data).success(function(data){
-           window.location.replace('/reminders');
+    $http({method:'POST',url:'/reminders/create', data}).success(function(data){
+        if(data=="success_task_saved"){
+          window.location.replace('/reminders');          
+        }else{
+          //something went wrong
+          window.location.reload();
+        }
     });
 }
 
+// check if all required field filled.
+$scope.check_saveReminder = function(){
 
-$scope.wait = function(){
-    $('.card').waitMe({
-        effect: 'win8_linear',
-        text: 'Please wait...',
-        bg: 'rgba(255,255,255,0.90)',
-        color: '#555'
-    });
+    //user must search and select document
+    if($scope.reminder.selectedDocument.length==0){
+       swal("eror", "Please search and select a document with a date reminder", "error");
+    }
+    //user must add task for the reminder
+    else if($scope.reminder.taskList.length==0){
+       swal("eror", "Please add a task", "error");
+    }
+    //all good, save reminder
+    else{
+       $scope.saveReminder();
+    }
 }
+
+// on keypress check key
+$scope.keypressNewTask = function(keyEvent) {
+  //if key == 13 == ENTER  search document.
+  if (keyEvent.which === 13){
+      $scope.addTask();
+  }
+
+};
+
+
+// SEARCH DOCUMENTS =============================================================================================================
+
+
+// clear autocomplete on search bar
+$scope.clear_autocomplete = function(){
+  $scope.ac_tags     = null;
+  $scope.ac_folders  = null;
+  $scope.ac_fulltext = null;
+  $scope.no_result_found = false;
+}
+// show preloading while searching for document
+$scope.preloader_table_data_show = function(){
+  $scope.rm_table = false;
+  $scope.rm_tb_preloader = true;
+  $scope.rm_tb_not_found = false;
+}
+// hide preloader when don searching
+$scope.preloader_table_data_hide = function(){
+  $scope.rm_table = true;
+  $scope.rm_tb_preloader = false;
+  $scope.rm_tb_not_found = false;
+}
+// show label not found if no document found
+$scope.show_not_found = function(){
+  $scope.rm_table = false;
+  $scope.rm_tb_preloader = false;
+  $scope.rm_tb_not_found = true;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 
 // on keypress check key
 $scope.searchKeyPress = function(keyEvent) {
@@ -408,34 +543,6 @@ $scope.searchKeyPress = function(keyEvent) {
   }
 };
 
-// clear autocomplete on search bar
-$scope.clear_autocomplete = function(){
-  $scope.ac_tags     = null;
-  $scope.ac_folders  = null;
-  $scope.ac_fulltext = null;
-  $scope.no_result_found = false;
-}
-
-$scope.preloader_table_data_show = function(){
-  $scope.rm_table = false;
-  $scope.rm_tb_preloader = true;
-  $scope.rm_tb_not_found = false;
-}
-
-$scope.preloader_table_data_hide = function(){
-  $scope.rm_table = true;
-  $scope.rm_tb_preloader = false;
-  $scope.rm_tb_not_found = false;
-}
-
-$scope.show_not_found = function(){
-  $scope.rm_table = false;
-  $scope.rm_tb_preloader = false;
-  $scope.rm_tb_not_found = true;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-
 //oninput change search autocomplete.
 $scope.onChangeInput = function(){
     //cancel previous autocomplete post request.
@@ -453,7 +560,7 @@ $scope.onChangeInput = function(){
           doc_keyword: $scope.doc_keyword
       }
       //make post request to get if keyword is found in documents tags,folder or page text.
-      $http({method:'POST',url:'/common_search/autocomplete', data, timeout: $scope.canceler.promise}).success(function(data){
+      $http({method:'POST',url:'/reminders/autocomplete', data, timeout: $scope.canceler.promise}).success(function(data){
           //if notthing is found, show not found dropdown result.
           if(data.tags=="not_found" && data.folders=="not_found" && data.fulltext=="not_found"){
             //not found
@@ -489,7 +596,7 @@ $scope.searchDocuments = function(keyword,filter){
        doc_filter:  filter
     }
     //filter = tag,folder,fulltext
-    $http({method:'POST',url:'/common_search/select_search', data, timeout: $scope.search_canceler.promise}).success(function(data){
+    $http({method:'POST',url:'/reminders/search', data, timeout: $scope.search_canceler.promise}).success(function(data){
        
        if(data=="error"){
           $scope.show_not_found();
@@ -506,8 +613,17 @@ $scope.searchDocuments = function(keyword,filter){
        console.log(data);
     });
 }
+
 //---------------------------------------------------------------------------------------------------------------------------
 
+$scope.wait = function(){
+    $('.card').waitMe({
+        effect: 'win8_linear',
+        text: 'Please wait...',
+        bg: 'rgba(255,255,255,0.90)',
+        color: '#555'
+    });
+}
 
 
 

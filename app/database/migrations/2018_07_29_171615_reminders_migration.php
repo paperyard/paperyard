@@ -15,13 +15,12 @@ class RemindersMigration extends Migration
     {
         //
         Schema::create('reminders', function (Blueprint $table) {
-            $table->increments('reminder_id');
-            $table->string('reminder_status')->default('standby');
-            $table->integer('reminder_user_id');
-            $table->integer('reminder_document_id')->nullable();
-            $table->string('reminder_title');
-            $table->longText('reminder_message');
-            $table->dateTime('reminder_schedule')->nullable();
+            $table->increments('rm_id');
+            $table->integer('rm_user_id');
+            $table->integer('rm_doc_id');
+            $table->string('rm_title');
+            $table->boolean('is_reminded')->default(0);
+            $table->string('rm_process_status')->default('new_reminder');
             $table->timestamp('created_at')->default(\DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('updated_at')->default(\DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
         });

@@ -1050,7 +1050,6 @@
 
     <!-- IMPORT EMAIL -->
 	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-
 		<div class="card">
 			<div class="body">
 				<div class="row clearfix">
@@ -1060,15 +1059,39 @@
 							Manage e-mail inboxes for automatic document import
 						</P>
 					</div>
-					<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
-						<span class="pull-right text-right">
-							<i class="material-icons" style="font-size:50px; position:absolute; top:0; right:0">keyboard_arrow_right</i>
-						</span><br>
-					</div>
+					<a href="/imap/new_credential">
+						<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+							<span class="pull-right text-right">
+								<i class="material-icons" style="font-size:50px; position:absolute; top:0; right:0">keyboard_arrow_right</i>
+							</span><br>
+						</div>
+					</a>	
 				</div>
 			</div>
 		</div>
+	</div>
 
+   <!-- FTP -->
+	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+		<div class="card">
+			<div class="body">
+				<div class="row clearfix">
+					<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+						<label>FTP Import files</label>
+						<P>
+							Access / Download PDF files using FTP.
+						</P>
+					</div>
+					<a href="/ftp_create_credentials">
+						<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+							<span class="pull-right text-right">
+								<i class="material-icons" style="font-size:50px; position:absolute; top:0; right:0">keyboard_arrow_right</i>
+							</span><br>
+						</div>
+					</a>	
+				</div>
+			</div>
+		</div>
 	</div>
 
 		

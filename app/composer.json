@@ -16,7 +16,8 @@
         "spatie/pdf-to-image": "^1.8",
         "symfony/finder": "^4.1",
         "symfony/process": "^4.1",
-        "thiagoalessio/tesseract_ocr": "^2.4"
+        "thiagoalessio/tesseract_ocr": "^2.4",
+        "webklex/laravel-imap": "^1.2"
     },
     "require-dev": {
         "filp/whoops": "^2.0",

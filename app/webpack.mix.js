@@ -84,11 +84,28 @@ mix.js('resources/assets/js/app.js', 'public/static/js')
        'node_modules/adminbsb-materialdesign/plugins/waitme/waitMe.js',
        'node_modules/ng-material-floating-button/src/mfb-directive.js',
     ], 'public/static/js/customize_pdf.js')
+    // IMAP ASSETS
+    .combine([
+       'node_modules/adminbsb-materialdesign/plugins/waitme/waitMe.css',
+    ], 'public/static/css/imap.css')
+    .combine([
+       'node_modules/adminbsb-materialdesign/plugins/waitme/waitMe.js',
+    ], 'public/static/js/imap.js')
+    // ADDRESS BOOK ASSETS
+    .combine([
+       'node_modules/adminbsb-materialdesign/plugins/waitme/waitMe.css',
+       'node_modules/ng-material-floating-button/mfb/dist/mfb.min.css',
+    ], 'public/static/css/address_book.css')
+    .combine([
+       'node_modules/adminbsb-materialdesign/plugins/waitme/waitMe.js',
+       'node_modules/ng-material-floating-button/src/mfb-directive.js',
+    ], 'public/static/js/address_book.js')
     // REMINDERS ASSETS
     .combine([
        'node_modules/adminbsb-materialdesign/plugins/bootstrap-tagsinput/bootstrap-tagsinput.css',
        'node_modules/adminbsb-materialdesign/plugins/waitme/waitMe.css',
        'node_modules/ng-material-floating-button/mfb/dist/mfb.min.css',
+       'node_modules/@fancyapps/fancybox/dist/jquery.fancybox.min.css',
     ], 'public/static/css/reminders.css')
     .combine([
        'node_modules/adminbsb-materialdesign/plugins/autosize/autosize.js',
@@ -96,6 +113,7 @@ mix.js('resources/assets/js/app.js', 'public/static/js')
        'node_modules/adminbsb-materialdesign/plugins/bootstrap-tagsinput/bootstrap-tagsinput.js',
        'node_modules/adminbsb-materialdesign/plugins/waitme/waitMe.js',
        'node_modules/ng-material-floating-button/src/mfb-directive.js',
+       'node_modules/@fancyapps/fancybox/dist/jquery.fancybox.min.js',
     ], 'public/static/js/reminders.js')
     .copyDirectory('resources/assets/datetimepicker/bootstrap-material-datetimepicker.css', 'public/static/css/bootstrap-material-datetimepicker.css')
     .copyDirectory('resources/assets/datetimepicker/bootstrap-material-datetimepicker.js', 'public/static/js/bootstrap-material-datetimepicker.css')

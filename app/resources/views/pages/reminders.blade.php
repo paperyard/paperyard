@@ -42,9 +42,9 @@
 
 .card:hover {
     color:#017cff;
-    -webkit-box-shadow: 0px 1px 5px 1px rgba(145,177,214,1);
-    -moz-box-shadow: 0px 1px 5px 1px rgba(145,177,214,1);
-    box-shadow: 0px 1px 5px 1px rgba(145,177,214,1);
+    -webkit-box-shadow: 0px 2px 4px 1px rgba(86, 153, 225, 0.35);
+    -moz-box-shadow: 0px 2px 4px 1px rgba(86, 153, 225, 0.35);
+    box-shadow: 0px 2px 4px 1px rgba(86, 153, 225, 0.35);
     cursor: pointer;
 }
 
@@ -54,6 +54,7 @@
 }
 
 /* ---------------material floating button -----------------------------------*/
+
 .mfb-component__button--main, .mfb-component__button--child {
     background-color:#017cff; !important;
       -webkit-transition: all .25s;
@@ -121,6 +122,10 @@
    color:#017cff;
 }
 
+.strikethrough {
+  text-decoration: #017cff line-through;
+  color: #017cff ;
+}
 </style>
 @endsection
 
@@ -132,48 +137,55 @@
 @endsection
 
 @section('content')
-<div class="row" ng-controller="reminders_controller">
+<div class="row clearfix" ng-controller="reminders_controller">
 
-@if(count($reminder_exist)>=1)
+@if(count($reminder_exist)>0)
 
-@if (session()->has('reminder_saved'))
+@if (session()->has('reminder_created'))
 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
     <div class="alert bg-light-blue alert-dismissible" role="alert">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-         <p>{!! session('reminder_saved') !!}</p>
+        <p>{!! session('reminder_created') !!}</p>
     </div>
 </div>
 @endif
 
-<div class="ng-hide" ng-show="rmds">
-    <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12" ng-repeat="rm in reminders_list track by $index">
-        <div class="card" ng-class="{'rm_activated':rm.reminder_status=='activated'}">
-            <div class="header" >
-                <h2>
-                    <# rm.reminder_title #>
-                    <small ng-if="rm.doc_ocr!=null">for document: <# rm.doc_ocr | limitTo:27 #>..</small>
-                </h2>
-
-                <ul class="header-dropdown m-r--5">
-                    <li class="dropdown">
-                        <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                            <i class="material-icons">more_vert</i>
-                        </a>
-                        <ul class="dropdown-menu pull-right">
-                            <li ><a ng-href="/reminders/edit/<#rm.reminder_id#>">Edit reminder</a></li>
-                            <li ng-click="deleteReminder(rm.reminder_id)"><a >Delete reminder</a></li>
-                        </ul>
+<br>
+<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" ng-repeat="rm in reminders_list track by $index">
+    <div class="card">
+        <div class="header"  >
+            <h2 data-toggle="collapse" href="#collapseTask<#$index#>" aria-expanded="false">
+                <# rm.rm_title #> <small>Due on <# rm.reminder #></small>
+            </h2>
+            <ul class="header-dropdown m-r--5">
+                <li class="dropdown">
+                    <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                        <i class="material-icons">more_vert</i>
+                    </a>
+                    <ul class="dropdown-menu pull-right">
+                        <li><a href="/reminder/edit/<#rm.rm_id#>">Edit</a></li>
+                        <li><a ng-click="deleteReminder(rm.rm_id)">Delete </a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        <div class="body collapse" id="collapseTask<#$index#>">
+              <ul class="list-unstyled" >
+                    <li class="" ng-repeat="task in rm.task_list track by $index" style=" word-wrap: break-word; margin-top:10px">
+                         <div>
+                                <input type="checkbox" id="arch<#task.task_id#>" class="filled-in chk-col-blue"  ng-model="task.select" ng-click="taskComplete(task.task_id,task.select)"/>
+                                <label for="arch<#task.task_id#>">
+                                      <span style="font-size:15px"  ng-class="{true: 'strikethrough'}[task.select == true]" ><# task.task_name #> </span>
+                                </label>
+                         </div>
                     </li>
-                </ul>
-            </div>
-            <div class="body">
-                <# rm.reminder_message | limitTo:184 #>...
-            </div>
+              </ul>   
         </div>
     </div>
 </div>
-<div class="col-md-12 ">
 
+
+<div class="col-md-12 ">
       <center>
             <div class="preloader ng-hide center-block" ng-show="reminder_preloader" style="margin-top:100px">
                 <div class="spinner-layer pl-blue">
@@ -188,12 +200,10 @@
       </center>
 </div>
 
-
 <nav mfb-menu position="br" effect="zoomin"
  active-icon="fa fa-times" resting-icon="fa fa-plus"
  toggling-method="click" >
- <button mfb-button icon="fa fa-calendar-plus-o" label="Create new reminder"  onclick="window.location='{{ url('/reminder/create') }}'"></button>
-
+ <button mfb-button icon="fa fa-calendar-plus-o" label="Create new reminder"  onclick="window.location='{{ url('/reminders/new') }}'"></button>
 </nav>
 
 @else
@@ -208,7 +218,7 @@
                 </p>
             </div><br>
             <div>
-                <button onclick="window.location='{{ url('reminder/create') }}'" class="btn-flat btn_color main_color waves-effect lg-btn_x2" type="submit"><span class="lg-btn-tx">Create reminder</span></button>
+                <button onclick="window.location='{{ url('reminders/new') }}'" class="btn-flat btn_color main_color waves-effect lg-btn_x2" type="submit"><span class="lg-btn-tx">Create reminder</span></button>
             </div>
         </div>
     </center>
@@ -221,42 +231,42 @@
 
 @section('scripts')
 <script src="{{ asset('static/js/reminders.js') }}"></script>
-<script src="{{ asset('static/js/bootstrap-material-datetimepicker.js') }}"></script>
 <script type="text/javascript">
-
-$(function () {
-    //Textare auto growth
-    autosize($('textarea.auto-growth'));
-
-    //Datetimepicker plugin
-    $('.datetimepicker').bootstrapMaterialDatePicker({
-        format: 'YYYY-MM-DD HH:mm:ss',
-        clearButton: true,
-        shortTime: true,
-        weekStart: 1
-    });
-
-});
 
 //inject this app to rootApp
 var app = angular.module('app', ['ng-mfb']);
 
-app.controller('reminders_controller', function($scope, $http, $timeout) {
+app.controller('reminders_controller', function($scope, $http, $timeout, $rootScope) {
+
+//scope to root app.
+//$rootScope.test = "hello";
+
+//task complete
+$scope.taskComplete = function(task_id,status){
+
+    data = {
+       task_id     : task_id,
+       task_status : status,
+    }
+    $http({method:'POST',url:'/reminders/task_complete', data}).success(function(data){
+        console.log(data);
+    });
+}
 
 
+//get users reminders
 $scope.getReminders = function(){
     $http.get('/get_reminders').success(function(data){
            $scope.hide_preloader();
            $scope.reminders_list = data;
     });
 }
-
-
+//show preloader while loading reminders
 $scope.show_preloader = function(){
     $scope.reminder_preloader = true;
     $scope.rmds = false;
 }
-
+//hide preloader when reminders found
 $scope.hide_preloader = function(){
     $scope.reminder_preloader = false;
     $scope.rmds = true;
@@ -266,7 +276,6 @@ $scope.show_preloader();
 $scope.getReminders();
 
 $scope.deleteReminder = function(rm_id){
-
     swal({
         title: "Delete reminder",
         text: "Are you sure you want to delete this reminder?",
@@ -275,7 +284,7 @@ $scope.deleteReminder = function(rm_id){
         confirmButtonColor: "#DD6B55",
         confirmButtonText: "Yes, delete it!",
         cancelButtonText: "No, cancel please!",
-        closeOnConfirm: true,
+        closeOnConfirm: false,
         closeOnCancel: false
     }, function (isConfirm) {
         $scope.show_preloader();
@@ -283,8 +292,13 @@ $scope.deleteReminder = function(rm_id){
             data = {
                 rm_id:rm_id
             }
-            $http.post('/reminder_delete', data).success(function(data){
+            $http.post('/reminders/delete', data).success(function(data){
+                if(data=="reminder_deleted"){  
                   $scope.getReminders();
+                  swal("Reminder deleted", "success");
+                }else{
+                  window.location.reload();
+                }
             });
 
         } else {

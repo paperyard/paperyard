@@ -11,31 +11,30 @@ use Illuminate\Http\RedirectResponse;
 use DB;
 
 /*
-this controller has common search code used in
+this controller used common search function in
 -reminder page
 -merge document page
 -dashboard
 */
 class commonSearchDocumentController extends Controller
 {
-    //return autocomplete 
+    
+    
+    // return autocomplete
     public function autoComplete(Request $req){
 
-    	//======get folders names ===============================================================================================
+
+        // get folder names like keyword----------------------------------------------------------------
         $folders = DB::table('folders')
         ->where('folder_user_id', Auth::user()->id)
         ->where('folder_name', 'LIKE', '%' . $req->doc_keyword . '%')
         ->select('folders.folder_name')
         ->get();
 
-        if(count($folders)==0){
-           $folders = "not_found";
-        }
-        //->return $folders
+        $folders = count($folders)>0?$folders:"not_found";
 
-        //======get tags =========================================================================================================
+        //get tags like keyword --------------------------------------------------------------------------
         $array_tags = [];
-
         $tags = DB::table('documents')
         ->where('doc_user_id', Auth::user()->id)
         ->where('is_archive', 1)
@@ -43,9 +42,8 @@ class commonSearchDocumentController extends Controller
         ->select('documents.tags')
         ->get();
 
-        if(count($tags)>=1){
+        if(count($tags)>0){
             foreach($tags as $key=>$t){
-            //documents.tags = "a,b,c,d"
             //convert comma separated string to array.
             $tagsArray = explode(',', $t->tags);
             //get elements with matching keyword
@@ -61,9 +59,8 @@ class commonSearchDocumentController extends Controller
         }else{
             $unique_array_tags = "not_found";
         }
-        //->return $unique_array_tags
-
-        //======get fulltext =====================================================================================================
+ 
+        //get document text like keyword -------------------------------------------------------------------
         $filter_text = [];
         //get user documents ids
         $user_doc = DB::table('documents')
@@ -71,7 +68,7 @@ class commonSearchDocumentController extends Controller
         ->where('is_archive', 1)
         ->select('documents.doc_id')->get();
 
-        if(count($user_doc)>=1){
+        if(count($user_doc)>0){
             //store ids in array
             $doc_ids = [];
             foreach($user_doc as $usr){
@@ -103,178 +100,286 @@ class commonSearchDocumentController extends Controller
             }else{
                 $clean_text = "not_found";
             }
-
         }else{
             $clean_text = "not_found";
         }
 
-        //tag folder fulltext.
+        //return tags,folders,fulltexts.---------------------------------------------------------------------------
         $json_response = json_encode(array('folders'=>$folders,'tags'=>$unique_array_tags,'fulltext'=>$clean_text));
         // # Return the response
         return $json_response;
-
     }
 
-    //returns documents from selected autocomplete
-    public function selectAutoCompleteSearch(Request $req){
+    //====================================================================================================================
+
+    // search for documents based on filter
+    public function searchDocuments(Request $req){
 
         // $req->doc_keyword
         // $req->doc_filter
-        if($req->doc_filter=="tag"){
-            $docs = $this->searchTags($req->doc_keyword);
-        }
-        if($req->doc_filter=="folder"){
-            $docs = $this->searchFolders($req->doc_keyword);
-        }
-        if($req->doc_filter=="fulltext"){
-            $docs = $this->searchFulltext($req->doc_keyword);
-        }
-        if($req->doc_filter=="no_filter"){
-            $docs = $this->enterkeySearch($req->doc_keyword);
+   
+        //return all documents when no keyword specified
+        if($req->doc_filter=="no_filter" && empty($req->doc_keyword)){
+            $docs = $this->get_documents_details();
         }
 
-        if(count($docs)>0){
+        // search documents
+        if($req->doc_filter=="no_filter" && !empty($req->doc_keyword)){
+             
+             $oprs = ['=','>','<'];
+             if(count(array_intersect($oprs,str_split($req->doc_keyword)))>0){
+                //run customsearch
+                $bin_operators = ['and','or','not','xor'];
+                $kw = explode(" ",$req->doc_keyword);
+                if(count(array_intersect($bin_operators, $kw))>0){
+                     $docs = $this->advance_customSearch($req->doc_keyword);
+                }else{
+                     $docs = $this->basic_customSearch($req->doc_keyword);
+                }
+             }else{
+                //run basic search
+                $docs = $this->no_filter_search($req->doc_keyword);
+            }
+        }
+
+        if($req->doc_filter=="folder"){
+            $docs = $this->folders_search($req->doc_keyword);
+        }
+        
+        if($req->doc_filter=="tag") {
+            $docs = $this->tags_search($req->doc_keyword);
+        }
+
+        if($req->doc_filter=="fulltext"){
+            $docs = $this->fulltext_search($req->doc_keyword);
+        }
+
+
+        if(count($docs)>0 && $docs!="invalid_format"){
+            // generate download format
             $docs = $this->generateDownloadFormat($docs);
-            return json_encode($docs);
-        }else{
+            // change date format based on client need
+            $docs = $this->newDateFormat($docs);
+             
+            $json_response = json_encode($docs);
+            return $json_response;
+        }
+        else if($docs=="invalid_format"){
+            return "invalid_format";
+        }
+        else{
             return "error";
         }
     }
 
 
-    //search for documents using enter key.
-    public function enterkeySearch($keyword){
 
-        //$req->doc_keyword
-        //store documents ids found in tag, folder and fulltext
+    //====================================================================================================================
+    // return documents based on keyword
+    public function no_filter_search($keyword){
+
+        //store document ids found in keyword tag,folder and text
         $docs_ids = [];
-        //------------------------------------------------------------------------------
-        //FOLDERS -------------get folder using passed keyword--------------------------
-        $folder_id = DB::table('folders')->where('folder_user_id', Auth::user()->id)
-        ->where('folder_name', 'LIKE', '%' . $keyword . '%')
-        ->select('folders.folder_id')
-        ->first();
 
-        //if folder is found
-        if(count($folder_id)>0){
-            //get documents ids from folder.
+        //get folder ids --------------------------------------------------------------
+        $folder_ids = DB::table('folders')
+        ->where('folder_user_id', Auth::user()->id)
+        ->where('folder_name', 'LIKE', '%' . $keyword . '%')
+        ->pluck('folder_id')->toArray();
+
+        //if folder found
+        if(count($folder_ids)>0){
+
+            //get documents ids from this folder ids.
             $folder_docs = DB::table('documents')
-            ->where('doc_user_id', Auth::user()->id)
             ->where('is_archive', 1)
-            ->where('doc_folder_id',$folder_id->folder_id)
-            ->select('documents.doc_id')
-            ->get();
-            //loop/store ids
+            ->where('doc_user_id', Auth::user()->id)
+            ->whereIn('doc_folder_id',$folder_ids)
+            ->pluck('doc_id')->toArray();
+
             if(count($folder_docs)>0){
-                 foreach($folder_docs as $fo_id){
-                     array_push($docs_ids,$fo_id->doc_id);
-                 }
+                $docs_ids = array_merge($docs_ids,$folder_docs);
             }
         }
-        //-------------------------------------------------------------------------------
-
-        //TAGS--------------get tags using passed keyword--------------------------------
+        //get tag ids -------------------------------------------------------------------  
         $tags_ids = DB::table('documents')
         ->where('doc_user_id', Auth::user()->id)
         ->where('is_archive', 1)
         ->where('tags', 'LIKE', '%' . $keyword . '%')
-        ->select('documents.doc_id')
-        ->get();
+        ->pluck('doc_id')->toArray();
 
         if(count($tags_ids)>0){
-            foreach($tags_ids as $tid){
-                array_push($docs_ids,$tid->doc_id);
-            }
+            $docs_ids = array_merge($docs_ids,$tags_ids);
         }
-        //-------------------------------------------------------------------------------
-
-        //FULLTEXT---------- find passed keyword in doc pages ---------------------------
-        //get all users documents id.
+ 
+        //get fulltext ids  ---------------------------------------------------------------
         $user_docs = DB::table('documents')
         ->where('doc_user_id', Auth::user()->id)
-        ->where('is_archive', 1)
-        ->select('documents.doc_id')->get();
-        //store all user documents ids in array.
-        $user_doc_ids = [];
+        ->where('is_archive', 1) 
+        ->pluck('doc_id')->toArray();
+
         if(count($user_docs)>0){
-            foreach($user_docs as $uid){
-                array_push($user_doc_ids,$uid->doc_id);
-            }
 
-            //find password keyword in each doc pages. get ids and store in array
-            $text_ids = DB::table('document_pages')->whereIn('doc_id', $user_doc_ids)
+            $text_ids = DB::table('document_pages')->whereIn('doc_id', $user_docs)
             ->where('doc_page_text', 'LIKE', '%' . $keyword . '%')
-            ->select('document_pages.doc_id')
-            ->get();
-
+            ->pluck('doc_id')->toArray();
+              
             if(count($text_ids)>0){
-                foreach($text_ids as $txt){
-                    array_push($docs_ids,$txt->doc_id);
-                }
+                $docs_ids = array_merge($docs_ids,$text_ids);
             }
         }
+
+        //search for all fields in document --------------------------------------------
+        similar_text("tax relevant",$keyword,$if_tax_relevant);
+        $is_tax_relevant = $if_tax_relevant>=50? "on":false;
+        
+        $search_in_all = DB::table('documents')
+        ->where('doc_user_id',Auth::user()->id)
+        ->where('is_archive',1)
+        ->where([
+            ['sender',    'LIKE', '%' . $keyword . '%'],
+            ['receiver',  'LIKE', '%' . $keyword . '%', 'or'],
+            ['category',  'LIKE', '%' . $keyword . '%', 'or'],
+            ['date',      'LIKE', '%' . $keyword . '%', 'or'],
+            ['note',      'LIKE', '%' . $keyword . '%', 'or'],
+            ['reminder',  'LIKE', '%' . $keyword . '%', 'or'],
+        ])
+        ->when($is_tax_relevant, function ($query, $is_tax_relevant) {
+            return $query->orWhere('tax_relevant', $is_tax_relevant);
+        })
+        ->pluck('doc_id')->toArray();
+        
+        if(count($search_in_all)>0){      
+           $docs_ids = array_merge($docs_ids,$search_in_all);
+        }
         //-------------------------------------------------------------------------------
-        //get unique ids in doc_ids array.
-        $unique_doc_ids = array_unique($docs_ids);
+        
+        //return documents with status
+        $pr_status = ['ocred_final','ocred_final_failed']; 
+        // remove duplicate ids
+        $find_all_ids = array_unique($docs_ids);
 
         $documents = DB::table('documents')
         ->where('doc_user_id', Auth::user()->id)
-        ->where('is_archive', 1)
-        ->where('process_status', 'ocred_final')
-        ->whereIn('documents.doc_id', $unique_doc_ids)
+        ->where('is_archive', 1) 
+        ->whereIn('documents.doc_id',$find_all_ids) 
+        ->whereIn('process_status', $pr_status)
         ->leftJoin('document_pages','documents.doc_id','=','document_pages.doc_id')
+        ->leftJoin('folders','documents.doc_folder_id','=','folders.folder_id')
         ->groupBy('document_pages.doc_id')
         ->select(
             'documents.doc_id',
             'documents.doc_ocr',
             'documents.doc_org',
-            'documents.approved',
-            'documents.process_status',
             'documents.sender',
             'documents.receiver',
-            'documents.tags',
+            'documents.approved',
             'documents.date',
+            'documents.tags',
             'documents.category',
-            'documents.created_at',
-            'document_pages.doc_page_image_preview'
-        )->get();
+            'documents.reminder',
+            'documents.tax_relevant',
+            'documents.process_status',
+            'documents.note',
+            'documents.origin',
+            'document_pages.doc_page_image_preview',
+            'document_pages.doc_page_thumbnail_preview',
+            'folders.folder_name'
+        )
+        ->orderBy('doc_id','desc')
+        ->get();
 
         return $documents;
 
     }
 
-   // search document with selected tag
-   public function searchTags($keyword){
 
-   	    $documents = DB::table('documents')
+    //====================================================================================================================
+
+    // return documents details using array of ids
+    public function get_documents_details(){
+
+        //return documents with status
+        $pr_status = ['ocred_final','ocred_final_failed']; 
+        // remove duplicate ids
+      
+        $documents = DB::table('documents')
         ->where('doc_user_id', Auth::user()->id)
-        ->where('is_archive', 1)
-        ->where('tags', 'LIKE', '%' . $keyword . '%')
-        ->where('process_status', 'ocred_final')
-        ->join('document_pages','documents.doc_id','=','document_pages.doc_id')
+        ->where('is_archive', 1)    
+        ->whereIn('process_status', $pr_status)
+        ->leftJoin('document_pages','documents.doc_id','=','document_pages.doc_id')
+        ->leftJoin('folders','documents.doc_folder_id','=','folders.folder_id')
         ->groupBy('document_pages.doc_id')
         ->select(
-                'documents.doc_id',
-                'documents.doc_ocr',
-                'documents.doc_org',
-                'documents.approved',
-                'documents.process_status',
-                'documents.sender',
-                'documents.receiver',
-                'documents.tags',
-                'documents.date',
-                'documents.category',
-                'documents.created_at',
-                'document_pages.doc_page_image_preview'
-        )->get();
-         
+            'documents.doc_id',
+            'documents.doc_ocr',
+            'documents.doc_org',
+            'documents.sender',
+            'documents.receiver',
+            'documents.approved',
+            'documents.date',
+            'documents.tags',
+            'documents.category',
+            'documents.reminder',
+            'documents.tax_relevant',
+            'documents.process_status',
+            'documents.note',
+            'documents.origin',
+            'document_pages.doc_page_image_preview',
+            'document_pages.doc_page_thumbnail_preview',
+            'folders.folder_name'
+        )
+        ->orderBy('doc_id','desc')
+        ->get();
+
         return $documents;
-   }
+    }
 
-   // search document with selected folder
-   public function searchFolders($keyword){
+   //=============================================== SELECT AUTOCOMPLETE SEARCH ===========================================
 
-   	    //get folder id using folder name
+    // return documents with tags filter
+    public function tags_search($keyword){
+
+        $pr_status = ['ocred_final','ocred_final_failed']; 
+        
+        $documents = DB::table('documents')
+        ->where('doc_user_id', Auth::user()->id)
+        ->where('is_archive', 1) 
+        ->where('tags', 'LIKE', '%' . $keyword . '%')
+        ->whereIn('process_status', $pr_status)
+        ->join('document_pages','documents.doc_id','=','document_pages.doc_id')
+        ->leftJoin('folders','documents.doc_folder_id','=','folders.folder_id')
+        ->groupBy('document_pages.doc_id')
+        ->select(
+            'documents.doc_id',
+            'documents.doc_ocr',
+            'documents.doc_org',
+            'documents.sender',
+            'documents.receiver',
+            'documents.date',
+            'documents.tags',
+            'documents.category',
+            'documents.reminder',
+            'documents.tax_relevant',
+            'documents.process_status',
+            'documents.approved',
+            'documents.note',
+            'documents.origin',
+            'document_pages.doc_page_image_preview',
+            'document_pages.doc_page_thumbnail_preview',
+            'folders.folder_name'
+        )
+        ->orderBy('doc_id','desc')
+        ->get();
+        
+        return $documents;
+    }
+
+    // return documents with folder filter
+    public function folders_search($keyword){
+
+        $pr_status = ['ocred_final','ocred_final_failed']; 
+        //get folder id using folder name
         $folderID = DB::table('folders')->where([
             ['folder_user_id', '=', Auth::user()->id],
             ['folder_name', '=', $keyword]
@@ -282,67 +387,104 @@ class commonSearchDocumentController extends Controller
 
         if(count($folderID)>0){
             $documents = DB::table('documents')
+            ->where('is_archive', 1) 
             ->where('doc_user_id', Auth::user()->id)
-            ->where('is_archive', 1)
+            ->whereIn('process_status', $pr_status)
             ->where('doc_folder_id', $folderID->folder_id)
-            ->where('process_status', 'ocred_final')
             ->join('document_pages','documents.doc_id','=','document_pages.doc_id')
+            ->leftJoin('folders','documents.doc_folder_id','=','folders.folder_id')
             ->groupBy('document_pages.doc_id')
             ->select(
                 'documents.doc_id',
                 'documents.doc_ocr',
                 'documents.doc_org',
-                'documents.approved',
-                'documents.process_status',
                 'documents.sender',
                 'documents.receiver',
-                'documents.tags',
                 'documents.date',
+                'documents.tags',
                 'documents.category',
-                'documents.created_at',
-                'document_pages.doc_page_image_preview'
-            )->get();
+                'documents.reminder',
+                'documents.tax_relevant',
+                'documents.process_status',
+                'documents.approved',
+                'documents.note',
+                'documents.origin',
+                'document_pages.doc_page_image_preview',
+                'document_pages.doc_page_thumbnail_preview',
+                'folders.folder_name'
+            )
+            ->orderBy('doc_id','desc')
+            ->get();
+            
+            //documents found in folder
             return $documents;
+        }else{
+            return $folderID;;
         }
-   	
-   }
 
-   // search document with selected text
-   public function searchFulltext($keyword){
+    }
 
-   	    $documents = DB::table('documents')
+    // return documents with specified fulltext
+    public function fulltext_search($keyword){
+
+        $pr_status = ['ocred_final','ocred_final_failed']; 
+
+        $documents = DB::table('documents')
         ->where('doc_user_id', Auth::user()->id)
         ->where('is_archive', 1) 
-        ->where('process_status', 'ocred_final')
+        ->whereIn('process_status', $pr_status)
         ->join('document_pages','documents.doc_id','=','document_pages.doc_id')
-        ->where('document_pages.doc_page_text', 'LIKE', '%' . $keyword. '%')
+        ->leftJoin('folders','documents.doc_folder_id','=','folders.folder_id')
+        ->where('document_pages.doc_page_text', 'LIKE', '%' . $keyword . '%')
         ->groupBy('document_pages.doc_id')
         ->select(
-                'documents.doc_id',
-                'documents.doc_ocr',
-                'documents.doc_org',
-                'documents.approved',
-                'documents.process_status',
-                'documents.sender',
-                'documents.receiver',
-                'documents.tags',
-                'documents.date',
-                'documents.category',
-                'documents.created_at',
-                'document_pages.doc_page_image_preview'
-        )->get();
+            'documents.doc_id',
+            'documents.doc_ocr',
+            'documents.doc_org',
+            'documents.sender',
+            'documents.receiver',
+            'documents.date',
+            'documents.tags',
+            'documents.category',
+            'documents.reminder',
+            'documents.tax_relevant',
+            'documents.process_status',
+            'documents.approved',
+            'documents.note',
+            'documents.origin',
+            'document_pages.doc_page_image_preview',
+            'document_pages.doc_page_thumbnail_preview',
+            'folders.folder_name' 
+        )
+        ->orderBy('doc_id','desc')
+        ->get();
+        
+        return $documents;
 
-        if(count($documents)>=1){
-            return $documents;
-        }
-   	
     }
-    
-    //generate download format otf based on user downloadfileformat
+
+    //================================================ FUNCTIONS OTF ========================================================
+
+    // format document date based on client needs.
+    public function newDateFormat($datas){
+        
+        // format date
+        foreach($datas as $d){                
+            if($d->date!=null){
+                $n_date = new \DateTime($d->date);
+                $short_date = date_format($n_date,"d.m.Y");
+                $d->date = $short_date;
+            }
+        }
+        return $datas;
+    }
+
+    // generate download format on the fly
     public function generateDownloadFormat($datas){
+
         $format = "";
-        $ext = ".pdf";
-        $dash = "-";
+        $ext    = ".pdf";
+        $dash   = "-";
         $d_date = new \DateTime();
         $date   = date_format($d_date, "ymd");
 
@@ -367,6 +509,410 @@ class commonSearchDocumentController extends Controller
         }
         return $datas;  
     }
+
+
+    //============================================  CUSTOM SEARCH =========================================================
+    
+    // custom search for documents eg.  sender=john. 
+    public function basic_customSearch($keyword){
+
+
+        // AND LIKE
+        // check if search is custom
+        // check if custom search has logic
+
+        //expression sent by user custom search
+        $expression = $keyword;
+        //convert all string to lower case then convert to array.
+        $expression = explode(" ", strtolower($expression));
+        //move index to proper position
+        $expression = array_values(array_filter($expression));
+
+        //where conditions
+        $conditions = [];
+        //normal columns have = operator
+        $columns_normal  = ["sender","receiver","tags",'category','note'];
+        //config columns have different operator.
+        $columns_config  = [
+            ["col"=>"date", "str_i"=>4],
+            ["col"=>"number_of_pages", "str_i"=>15],
+            ["col"=>"reminder", "str_i"=>8],
+            ["col"=>"tax_relevant", "str_i"=>12]
+        ];
+        $operators   = ["=","<",">","<=",">=","!=","!"];
+        $total_equal = 0;
+        $total_col   = 0;
+
+        $tax_relevant = false;
+        $tax_opr = null;
+        
+        //------------------------------------CHECK FORMAT----------------------------------------------
+        //check each expression for valid format.
+        //store conditions for where clause.
+        foreach($expression as $key=>$exp){
+              //0,4 = 1-4
+              //expression index
+              //e_i used to get operator from string explode
+              $e_i = 0;
+              $current_culomn = null;
+              $ch_col = null; 
+              
+              foreach($columns_config as $c_i){
+                  //substring exp & check if column has match
+                  $ch_col = substr((string)$exp,0,$c_i['str_i']);
+                  if($ch_col == $c_i['col']){
+                      //columns is valid store to current column & end loop
+                      $current_culomn = $ch_col;
+                      //store str_i num to e_i to be used in determining index of operator
+                      $e_i = $c_i['str_i'];
+                      //add 1 to total col for format checking.
+                      $total_col   +=1;
+                      $total_equal +=1;
+                      break;
+                  }
+              }
+              //column need to be config.
+
+              if($e_i>0){
+                  $opr = null;
+                  //$e_i is the index of first operator.
+                  if(count(array_intersect([$exp[$e_i]],$operators))==1){
+                      if($exp[$e_i+1]=="="){
+                         $opr = $exp[$e_i].$exp[$e_i+1];
+                      }else{
+                         $opr = $exp[$e_i];
+                      }
+                  }else{
+                     return "invalid_format";
+                  }
+                  //$opr - $current_culomn
+                  $exp = explode($opr, $exp);
+                  //check if explode has column[0] and value[1]
+                  if(count($exp)==2){
+                    if($exp[0]=="tax_relevant"){
+                      array_push($conditions,[$exp[0],"=","on"]);
+                      array_push($conditions,[$exp[0],$opr,$exp[1]]);
+                      $tax_relevant = $exp[1];
+                      $tax_opr = $opr;
+                    }else{
+                      array_push($conditions,[$exp[0],$opr,$exp[1]]);
+                    }
+                  }  
+
+              }
+              //normal column
+              else{
+                  //if each exp has = then + 1 to toal_equal
+                  $total_equal += substr_count($exp, '=')==1? 1:0;
+                  //convert each value to array 
+                  $exp = explode("=", $exp);
+                  //check if explode has column[0] and value[1]
+                  if(count($exp)==2){
+                    //if value has valid culomn name +1
+                    $total_col += count(array_intersect([$exp[0]],$columns_normal))==1? 1:0;
+                    array_push($conditions,[ $exp[0],'LIKE', '%' . $exp[1] . '%' ]);
+                  }
+              } 
+        }
+        //------------------------------------------------------------------------------------------------
+        /*
+        VALID FORMAT
+        count expression = count total_equal = total_column
+        */
+        if(($total_equal == $total_col) && ($total_col ==count($expression)) ){
+
+           $custom_srch_basic = DB::table('documents')
+           ->where('doc_user_id',Auth::user()->id)
+           ->where('is_archive',1)
+           ->where($conditions)
+           ->when($tax_relevant, function ($query, $tax_relevant) use ($tax_opr) {
+                return $query->whereYear('created_at',$tax_opr,$tax_relevant);
+           })->pluck('doc_id')->toArray();
+           
+           return $this->get_documents_details($custom_srch_basic);
+    
+        }else{
+           return "invalid_format";
+        }
+
+    }
+
+    // custom search with binary operations sender=John or receiver=Till
+    public function advance_customSearch($keyword){
+
+        //expression sent by user custom search
+        $expression = $keyword;
+        //convert all string to lower case then convert to array.
+        $expression = explode(" ", strtolower($expression));
+        //move index to proper position
+        $expression = array_values(array_filter($expression));
+        //binary operators
+        $b_opr = ['and','or','not','xor'];
+        //even->store expression
+        $exp_even = [];
+        //odd ->store operator
+        $opr_odd  = [];
+
+        foreach($expression as $key=>$e){
+            if($key % 2 == 0){
+                 array_push($exp_even,$e);
+            }else{
+                 array_push($opr_odd, $e);
+            }
+        }
+        //check if operator is valid
+        $opr_odd = array_map('strtolower', $opr_odd);
+        
+        $total_opr = 0;
+        foreach($opr_odd as $opr){
+            $total_opr += count(array_keys($b_opr, $opr));
+        }
+        if($total_opr!=count($opr_odd)){
+           return "invalid_format";
+        }
+
+        if(count($exp_even)-count($opr_odd)!=1){
+           return "invalid_format";
+        }
+        //dont not continue
+
+        //where conditions
+        $conditions = [];
+        //normal columns have = operator
+        $columns_normal  = ["sender","receiver","tags",'category','note'];
+        //config columns have different operator.
+        $columns_config  = [
+            ["col"=>"date", "str_i"=>4],
+            ["col"=>"number_of_pages", "str_i"=>15],
+            ["col"=>"reminder", "str_i"=>8],
+            ["col"=>"tax_relevant", "str_i"=>12]
+        ];
+
+        $reverse_bin_opr = [
+            ['opr'=>'=',  'rv_opr'=>'!='],
+            ['opr'=>'!=', 'rv_opr'=>'='],
+            ['opr'=>'>',  'rv_opr'=>'<='],
+            ['opr'=>'<',  'rv_opr'=>'>='],
+            ['opr'=>'>=', 'rv_opr'=>'<' ],
+            ['opr'=>'<=', 'rv_opr'=>'>' ],
+        ];
+        $operators   = ["=","<",">","<=",">=","!=","!"];
+        $total_equal = 0;
+        $total_col   = 0;
+
+        $tax_relevant = false;
+        $tax_opr = null;
+        $tax_bin_opr = null;
+        
+        //------------------------------------CHECK FORMAT----------------------------------------------
+        //check each expression for valid format.
+        //store conditions for where clause.
+        foreach($exp_even as $key=>$exp){
+              //0,4 = 1-4
+              //expression index
+              //e_i used to get operator from string explode
+              $e_i = 0;
+              $current_culomn = null;
+              $ch_col = null; 
+              
+              foreach($columns_config as $c_i){
+                  //substring exp & check if column has match
+                  $ch_col = substr((string)$exp,0,$c_i['str_i']);
+                  if($ch_col == $c_i['col']){
+                      //columns is valid store to current column & end loop
+                      $current_culomn = $ch_col;
+                      //store str_i num to e_i to be used in determining index of operator
+                      $e_i = $c_i['str_i'];
+                      //add 1 to total col for format checking.
+                      $total_col   +=1;
+                      $total_equal +=1;
+                      break;
+                  }
+              }
+              //column need to be config.
+              if($e_i>0){
+                  $opr = null;
+                  //$e_i is the index of first operator.
+                  if(count(array_intersect([$exp[$e_i]],$operators))==1){
+                      if($exp[$e_i+1]=="="){
+
+                         $opr = $exp[$e_i].$exp[$e_i+1];
+                      }else{
+                         $opr = $exp[$e_i];
+                      }
+                  }else{
+                     return "invalid_format";
+                  }
+                  //$opr - $current_culomn
+                  $exp = explode($opr,$exp);
+                  //check if explode has column[0] and value[1]
+                  if(count($exp)==2){
+                    if($key==0){
+                        if($exp[0]=="tax_relevant"){
+                          array_push($conditions,[$exp[0],"=","on"]);
+                          $tax_relevant = $exp[1];
+                          $tax_opr = $opr;
+                        }else{
+                          array_push($conditions,[ $exp[0], $opr, $exp[1]]);
+                        }
+                    }
+                    if($key>0){
+                        $binary_index = $key-1;
+                        if($exp[0]=="tax_relevant"){
+                          array_push($conditions,[$exp[0],"=","on"]);
+                          $tax_relevant = $exp[1];
+                          $tax_opr = $opr;
+                          $tax_bin_opr = $opr_odd[$binary_index];
+                        }
+                        else{
+                            if($opr_odd[$binary_index]=="and"){
+                               array_push($conditions,[ $exp[0], $opr, $exp[1] ]);
+                            }
+                            if($opr_odd[$binary_index]=="or"){
+                               array_push($conditions,[ $exp[0], $opr, $exp[1], 'or' ]);
+                            }
+                            if($opr_odd[$binary_index]=="not"){
+                               foreach($reverse_bin_opr as $rv_opr){
+                                  if($rv_opr['opr']==$opr){
+                                      $opr = $rv_opr['rv_opr'];
+                                      break;
+                                  }
+                               }
+                               array_push($conditions,[ $exp[0], $opr, $exp[1] ]);
+                            }
+                            if($opr_odd[$binary_index]=="xor"){
+                               array_push($conditions,[ $exp[0], $opr, $exp[1], 'xor' ]);
+                            } 
+                        }
+                    }           
+                  }  
+
+              }
+              // ---------------------------------------------------------------------------------------------
+              //normal column
+              else{
+                  //if each exp has = then + 1 to toal_equal
+                  $total_equal += substr_count($exp, '=')==1? 1:0;
+                  //convert each value to array 
+                  $exp = explode("=", $exp);
+
+                  //check if explode has column[0] and value[1]
+                  if(count($exp)==2){
+                      //if value has valid culomn name +1   
+                      $total_col += count(array_intersect([$exp[0]],$columns_normal))==1? 1:0;
+                  
+                      if($key==0){
+                          array_push($conditions,[ $exp[0],'LIKE', '%' . $exp[1] . '%' ]);
+                      }
+                      if($key>0){
+                          $binary_index = $key-1;
+                          if($opr_odd[$binary_index]=="and"){
+                             array_push($conditions,[ $exp[0],'LIKE', '%' . $exp[1] . '%' ]);
+                          }
+                          if($opr_odd[$binary_index]=="or"){
+                             array_push($conditions,[ $exp[0],'LIKE', '%' . $exp[1] . '%', 'or' ]);
+                          }
+                          if($opr_odd[$binary_index]=="not"){
+                             array_push($conditions,[ $exp[0],'!=', $exp[1] ]);
+                          }
+                          if($opr_odd[$binary_index]=="xor"){
+                             array_push($conditions,[ $exp[0],'LIKE', '%' . $exp[1] . '%', 'xor' ]);
+                          }
+                      }
+                   }   
+              } 
+        }
+        //------------------------------------------------------------------------------------------------
+        /*
+        VALID FORMAT
+        count expression = count total_equal = total_column
+        */
+
+        $expression = count($expression) - count($opr_odd);
+
+        if(($total_equal == $total_col) && ($total_col == $expression) ){
+           
+           $custom_srch_advance = DB::table('documents')
+           ->where('doc_user_id',Auth::user()->id)
+           ->where('is_archive',1)
+           ->where($conditions)
+           ->when($tax_relevant, function ($query, $tax_relevant) use ($tax_opr,$tax_bin_opr) {
+                if($tax_bin_opr=="and" || $tax_bin_opr==null){
+                  return $query->whereYear('created_at',$tax_opr,$tax_relevant);
+                }
+                else{
+                  return $query->whereYear('created_at',$tax_opr,$tax_relevant,$tax_bin_opr);
+                }  
+           })->pluck('doc_id')->toArray();
+      
+           return $this->get_documents_details($custom_srch_advance);
+     
+        }else{
+           return "invalid_format";
+        }
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -253,7 +253,7 @@
                                 <i class="material-icons cstm_icon_btn_ico">share</i>
                             </button>
                             <!-- View/Download Ocred documents -->
-                            <a ng-href="/files/ocr/<#data.doc_ocr#>" style="text-decoration: none" download="<#data.download_format#>">
+                            <a ng-href="/files/ocr/<#data.doc_ocr#>" style="text-decoration: none" target="_blank">
                             <button type="button" class="btn btn-default waves-effect cstm_icon_btn" data-toggle="tooltip" title="" data-original-title="View document" tooltip-top>
                                 <i class="material-icons cstm_icon_btn_ico">remove_red_eye</i>
                             </button>
@@ -443,6 +443,7 @@ $scope.approveDocument = function(doc_id,doc_org){
 // delete document
 $scope.deleteDocument = function(doc_id) {
 
+    var doc_ids = [doc_id];
     swal({
         title: "Delete document?",
         text: "You will not be able to recover this document after you delete.",
@@ -460,7 +461,7 @@ $scope.deleteDocument = function(doc_id) {
              $.ajax({
                 url: '/document/delete',
                 data: {
-                    doc_id: doc_id
+                    doc_id: doc_ids
                 },
                 type: 'POST',
                 success: function(data) {

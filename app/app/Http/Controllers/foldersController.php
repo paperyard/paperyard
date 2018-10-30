@@ -17,6 +17,11 @@ use Image;
 use DB;
 use Mail;
 use App\Mail\sendNotification;
+use Spatie\PdfToImage\Pdf;
+
+# IMAP
+use Webklex\IMAP\Client;
+use Illuminate\Support\Facades\Crypt;
 
 
 // cache controller composer dump-autoload
@@ -28,7 +33,6 @@ class foldersController extends Controller
       $folder_stat = DB::table('folders')->where('folder_user_id', Auth::user()->id)->get();
       return view('pages/folders')->with(compact('folder_stat'));
     }
-
 
     public function returnFolders(){
 
@@ -167,6 +171,7 @@ class foldersController extends Controller
             // DELETE DOCUMENTS FROM DATABASE
             DB::table('documents')->whereIn('doc_id', $doc_idz)->delete();
             DB::table('document_pages')->whereIn('doc_id', $doc_idz)->delete();
+            DB::table('documents_viewed')->whereIn('view_doc_id', $doc_idz)->delete();
 
             return "success_deleted";
 
@@ -227,7 +232,7 @@ class foldersController extends Controller
 
     }
 
-     public function generateDownloadFormat($datas){
+    public function generateDownloadFormat($datas){
         $format = "";
         $ext = ".pdf";
         $dash = "-";
@@ -253,9 +258,7 @@ class foldersController extends Controller
             $d->download_format = substr($format, 0, -1).$ext;
             $format = "";
 
-            if($d->date=="0000-00-00 00:00:00"){
-                $d->date = "N/D";
-            }else{
+            if($d->date!=null){
               $n_date = new \DateTime($d->date);
               $short_date = date_format($n_date,"d.m.Y");
               $d->date = $short_date;
@@ -264,21 +267,85 @@ class foldersController extends Controller
         return $datas;  
     }
 
-
-
-
-
     public function serverTest(){
-       
+        
+       try { 
+           $ftp = Storage::createFtpDriver([
+                  'host' => 'ftp.dlptest.com',
+                  'username' => 'dlpuser@dlptest.com',
+                  'password' => 'e73jzTRTNqCN9PYAAjjn',
+                  'port' => 21,
+                  'timeout' => 3600
+           ]);
 
-           $update = DB::table('users')->where('id', Auth::user()->id)
-           ->update(['name'=>'John']);
+           #file_put_contents(storage_path('app/documents_new/' . 'downloaded_porn2.pdf'), $ftp->get('porn1.pdf'));
 
-           echo $update;
-      
-    }
+           // $ftp->put('/binary.pdf', storage_path('app/documents_new/paperyard_test_07_binary_junk.pdf'));
+           // $ftp->put('/sample.pdf', storage_path('app/documents_new/paperyard_test_02_image_only_english-jBwlG-org.pdf'));
+            
+
+           // directory
+           $ftp->makeDirectory('Paperyard_test_folder_01/Papeyard_test_folder_02');
+           $ftp->makeDirectory('Folder_01');
+           $ftp->makeDirectory('Folder_02');
 
 
+           // UPLOAD FILES TO SERVER NOT CORRUPTED
+           $localFile = File::get(storage_path('app/documents_new/paperyard_test_02_image_only_english.pdf'));
+
+           $localFile1 = File::get(storage_path('app/documents_new/35-algorithm-types.ppt'));
+           $localFile2 = File::get(storage_path('app/documents_new/semi_blank.jpg'));
+
+
+           $ftp->put('Paperyard_test_folder_01/Papeyard_test_folder_02/sample_pdf.pdf', $localFile);
+           $ftp->put('Paperyard_test_folder_01/Papeyard_test_folder_02/35-algorithm-types.ppt', $localFile1);
+           $ftp->put('Paperyard_test_folder_01/Papeyard_test_folder_02/semi_blank.jpg', $localFile2);
+
+           $ftp->put('paperyard_sample_pdf_01.pdf', $localFile);
+           $ftp->put('paperyard_sample_pdf_02.pdf', $localFile);
+           $ftp->put('paperyard_sample_pdf_03.pdf', $localFile);
+
+           $ftp->put('35-algorithm-types.ppt', $localFile1);
+           $ftp->put('semi_blank.jpg', $localFile2);
+
+
+
+           // @var path string, recursive bool.
+           $directories = $ftp->listContents('/', true);
+
+
+           echo "<pre>". json_encode($directories, JSON_PRETTY_PRINT) ."</pre>";
+
+
+
+
+           // //detel all shit
+           
+
+           // // @var path string, recursive bool.
+           // $directories = $ftp->listContents('/', true);
+           // // $directories = $ftp->allFiles('/', 1);
+
+           // foreach($directories as $key=>$dir){
+           //      $ftp->delete($dir["path"]);
+           // } 
+
+
+
+
+
+       }
+       catch(\Exception $err){
+          echo "something is not right";
+       }  
+         
+
+
+
+
+    }   
 
 
 }
+
+

@@ -58,8 +58,13 @@ class mergeDocumentController extends Controller
     public function mergeDocuments(Request $request){
 
         // documents location
-        $doc1 = storage_path('app/documents_ocred') . '/' . $request->doc1_name;
-        $doc2 = storage_path('app/documents_ocred') . '/' . $request->doc2_name;
+        $doc1     = storage_path('app/documents_ocred') . '/' . $request->doc1_name;
+        $doc2     = storage_path('app/documents_ocred') . '/' . $request->doc2_name;
+
+        //-----------------------------------------------------------------------
+        $doc2_org = storage_path('app/documents_new')   . '/' . $request->doc2_org;
+        //------------------------------------------------------------------------
+
         // output file location/name
         $output_doc = storage_path('app/documents_ocred') . '/' . str_random(10) . ".pdf";
 
@@ -99,19 +104,10 @@ class mergeDocumentController extends Controller
             //================= APPEND DOCUMENT 2 to DOCUMENT 1 ==================================
             $params = "pdftk $doc1 $doc2 cat output $output_doc && mv $output_doc $doc1";
             $process = new Process($params);
-            $process->disableOutput();
+            $process->enableOutput();
+            $process->setTimeout(86400);
             $process->start();
             $process->wait();
-
-            //delete document 2 ======================
-            File::delete((string)$doc2);
-
-            //delete document 2 datas =========================
-            DB::table('documents')->where('doc_id', $request->doc2_id)->delete();
-
-            //session flash
-            session()->flash('merge_success', 'Documents successfully merged.');
-            return "success";
 
         }
 
@@ -157,21 +153,23 @@ class mergeDocumentController extends Controller
             //================= INTERLEAVE/COLLATE DOCUMENT 2 to DOCUMENT 1 ==================================
             $params = "pdftk $doc1 $doc2 shuffle output $output_doc && mv $output_doc $doc1";
             $process = new Process($params);
-            $process->disableOutput();
+            $process->enableOutput();
+            $process->setTimeout(86400);
             $process->start();
             $process->wait();
 
-            //delete document 2 ======================
-            File::delete((string)$doc2);
+        }        
+        //delete document 2 ======================
+        File::delete((string)$doc2);
+        File::delete((string)$doc2_org);
 
-            //delete document 2 datas =========================
-            DB::table('documents')->where('doc_id', $request->doc2_id)->delete();
+        //delete document 2 datas =========================
+        DB::table('documents')->where('doc_id', $request->doc2_id)->delete();
 
-            //session flash
-            session()->flash('merge_success', 'Documents successfully merged.');
-            return "success";
-
-
-        }
+        //session flash
+        session()->flash('merge_success', 'Documents successfully merged.');
+        return "success";
     }
+
+
 }

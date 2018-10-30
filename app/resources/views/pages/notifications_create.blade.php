@@ -205,6 +205,7 @@
                            <span ng-show="notification_base.email_subject.$error.required && base_notify.send_email==true" class="invalid_inp">This field is required!</span>
                         </div>
                     </div>
+                    
                     <div class="form-group">
                         <div class="form-line">
                             <input type="text" name="email_receiver_name" ng-model="base_notify.email_receiver_name" class="form-control" placeholder="Receiver name" ng-required="base_notify.send_email==true">
@@ -213,6 +214,7 @@
                            <span ng-show="notification_base.email_receiver_name.$error.required && base_notify.send_email==true" class="invalid_inp">This field is required!</span>
                         </div>
                     </div>
+
                     <div class="form-group">
                         <div class="form-line">
                                <input type="email" name="email_receiver_email" ng-model="base_notify.email_receiver_email" class="form-control" placeholder="Receiver email" ng-required="base_notify.send_email==true">
@@ -223,7 +225,6 @@
                                    Invalid email format.
                                </span>
                         </div>
-
                     </div>
 
                      <div class="form-group">

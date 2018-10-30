@@ -28,7 +28,8 @@ class Kernel extends ConsoleKernel
         'App\Console\Commands\ocr_new',
         'App\Console\Commands\ocr_txt_img',
         'App\Console\Commands\ocr_force',
-        'App\Console\Commands\ocr_reminder'
+        'App\Console\Commands\ocr_reminder',
+        'App\Console\Commands\imap_import'
 
     ];
 
@@ -40,14 +41,16 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // // run ocrmypdf to new documents added
+        // un ocrmypdf to new documents added
         $schedule->command('ocr:new')->everyMinute();
-        // // rerun failed ocred documents
+        // erun failed ocred documents
         $schedule->command('ocr:force')->everyMinute();
-        // // make image preview and get text from documents for searching.
+        // make image preview and get text from documents for searching.
         $schedule->command('ocr:txt_img')->everyMinute();
         // shedule reminder
         $schedule->command('ocr:reminder')->everyMinute();
+        // IMAP
+        $schedule->command('imap:import')->everyMinute();
     }
 
     /**

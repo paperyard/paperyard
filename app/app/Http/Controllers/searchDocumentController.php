@@ -23,7 +23,7 @@ class searchDocumentController extends Controller
         return view('pages/search_docs');
     }
 
-    // autocomplete ==================================================================================================
+    // autocomplete ========================================================================================
     public function typeHead(Request $req){
       
       //default
@@ -39,9 +39,8 @@ class searchDocumentController extends Controller
             ->where('folder_name', 'LIKE', '%' . $req->keyword . '%')
             ->select('folders.folder_name')
             ->get();
-            if(count($folders)==0){
-                $folders = "not_found";
-            }
+            
+            $folders = count($folders)>0?$folders:"not_found";
             //return $folders.
       }
       //filter tags or no filter.
@@ -136,8 +135,8 @@ class searchDocumentController extends Controller
         // # Return the response
         return $json_response;
     }
-    // autocomplete ==================================================================================================
-    
+
+
     // Search documents  =============================================================================================
     public function searchDocument(Request $req){
          
@@ -181,9 +180,7 @@ class searchDocumentController extends Controller
             
             $doc_tags = [];
             foreach($docs as $d){                
-                if($d->date=="0000-00-00 00:00:00"){
-                    $d->date = "N/D";
-                }else{
+                if($d->date!=null){
                     $n_date = new \DateTime($d->date);
                     $short_date = date_format($n_date,"d.m.Y");
                     $d->date = $short_date;
@@ -194,7 +191,8 @@ class searchDocumentController extends Controller
                    $doc_tags = $arr_tags;
                 }
             }
-            $unique_tags = array_unique($doc_tags);
+            //remove unique, remove empty element
+            $unique_tags =   array_filter(array_unique($doc_tags));
             $json_response = json_encode(array('doc_datas'=>$docs,'doc_tags'=>$unique_tags));
             return $json_response;
 
@@ -205,15 +203,13 @@ class searchDocumentController extends Controller
         else{
             return "error";
         }
-
-
     }
 
 
     // return all documnets ======================================================
     public function returnAllDocuments(){
        
-        $pr_status = ['ocred_final','ocred_final_failed']; 
+        $pr_status = ['ocred_final','ocred_final_failed'];
         $documents = DB::table('documents')
         ->where('doc_user_id', Auth::user()->id)
         ->where('is_archive', 1) 
@@ -257,80 +253,58 @@ class searchDocumentController extends Controller
     //search on keypress enter  =============================================================================================
     public function searchNoFilter($keyword){
         
-        //store document ids found in keyword tag,folder and text
+         //store document ids found in keyword tag,folder and text
         $docs_ids = [];
 
         //get folder ids --------------------------------------------------------------
-        $folder_ids = DB::table('folders')->where('folder_user_id', Auth::user()->id)
+        $folder_ids = DB::table('folders')
+        ->where('folder_user_id', Auth::user()->id)
         ->where('folder_name', 'LIKE', '%' . $keyword . '%')
-        ->select('folders.folder_id')
-        ->get();
+        ->pluck('folder_id')->toArray();
 
         //if folder found
         if(count($folder_ids)>0){
-
-            $folder_docs_ids = [];
-             //get ids from each folder
-            foreach($folder_ids as $fid){
-                 array_push($folder_docs_ids, $fid->folder_id);
-            }
 
             //get documents ids from this folder ids.
             $folder_docs = DB::table('documents')
             ->where('is_archive', 1)
             ->where('doc_user_id', Auth::user()->id)
-            ->whereIn('doc_folder_id',$folder_docs_ids)
-            ->select('documents.doc_id')
-            ->get();
+            ->whereIn('doc_folder_id',$folder_ids)
+            ->pluck('doc_id')->toArray();
 
             if(count($folder_docs)>0){
-                 foreach($folder_docs as $fod){
-                     array_push($docs_ids,$fod->doc_id);
-                 }
+                $docs_ids = array_merge($docs_ids,$folder_docs);
             }
         }
-        //------------------------------------------------------------------------------  
-        //get tag ids
+        //get tag ids -------------------------------------------------------------------  
         $tags_ids = DB::table('documents')
         ->where('doc_user_id', Auth::user()->id)
         ->where('is_archive', 1)
         ->where('tags', 'LIKE', '%' . $keyword . '%')
-        ->select('documents.doc_id')
-        ->get();
+        ->pluck('doc_id')->toArray();
 
         if(count($tags_ids)>0){
-            foreach($tags_ids as $tid){
-                array_push($docs_ids,$tid->doc_id);
-            }
+            $docs_ids = array_merge($docs_ids,$tags_ids);
         }
-        //-------------------------------------------------------------------------------
-        
-        //get fulltext ids
+ 
+        //get fulltext ids  ---------------------------------------------------------------
         $user_docs = DB::table('documents')
         ->where('doc_user_id', Auth::user()->id)
         ->where('is_archive', 1) 
-        ->select('documents.doc_id')
-        ->get();
+        ->pluck('doc_id')->toArray();
 
-        $user_doc_ids = [];
         if(count($user_docs)>0){
 
-              foreach($user_docs as $uid){
-                  array_push($user_doc_ids, $uid->doc_id);
-              }
-              $text_ids = DB::table('document_pages')->whereIn('doc_id', $user_doc_ids)
-              ->where('doc_page_text', 'LIKE', '%' . $keyword . '%')
-              ->select('document_pages.doc_id')
-              ->get();
-              if(count($text_ids)>0){
-                    foreach($text_ids as $txt){
-                        array_push($docs_ids,$txt->doc_id);
-                    }
-              }
+            $text_ids = DB::table('document_pages')->whereIn('doc_id', $user_docs)
+            ->where('doc_page_text', 'LIKE', '%' . $keyword . '%')
+            ->pluck('doc_id')->toArray();
+              
+            if(count($text_ids)>0){
+                $docs_ids = array_merge($docs_ids,$text_ids);
+            }
         }
 
         //search for all fields in document --------------------------------------------
-
         similar_text("tax relevant",$keyword,$if_tax_relevant);
         $is_tax_relevant = $if_tax_relevant>=50? "on":false;
         
@@ -401,355 +375,6 @@ class searchDocumentController extends Controller
         }else{
             return $documents;
         }    
-    }
-
-
-    public function customSearchBasic($keyword){
-
-        // AND LIKE
-        // check if search is custom
-        // check if custom search has logic
-
-        //expression sent by user custom search
-        $expression = $keyword;
-        //convert all string to lower case then convert to array.
-        $expression = explode(" ", strtolower($expression));
-        //move index to proper position
-        $expression = array_values(array_filter($expression));
-
-        //where conditions
-        $conditions = [];
-        //normal columns have = operator
-        $columns_normal  = ["sender","receiver","tags",'category','note'];
-        //config columns have different operator.
-        $columns_config  = [
-            ["col"=>"date", "str_i"=>4],
-            ["col"=>"number_of_pages", "str_i"=>15],
-            ["col"=>"reminder", "str_i"=>8],
-            ["col"=>"tax_relevant", "str_i"=>12]
-        ];
-        $operators   = ["=","<",">","<=",">=","!=","!"];
-        $total_equal = 0;
-        $total_col   = 0;
-
-        $tax_relevant = false;
-        $tax_opr = null;
-        
-        //------------------------------------CHECK FORMAT----------------------------------------------
-        //check each expression for valid format.
-        //store conditions for where clause.
-        foreach($expression as $key=>$exp){
-              //0,4 = 1-4
-              //expression index
-              //e_i used to get operator from string explode
-              $e_i = 0;
-              $current_culomn = null;
-              $ch_col = null; 
-              
-              foreach($columns_config as $c_i){
-                  //substring exp & check if column has match
-                  $ch_col = substr((string)$exp,0,$c_i['str_i']);
-                  if($ch_col == $c_i['col']){
-                      //columns is valid store to current column & end loop
-                      $current_culomn = $ch_col;
-                      //store str_i num to e_i to be used in determining index of operator
-                      $e_i = $c_i['str_i'];
-                      //add 1 to total col for format checking.
-                      $total_col   +=1;
-                      $total_equal +=1;
-                      break;
-                  }
-              }
-              //column need to be config.
-
-              if($e_i>0){
-                  $opr = null;
-                  //$e_i is the index of first operator.
-                  if(count(array_intersect([$exp[$e_i]],$operators))==1){
-                      if($exp[$e_i+1]=="="){
-                         $opr = $exp[$e_i].$exp[$e_i+1];
-                      }else{
-                         $opr = $exp[$e_i];
-                      }
-                  }else{
-                     return "invalid_format";
-                  }
-                  //$opr - $current_culomn
-                  $exp = explode($opr, $exp);
-                  //check if explode has column[0] and value[1]
-                  if(count($exp)==2){
-                    if($exp[0]=="tax_relevant"){
-                      array_push($conditions,[$exp[0],"=","on"]);
-                      array_push($conditions,[$exp[0],$opr,$exp[1]]);
-                      $tax_relevant = $exp[1];
-                      $tax_opr = $opr;
-                    }else{
-                      array_push($conditions,[$exp[0],$opr,$exp[1]]);
-                    }
-                  }  
-
-              }
-              //normal column
-              else{
-                  //if each exp has = then + 1 to toal_equal
-                  $total_equal += substr_count($exp, '=')==1? 1:0;
-                  //convert each value to array 
-                  $exp = explode("=", $exp);
-                  //check if explode has column[0] and value[1]
-                  if(count($exp)==2){
-                    //if value has valid culomn name +1
-                    $total_col += count(array_intersect([$exp[0]],$columns_normal))==1? 1:0;
-                    array_push($conditions,[ $exp[0],'LIKE', '%' . $exp[1] . '%' ]);
-                  }
-              } 
-        }
-        //------------------------------------------------------------------------------------------------
-        /*
-        VALID FORMAT
-        count expression = count total_equal = total_column
-        */
-        if(($total_equal == $total_col) && ($total_col ==count($expression)) ){
-
-           $custom_srch_basic = DB::table('documents')
-           ->where('doc_user_id',Auth::user()->id)
-           ->where('is_archive',1)
-           ->where($conditions)
-           ->when($tax_relevant, function ($query, $tax_relevant) use ($tax_opr) {
-                return $query->whereYear('created_at',$tax_opr,$tax_relevant);
-           })->pluck('doc_id')->toArray();
-           
-           if(count($custom_srch_basic)>0){
-               return $this->getDocumentsDetails($custom_srch_basic);
-           }else{
-               return $custom_srch_basic;
-           }
-
-        }else{
-           return "invalid_format";
-        }
-
-
-    }
-
-
-    public function customSearchAdvance($keyword){
-
-        //expression sent by user custom search
-        $expression = $keyword;
-        //convert all string to lower case then convert to array.
-        $expression = explode(" ", strtolower($expression));
-        //move index to proper position
-        $expression = array_values(array_filter($expression));
-        //binary operators
-        $b_opr = ['and','or','not','xor'];
-        //even->store expression
-        $exp_even = [];
-        //odd ->store operator
-        $opr_odd  = [];
-
-        foreach($expression as $key=>$e){
-            if($key % 2 == 0){
-                 array_push($exp_even,$e);
-            }else{
-                 array_push($opr_odd, $e);
-            }
-        }
-        //check if operator is valid
-        $opr_odd = array_map('strtolower', $opr_odd);
-        
-        $total_opr = 0;
-        foreach($opr_odd as $opr){
-            $total_opr += count(array_keys($b_opr, $opr));
-        }
-        if($total_opr!=count($opr_odd)){
-           return "invalid_format";
-        }
-
-        if(count($exp_even)-count($opr_odd)!=1){
-           return "invalid_format";
-        }
-        //dont not continue
-
-        //where conditions
-        $conditions = [];
-        //normal columns have = operator
-        $columns_normal  = ["sender","receiver","tags",'category','note'];
-        //config columns have different operator.
-        $columns_config  = [
-            ["col"=>"date", "str_i"=>4],
-            ["col"=>"number_of_pages", "str_i"=>15],
-            ["col"=>"reminder", "str_i"=>8],
-            ["col"=>"tax_relevant", "str_i"=>12]
-        ];
-
-        $reverse_bin_opr = [
-            ['opr'=>'=',  'rv_opr'=>'!='],
-            ['opr'=>'!=', 'rv_opr'=>'='],
-            ['opr'=>'>',  'rv_opr'=>'<='],
-            ['opr'=>'<',  'rv_opr'=>'>='],
-            ['opr'=>'>=', 'rv_opr'=>'<' ],
-            ['opr'=>'<=', 'rv_opr'=>'>' ],
-        ];
-        $operators   = ["=","<",">","<=",">=","!=","!"];
-        $total_equal = 0;
-        $total_col   = 0;
-
-        $tax_relevant = false;
-        $tax_opr = null;
-        $tax_bin_opr = null;
-        
-        //------------------------------------CHECK FORMAT----------------------------------------------
-        //check each expression for valid format.
-        //store conditions for where clause.
-        foreach($exp_even as $key=>$exp){
-              //0,4 = 1-4
-              //expression index
-              //e_i used to get operator from string explode
-              $e_i = 0;
-              $current_culomn = null;
-              $ch_col = null; 
-              
-              foreach($columns_config as $c_i){
-                  //substring exp & check if column has match
-                  $ch_col = substr((string)$exp,0,$c_i['str_i']);
-                  if($ch_col == $c_i['col']){
-                      //columns is valid store to current column & end loop
-                      $current_culomn = $ch_col;
-                      //store str_i num to e_i to be used in determining index of operator
-                      $e_i = $c_i['str_i'];
-                      //add 1 to total col for format checking.
-                      $total_col   +=1;
-                      $total_equal +=1;
-                      break;
-                  }
-              }
-              //column need to be config.
-              if($e_i>0){
-                  $opr = null;
-                  //$e_i is the index of first operator.
-                  if(count(array_intersect([$exp[$e_i]],$operators))==1){
-                      if($exp[$e_i+1]=="="){
-
-                         $opr = $exp[$e_i].$exp[$e_i+1];
-                      }else{
-                         $opr = $exp[$e_i];
-                      }
-                  }else{
-                     return "invalid_format";
-                  }
-                  //$opr - $current_culomn
-                  $exp = explode($opr,$exp);
-                  //check if explode has column[0] and value[1]
-                  if(count($exp)==2){
-                    if($key==0){
-                        if($exp[0]=="tax_relevant"){
-                          array_push($conditions,[$exp[0],"=","on"]);
-                          $tax_relevant = $exp[1];
-                          $tax_opr = $opr;
-                        }else{
-                          array_push($conditions,[ $exp[0], $opr, $exp[1]]);
-                        }
-                    }
-                    if($key>0){
-                        $binary_index = $key-1;
-                        if($exp[0]=="tax_relevant"){
-                          array_push($conditions,[$exp[0],"=","on"]);
-                          $tax_relevant = $exp[1];
-                          $tax_opr = $opr;
-                          $tax_bin_opr = $opr_odd[$binary_index];
-                        }
-                        else{
-                            if($opr_odd[$binary_index]=="and"){
-                               array_push($conditions,[ $exp[0], $opr, $exp[1] ]);
-                            }
-                            if($opr_odd[$binary_index]=="or"){
-                               array_push($conditions,[ $exp[0], $opr, $exp[1], 'or' ]);
-                            }
-                            if($opr_odd[$binary_index]=="not"){
-                               foreach($reverse_bin_opr as $rv_opr){
-                                  if($rv_opr['opr']==$opr){
-                                      $opr = $rv_opr['rv_opr'];
-                                      break;
-                                  }
-                               }
-                               array_push($conditions,[ $exp[0], $opr, $exp[1] ]);
-                            }
-                            if($opr_odd[$binary_index]=="xor"){
-                               array_push($conditions,[ $exp[0], $opr, $exp[1], 'xor' ]);
-                            } 
-                        }
-                    }           
-// ---------------------------------------------------------------------------------------------
-                  }  
-
-              }
-              //normal column
-              else{
-                  //if each exp has = then + 1 to toal_equal
-                  $total_equal += substr_count($exp, '=')==1? 1:0;
-                  //convert each value to array 
-                  $exp = explode("=", $exp);
-
-                  //check if explode has column[0] and value[1]
-                  if(count($exp)==2){
-                      //if value has valid culomn name +1   
-                      $total_col += count(array_intersect([$exp[0]],$columns_normal))==1? 1:0;
-                  
-                      if($key==0){
-                          array_push($conditions,[ $exp[0],'LIKE', '%' . $exp[1] . '%' ]);
-                      }
-                      if($key>0){
-                          $binary_index = $key-1;
-                          if($opr_odd[$binary_index]=="and"){
-                             array_push($conditions,[ $exp[0],'LIKE', '%' . $exp[1] . '%' ]);
-                          }
-                          if($opr_odd[$binary_index]=="or"){
-                             array_push($conditions,[ $exp[0],'LIKE', '%' . $exp[1] . '%', 'or' ]);
-                          }
-                          if($opr_odd[$binary_index]=="not"){
-                             array_push($conditions,[ $exp[0],'!=', $exp[1] ]);
-                          }
-                          if($opr_odd[$binary_index]=="xor"){
-                             array_push($conditions,[ $exp[0],'LIKE', '%' . $exp[1] . '%', 'xor' ]);
-                          }
-                      }
-                   }   
-              } 
-        }
-        //------------------------------------------------------------------------------------------------
-        /*
-        VALID FORMAT
-        count expression = count total_equal = total_column
-        */
-
-        $expression = count($expression) - count($opr_odd);
-
-        if(($total_equal == $total_col) && ($total_col == $expression) ){
-           
-           $custom_srch_advance = DB::table('documents')
-           ->where('doc_user_id',Auth::user()->id)
-           ->where('is_archive',1)
-           ->where($conditions)
-           ->when($tax_relevant, function ($query, $tax_relevant) use ($tax_opr,$tax_bin_opr) {
-                if($tax_bin_opr=="and" || $tax_bin_opr==null){
-                  return $query->whereYear('created_at',$tax_opr,$tax_relevant);
-                }
-                else{
-                  return $query->whereYear('created_at',$tax_opr,$tax_relevant,$tax_bin_opr);
-                }  
-           })->pluck('doc_id')->toArray();
-      
-           if(count($custom_srch_advance)>0){
-               return $this->getDocumentsDetails($custom_srch_advance);
-           }else{
-               return $custom_srch_advance;
-           }
-
-        }else{
-           return "invalid_format";
-        }
-
-
     }
 
 
@@ -901,7 +526,9 @@ class searchDocumentController extends Controller
         }
     }
 
-    //convert file size to human readable.  =============================================================================================
+    //==============================================   FUNCTIONS OTF ======================================================
+
+    //convert file size to human readable.  
     public function FileSizeConvert($bytes)
     {
         $bytes = floatval($bytes);
@@ -940,7 +567,7 @@ class searchDocumentController extends Controller
         return $result;
     }
 
-    // barchart datas ==========================================
+    // barchart datas 
     public function getBarchartDatas(){
 
          //return 
@@ -974,6 +601,7 @@ class searchDocumentController extends Controller
          return json_encode($datas);
     }
 
+    // barchar year
     public function getDocDatas($year){
           
          $datas = DB::table('documents')
@@ -989,4 +617,359 @@ class searchDocumentController extends Controller
          
          return $datas;
     }
+
+
+    //============================================= CUSTOM SEARCH ======================================================
+
+
+    public function customSearchBasic($keyword){
+
+        // AND LIKE
+        // check if search is custom
+        // check if custom search has logic
+
+        //expression sent by user custom search
+        $expression = $keyword;
+        //convert all string to lower case then convert to array.
+        $expression = explode(" ", strtolower($expression));
+        //move index to proper position
+        $expression = array_values(array_filter($expression));
+
+        //where conditions
+        $conditions = [];
+        //normal columns have = operator
+        $columns_normal  = ["sender","receiver","tags",'category','note'];
+        //config columns have different operator.
+        $columns_config  = [
+            ["col"=>"date", "str_i"=>4],
+            ["col"=>"number_of_pages", "str_i"=>15],
+            ["col"=>"reminder", "str_i"=>8],
+            ["col"=>"tax_relevant", "str_i"=>12]
+        ];
+        $operators   = ["=","<",">","<=",">=","!=","!"];
+        $total_equal = 0;
+        $total_col   = 0;
+
+        $tax_relevant = false;
+        $tax_opr = null;
+        
+        //------------------------------------CHECK FORMAT----------------------------------------------
+        //check each expression for valid format.
+        //store conditions for where clause.
+        foreach($expression as $key=>$exp){
+              //0,4 = 1-4
+              //expression index
+              //e_i used to get operator from string explode
+              $e_i = 0;
+              $current_culomn = null;
+              $ch_col = null; 
+              
+              foreach($columns_config as $c_i){
+                  //substring exp & check if column has match
+                  $ch_col = substr((string)$exp,0,$c_i['str_i']);
+                  if($ch_col == $c_i['col']){
+                      //columns is valid store to current column & end loop
+                      $current_culomn = $ch_col;
+                      //store str_i num to e_i to be used in determining index of operator
+                      $e_i = $c_i['str_i'];
+                      //add 1 to total col for format checking.
+                      $total_col   +=1;
+                      $total_equal +=1;
+                      break;
+                  }
+              }
+              //column need to be config.
+
+              if($e_i>0){
+                  $opr = null;
+                  //$e_i is the index of first operator.
+                  if(count(array_intersect([$exp[$e_i]],$operators))==1){
+                      if($exp[$e_i+1]=="="){
+                         $opr = $exp[$e_i].$exp[$e_i+1];
+                      }else{
+                         $opr = $exp[$e_i];
+                      }
+                  }else{
+                     return "invalid_format";
+                  }
+                  //$opr - $current_culomn
+                  $exp = explode($opr, $exp);
+                  //check if explode has column[0] and value[1]
+                  if(count($exp)==2){
+                    if($exp[0]=="tax_relevant"){
+                      array_push($conditions,[$exp[0],"=","on"]);
+                      array_push($conditions,[$exp[0],$opr,$exp[1]]);
+                      $tax_relevant = $exp[1];
+                      $tax_opr = $opr;
+                    }else{
+                      array_push($conditions,[$exp[0],$opr,$exp[1]]);
+                    }
+                  }  
+
+              }
+              //normal column
+              else{
+                  //if each exp has = then + 1 to toal_equal
+                  $total_equal += substr_count($exp, '=')==1? 1:0;
+                  //convert each value to array 
+                  $exp = explode("=", $exp);
+                  //check if explode has column[0] and value[1]
+                  if(count($exp)==2){
+                    //if value has valid culomn name +1
+                    $total_col += count(array_intersect([$exp[0]],$columns_normal))==1? 1:0;
+                    array_push($conditions,[ $exp[0],'LIKE', '%' . $exp[1] . '%' ]);
+                  }
+              } 
+        }
+        //------------------------------------------------------------------------------------------------
+        /*
+        VALID FORMAT
+        count expression = count total_equal = total_column
+        */
+        if(($total_equal == $total_col) && ($total_col ==count($expression)) ){
+
+           $custom_srch_basic = DB::table('documents')
+           ->where('doc_user_id',Auth::user()->id)
+           ->where('is_archive',1)
+           ->where($conditions)
+           ->when($tax_relevant, function ($query, $tax_relevant) use ($tax_opr) {
+                return $query->whereYear('created_at',$tax_opr,$tax_relevant);
+           })->pluck('doc_id')->toArray();
+           
+           return $this->getDocumentsDetails($custom_srch_basic);
+
+        }else{
+           return "invalid_format";
+        }
+
+    }
+
+
+    // custom search with binary operations
+    public function customSearchAdvance($keyword){
+
+        //expression sent by user custom search
+        $expression = $keyword;
+        //convert all string to lower case then convert to array.
+        $expression = explode(" ", strtolower($expression));
+        //move index to proper position
+        $expression = array_values(array_filter($expression));
+        //binary operators
+        $b_opr = ['and','or','not','xor'];
+        //even->store expression
+        $exp_even = [];
+        //odd ->store operator
+        $opr_odd  = [];
+
+        foreach($expression as $key=>$e){
+            if($key % 2 == 0){
+                 array_push($exp_even,$e);
+            }else{
+                 array_push($opr_odd, $e);
+            }
+        }
+        //check if operator is valid
+        $opr_odd = array_map('strtolower', $opr_odd);
+        
+        $total_opr = 0;
+        foreach($opr_odd as $opr){
+            $total_opr += count(array_keys($b_opr, $opr));
+        }
+        if($total_opr!=count($opr_odd)){
+           return "invalid_format";
+        }
+
+        if(count($exp_even)-count($opr_odd)!=1){
+           return "invalid_format";
+        }
+        //dont not continue
+
+        //where conditions
+        $conditions = [];
+        //normal columns have = operator
+        $columns_normal  = ["sender","receiver","tags",'category','note'];
+        //config columns have different operator.
+        $columns_config  = [
+            ["col"=>"date", "str_i"=>4],
+            ["col"=>"number_of_pages", "str_i"=>15],
+            ["col"=>"reminder", "str_i"=>8],
+            ["col"=>"tax_relevant", "str_i"=>12]
+        ];
+
+        $reverse_bin_opr = [
+            ['opr'=>'=',  'rv_opr'=>'!='],
+            ['opr'=>'!=', 'rv_opr'=>'='],
+            ['opr'=>'>',  'rv_opr'=>'<='],
+            ['opr'=>'<',  'rv_opr'=>'>='],
+            ['opr'=>'>=', 'rv_opr'=>'<' ],
+            ['opr'=>'<=', 'rv_opr'=>'>' ],
+        ];
+        $operators   = ["=","<",">","<=",">=","!=","!"];
+        $total_equal = 0;
+        $total_col   = 0;
+
+        $tax_relevant = false;
+        $tax_opr = null;
+        $tax_bin_opr = null;
+        
+        //------------------------------------CHECK FORMAT----------------------------------------------
+        //check each expression for valid format.
+        //store conditions for where clause.
+        foreach($exp_even as $key=>$exp){
+              //0,4 = 1-4
+              //expression index
+              //e_i used to get operator from string explode
+              $e_i = 0;
+              $current_culomn = null;
+              $ch_col = null; 
+              
+              foreach($columns_config as $c_i){
+                  //substring exp & check if column has match
+                  $ch_col = substr((string)$exp,0,$c_i['str_i']);
+                  if($ch_col == $c_i['col']){
+                      //columns is valid store to current column & end loop
+                      $current_culomn = $ch_col;
+                      //store str_i num to e_i to be used in determining index of operator
+                      $e_i = $c_i['str_i'];
+                      //add 1 to total col for format checking.
+                      $total_col   +=1;
+                      $total_equal +=1;
+                      break;
+                  }
+              }
+              //column need to be config.
+              if($e_i>0){
+                  $opr = null;
+                  //$e_i is the index of first operator.
+                  if(count(array_intersect([$exp[$e_i]],$operators))==1){
+                      if($exp[$e_i+1]=="="){
+
+                         $opr = $exp[$e_i].$exp[$e_i+1];
+                      }else{
+                         $opr = $exp[$e_i];
+                      }
+                  }else{
+                     return "invalid_format";
+                  }
+                  //$opr - $current_culomn
+                  $exp = explode($opr,$exp);
+                  //check if explode has column[0] and value[1]
+                  if(count($exp)==2){
+                    if($key==0){
+                        if($exp[0]=="tax_relevant"){
+                          array_push($conditions,[$exp[0],"=","on"]);
+                          $tax_relevant = $exp[1];
+                          $tax_opr = $opr;
+                        }else{
+                          array_push($conditions,[ $exp[0], $opr, $exp[1]]);
+                        }
+                    }
+                    if($key>0){
+                        $binary_index = $key-1;
+                        if($exp[0]=="tax_relevant"){
+                          array_push($conditions,[$exp[0],"=","on"]);
+                          $tax_relevant = $exp[1];
+                          $tax_opr = $opr;
+                          $tax_bin_opr = $opr_odd[$binary_index];
+                        }
+                        else{
+                            if($opr_odd[$binary_index]=="and"){
+                               array_push($conditions,[ $exp[0], $opr, $exp[1] ]);
+                            }
+                            if($opr_odd[$binary_index]=="or"){
+                               array_push($conditions,[ $exp[0], $opr, $exp[1], 'or' ]);
+                            }
+                            if($opr_odd[$binary_index]=="not"){
+                               foreach($reverse_bin_opr as $rv_opr){
+                                  if($rv_opr['opr']==$opr){
+                                      $opr = $rv_opr['rv_opr'];
+                                      break;
+                                  }
+                               }
+                               array_push($conditions,[ $exp[0], $opr, $exp[1] ]);
+                            }
+                            if($opr_odd[$binary_index]=="xor"){
+                               array_push($conditions,[ $exp[0], $opr, $exp[1], 'xor' ]);
+                            } 
+                        }
+                    }           
+                  // ---------------------------------------------------------------------------------------------
+                  }  
+
+              }
+              //normal column
+              else{
+                  //if each exp has = then + 1 to toal_equal
+                  $total_equal += substr_count($exp, '=')==1? 1:0;
+                  //convert each value to array 
+                  $exp = explode("=", $exp);
+
+                  //check if explode has column[0] and value[1]
+                  if(count($exp)==2){
+                      //if value has valid culomn name +1   
+                      $total_col += count(array_intersect([$exp[0]],$columns_normal))==1? 1:0;
+                  
+                      if($key==0){
+                          array_push($conditions,[ $exp[0],'LIKE', '%' . $exp[1] . '%' ]);
+                      }
+                      if($key>0){
+                          $binary_index = $key-1;
+                          if($opr_odd[$binary_index]=="and"){
+                             array_push($conditions,[ $exp[0],'LIKE', '%' . $exp[1] . '%' ]);
+                          }
+                          if($opr_odd[$binary_index]=="or"){
+                             array_push($conditions,[ $exp[0],'LIKE', '%' . $exp[1] . '%', 'or' ]);
+                          }
+                          if($opr_odd[$binary_index]=="not"){
+                             array_push($conditions,[ $exp[0],'!=', $exp[1] ]);
+                          }
+                          if($opr_odd[$binary_index]=="xor"){
+                             array_push($conditions,[ $exp[0],'LIKE', '%' . $exp[1] . '%', 'xor' ]);
+                          }
+                      }
+                   }   
+              } 
+        }
+        //------------------------------------------------------------------------------------------------
+        /*
+        VALID FORMAT
+        count expression = count total_equal = total_column
+        */
+
+        $expression = count($expression) - count($opr_odd);
+
+        if(($total_equal == $total_col) && ($total_col == $expression) ){
+           
+            $custom_srch_advance = DB::table('documents')
+            ->where('doc_user_id',Auth::user()->id)
+            ->where('is_archive',1)
+            ->where($conditions)
+            ->when($tax_relevant, function ($query, $tax_relevant) use ($tax_opr,$tax_bin_opr) {
+                if($tax_bin_opr=="and" || $tax_bin_opr==null){
+                  return $query->whereYear('created_at',$tax_opr,$tax_relevant);
+                }
+                else{
+                  return $query->whereYear('created_at',$tax_opr,$tax_relevant,$tax_bin_opr);
+                }  
+            })->pluck('doc_id')->toArray();
+      
+
+            return $this->getDocumentsDetails($custom_srch_advance);
+   
+        }else{
+           return "invalid_format";
+        }
+
+
+    }
+
+
+
+
+
+
+
+
+
+
 }

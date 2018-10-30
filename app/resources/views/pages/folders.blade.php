@@ -206,176 +206,158 @@
 
 @section('content')
 <div class="row" ng-controller="folders_controller">
-
-   @if(count($folder_stat)>=1)
-
-   <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-	<table>
-		<tr class="viewIcons">
-			<!-- CREATE NEW FOLDER -->
-			<td>
-				<a href="#" data-toggle="tab" ng-click="newFolder()">
-					<i class="material-icons btn_no_folders tab_view_icon" style="font-size:36px; margin-top:2px">create_new_folder</i>
-				</a>
-			</td>
-			<!-- FOLDER VIEW 1 -->
-			<td >
-				<a href="#grid_view"  data-toggle="tab" class="active"  ng-click="selected='grid_v'">
-					<i ng-class="{activeView: selected=='grid_v'}" class="fa fa-th-list tab_view_icon"></i>
-				</a>
-			</td>
-			<!-- FOLDER VIEW 2 -->
-			<td  style="border-right:2px solid #ccc;">
-				<a href="#table_view" data-toggle="tab" ng-click="selected='table_v'">
-					<i ng-class="{activeView: selected=='table_v'}" class="fa fa-align-justify tab_view_icon"></i>
-				</a>
-			</td>
-			<!-- FOLDER SORT -->
-			<td style="padding-left:18px">
-				<a href="#messages_only_icon_title" data-toggle="tab" ng-click="sortByAlpha('folder_name')">
-					<i class="fa tab_view_icon" ng-class="alphaSortIcon" style="font-size:24px;"></i>
-				</a>
-			</td>
-			<td>
-				<a href="#settings_only_icon_title" data-toggle="tab" ng-click="sortByNum('total_c')">
-					<i class="fa  tab_view_icon"  ng-class="numSortIcon" style="font-size:24px;"></i>
-				</a>
-			</td>
-		</tr>
-	</table><br>
-	</div>
-
-
-	<div class="col-md-12 ">
-
-      <center>
-        <div class="preloader ng-hide center-block" ng-show="folder_loader" style="margin-top:100px">
-            <div class="spinner-layer pl-blue">
-                <div class="circle-clipper left">
-                    <div class="circle"></div>
-                </div>
-                <div class="circle-clipper right">
-                    <div class="circle"></div>
-                </div>
-            </div>
+  @if(count($folder_stat)>=1)
+  <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+    <table>
+      <tr class="viewIcons">
+        <!-- CREATE NEW FOLDER -->
+        <td>
+          <a href="#" data-toggle="tab" ng-click="newFolder()">
+            <i class="material-icons btn_no_folders tab_view_icon" style="font-size:36px; margin-top:2px">create_new_folder</i>
+          </a>
+        </td>
+        <!-- FOLDER VIEW 1 -->
+        <td >
+          <a href="#grid_view"  data-toggle="tab" class="active"  ng-click="selected='grid_v'">
+            <i ng-class="{activeView: selected=='grid_v'}" class="fa fa-th-list tab_view_icon"></i>
+          </a>
+        </td>
+        <!-- FOLDER VIEW 2 -->
+        <td  style="border-right:2px solid #ccc;">
+          <a href="#table_view" data-toggle="tab" ng-click="selected='table_v'">
+            <i ng-class="{activeView: selected=='table_v'}" class="fa fa-align-justify tab_view_icon"></i>
+          </a>
+        </td>
+        <!-- FOLDER SORT -->
+        <td style="padding-left:18px">
+          <a href="#messages_only_icon_title" data-toggle="tab" ng-click="sortByAlpha('folder_name')">
+            <i class="fa tab_view_icon" ng-class="alphaSortIcon" style="font-size:24px;"></i>
+          </a>
+        </td>
+        <td>
+          <a href="#settings_only_icon_title" data-toggle="tab" ng-click="sortByNum('total_c')">
+            <i class="fa  tab_view_icon"  ng-class="numSortIcon" style="font-size:24px;"></i>
+          </a>
+        </td>
+      </tr>
+    </table><br>
+  </div>
+  <div class="col-md-12 ">
+    <center>
+    <div class="preloader ng-hide center-block" ng-show="folder_loader" style="margin-top:100px">
+      <div class="spinner-layer pl-blue">
+        <div class="circle-clipper left">
+          <div class="circle"></div>
         </div>
-
-        <div class="center-block ng-hide" ng-show="folder_not_found" style="margin-top:100px">
-        	 <h2 style="color:red">No folder found. create one.</h2>
+        <div class="circle-clipper right">
+          <div class="circle"></div>
         </div>
-      </center>
-
+      </div>
     </div>
-
-
-     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-    	<div class="row">
-   			<!-- Tab panes -->
-   			<div class="tab-content ng-hide" ng-show="folderz">
-
-                <!-- GRID TAB -->
-   				<div role="tabpanel" class="tab-pane fade in active" id="grid_view">
-
-					<div class="col-md-6"  ng-repeat="folder in gridDatas | orderBy:propertyName:reverse track by $index " ng-init="$last && finished()">
-						<div class="card view3_container "  >
-							<table>
-								<tr>
-									<!-- FOLDER IMAGE CONTAINING DOCUMENT -->
-									<td>
-										<a ng-href="/folder/<#folder.folder_id#>">
-											<div class="view3_div">
-												<img class="img1" src="{{ asset('static/img/folder_img_holder.jpg') }}">
-												<span ng-if=" folder.thumb != null ">
-												    <img class="img2" ng-src="/files/image/<#folder.thumb#>">
-												</span>
-											</div>
-									    </a>
-									</td>
-									<!-- FOLDER DETAILS -->
-									<td style="width:100%">
-										<div class="view_date">
-											<ul class="list-unstyled header-dropdown m-r--5 list-inline">
-												<li><p style="font-size:18px; padding-top:-20px;"><b><# folder.folder_name #></b></p></li>
-												<li class="dropdown" >
-													<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" >
-														<i class="material-icons" style="padding:0px;">more_vert</i>
-													</a>
-													<ul class="dropdown-menu pull-right">
-														<li ng-click="deleteFolder(folder.folder_id)"><a href="javascript:void(0);">Delete folder</a></li>
-														<li ng-click="renameFolder(folder.folder_id,folder.folder_name)"><a href="javascript:void(0);">Rename folder</a></li>
-													</ul>
-												</li>
-											</ul>
-										</div>
-										<a ng-href="/folder/<#folder.folder_id#>">
-											<ul class="list-unstyled view3_card_d" >
-												<li><p><# folder.total_c #> Dokumente</p></li>
-												<li ng-if="folder.latest_date!=null"><p>neuestes Dokument vom <# folder.short_date#></p></li>
-											</ul>
-									   </a>
-                     <!-- LINECHART -->
+    <div class="center-block ng-hide" ng-show="folder_not_found" style="margin-top:100px">
+      <h2 style="color:red">No folder found. create one.</h2>
+    </div>
+    </center>
+  </div>
+  <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+    <div class="row">
+      <!-- Tab panes -->
+      <div class="tab-content ng-hide" ng-show="folderz">
+        <!-- GRID TAB -->
+        <div role="tabpanel" class="tab-pane fade in active" id="grid_view">
+          <div class="col-md-6"  ng-repeat="folder in gridDatas | orderBy:propertyName:reverse track by $index " ng-init="$last && finished()">
+            <div class="card view3_container "  >
+              <table>
+                <tr>
+                  <!-- FOLDER IMAGE CONTAINING DOCUMENT -->
+                  <td>
+                    <a ng-href="/folder/<#folder.folder_id#>">
+                      <div class="view3_div">
+                        <img class="img1" src="{{ asset('static/img/folder_img_holder.jpg') }}">
+                        <span ng-if=" folder.thumb != null ">
+                          <img class="img2" ng-src="/files/image/<#folder.thumb#>">
+                        </span>
+                      </div>
+                    </a>
+                  </td>
+                  <!-- FOLDER DETAILS -->
+                  <td style="width:100%">
+                    <div class="view_date">
+                      <ul class="list-unstyled header-dropdown m-r--5 list-inline">
+                        <li><p style="font-size:18px; padding-top:-20px;"><b><# folder.folder_name #></b></p></li>
+                        <li class="dropdown" >
+                          <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" >
+                            <i class="material-icons" style="padding:0px;">more_vert</i>
+                          </a>
+                          <ul class="dropdown-menu pull-right">
+                            <li ng-click="deleteFolder(folder.folder_id)"><a href="javascript:void(0);">Delete folder</a></li>
+                            <li ng-click="renameFolder(folder.folder_id,folder.folder_name)"><a href="javascript:void(0);">Rename folder</a></li>
+                          </ul>
+                        </li>
+                      </ul>
+                    </div>
+                    <a ng-href="/folder/<#folder.folder_id#>">
+                      <ul class="list-unstyled view3_card_d" >
+                        <li><p><# folder.total_c #> Dokumente</p></li>
+                        <li ng-if="folder.latest_date!=null"><p>neuestes Dokument vom <# folder.short_date#></p></li>
+                      </ul>
+                    </a>
+                    <!-- LINECHART -->
                     <div style="height:70px; margin-top:120px; padding:8px;">
-                        <canvas id="myChart<#folder.folder_id#>" class="canvasStyle"></canvas>
-                    </div> 
-										
-									</td>
-								</tr>
-							</table>
-						</div>
-
-           
-					</div>
-
-				</div>
-
-   				<!--  TABLE TAB-->
-   				<div role="tabpanel" class="tab-pane fade" id="table_view">
-
-                     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-				        	<div class="body table-responsive">
-				        		<table class="table table-striped table-hover">
-				        			<thead>
-				        				<tr>
-				        					<th>Folder name</th>
-				        					<th>Documents</th>
-				        					<th>Latest document</th>
-				        					<th>Date created</th>
-				        					<th><span class="pull-right">Actions</span></th>
-				        				</tr>
-				        			</thead>
-				        			<tbody>
-				        				<tr  ng-repeat="folder in tableDatas | orderBy:propertyName:reverse track by $index">
-				        					<td><# folder.folder_name #></td>
-				        					<td><# folder.total_c     | default #></td>
-				        					<td><# folder.latest_date | default #></td>
-				        					<td><# folder.folder_date_created #></td>
-				        					<td>
-				        						<span class="pull-right">
-				        							<a ng-href="/folder/<#folder.folder_id#>" style="text-decoration: none !important">
-					        							<button type="button" class="btn btn-default waves-effects cstm_icon_btn">
-					        								<i class="material-icons">folder</i>
-					        							</button>
-				        						    </a>
-				        							<button type="button" class="btn btn-default  waves-effect cstm_icon_btn" ng-click="renameFolder(folder.folder_id,folder.folder_name)">
-				        								<i class="material-icons">mode_edit</i>
-				        							</button>
-				        							<button type="button" class="btn btn-default waves-effects cstm_icon_btn" ng-click="deleteFolder(folder.folder_id)">
-				        								<i class="material-icons">delete_forever</i>
-				        							</button>
-				        						</span>
-				        					</td>
-				        				</tr>
-
-				        			</tbody>
-				        		</table>
-				        	</div>
-				        </div>
-
-   				</div>
-
-   			</div>
-   		</div>
-   	</div>
+                      <canvas id="myChart<#folder.folder_id#>" class="canvasStyle"></canvas>
+                    </div>
+                    
+                  </td>
+                </tr>
+              </table>
+            </div>
+            
+          </div>
+        </div>
+        <!--  TABLE TAB-->
+        <div role="tabpanel" class="tab-pane fade" id="table_view">
+          <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+            <div class="body table-responsive">
+              <table class="table table-striped table-hover">
+                <thead>
+                  <tr>
+                    <th>Folder name</th>
+                    <th>Documents</th>
+                    <th>Latest document</th>
+                    <th>Date created</th>
+                    <th><span class="pull-right">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr  ng-repeat="folder in tableDatas | orderBy:propertyName:reverse track by $index">
+                    <td><# folder.folder_name #></td>
+                    <td><# folder.total_c     | default #></td>
+                    <td><# folder.latest_date | default #></td>
+                    <td><# folder.folder_date_created #></td>
+                    <td>
+                      <span class="pull-right">
+                        <a ng-href="/folder/<#folder.folder_id#>" style="text-decoration: none !important">
+                          <button type="button" class="btn btn-default waves-effects cstm_icon_btn">
+                          <i class="material-icons">folder</i>
+                          </button>
+                        </a>
+                        <button type="button" class="btn btn-default  waves-effect cstm_icon_btn" ng-click="renameFolder(folder.folder_id,folder.folder_name)">
+                        <i class="material-icons">mode_edit</i>
+                        </button>
+                        <button type="button" class="btn btn-default waves-effects cstm_icon_btn" ng-click="deleteFolder(folder.folder_id)">
+                        <i class="material-icons">delete_forever</i>
+                        </button>
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
    @else
 	<!-- SHOW IF NO FOLDER EXIST -->

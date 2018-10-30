@@ -33,7 +33,7 @@ class uploadDocumentController extends Controller
               $doc =  $req['file'];
               //get original file name / use basename function to get name without file extension.
               $org_filename = basename($doc->getClientOriginalName(), '.'.$doc->getClientOriginalExtension());
-              //using timestamps and random string for naming.
+              
               $base_n = $org_filename . '-' . str_random(5);
               //get file extension
               $ext = $doc->getClientOriginalExtension();

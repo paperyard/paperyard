@@ -6,38 +6,39 @@
 
 @section('custom_style')
 <link href="{{ asset('static/css/reminders.css') }}" rel="stylesheet">
-<link href="{{ asset('static/css/bootstrap-material-datetimepicker.css') }}" rel="stylesheet">
 <style type="text/css" media="screen">
 
-/* --------------------------paperyard custom button -----------------------------*/
+/* ------------------paperyard custom button ---------------------------*/
 
 .lg-btn-tx {
-    font-size:18px;
-    color:#017cff;
-    font-weight:bold
+  font-size:18px;
+  color:#017cff;
+  font-weight:bold
 }
 
 .lg-btn_x2 {
-    width:210px;
-    height:35px;
-    border:none;
-    border-radius:5px
+  width:210px;
+  height:35px;
+  border:none;
+  border-radius:5px
 }
 
 .btn_color{
-    background-color:#b1d5ff;
+  background-color:#b1d5ff;
 }
 
-/*----------------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------*/
 
 .notify_w_tx {
-    color:#7e7e7e; font-size:22px;
+  color:#7e7e7e; font-size:22px;
 }
+
 .notify_ico {
-    color:#b1d5ff; font-size:100px;
+  color:#b1d5ff; font-size:100px;
 }
+
 .notify_pos {
-    margin-top:50px;
+  margin-top:50px;
 }
 
 .card:hover {
@@ -48,12 +49,10 @@
     cursor: pointer;
 }
 
-
 .notify-edit-icon:hover {
     color:#017cff !important;
     cursor: pointer;
 }
-
 
 .list-group-autocomplete{
    position:absolute !important;
@@ -64,8 +63,7 @@
     margin-top:-20px;
 }
 
-
-/* --------------------------------breadcrumb nav --------------------------------*/
+/* --------------------------------  breadcrumb nav -----------------------------------*/
 .arrows li {
     background-color:#b1d5ff;
     display: inline-block;
@@ -112,6 +110,96 @@
    color:#017cff;
 }
 
+/* ------------table custom design -----------------*/
+
+.table-striped>tbody>tr:nth-child(odd)>td,
+.table-striped>tbody>tr:nth-child(odd)>th {
+   background-color: #fff;
+ }
+
+.table-striped>thead>tr:nth-child(odd)>th {
+   background-color: #ebedf8;
+ }
+.table-hover tbody tr:hover td{
+   background-color: #b1d5ff !important;
+   cursor: pointer;
+}
+
+.table-striped>tbody>tr:nth-child(even)>td,
+.table-striped>tbody>tr:nth-child(even)>th {
+   background-color: #ebedf8;
+}
+/*---------------------------------------------------*/
+
+/* --------- autocomplete ---------------------------*/
+.th-t {
+  background-color: #4ddb9f;
+}
+.th-f {
+  background-color: #ef5c8f;
+}
+.th-ft {
+  background-color: #fade45;
+}
+/*---------------------------------------------------*/
+
+.cstm_input {
+  background-color:#ebedf8;
+}
+
+.cstm_icon_btn {
+  padding:2px !important;
+  padding-left:5px !important;
+  padding-right:5px !important;
+  padding-top:0px !important;
+  margin-right:7px;
+}
+.cstm_icon_btn:hover {
+  background-color:  #017cff !important;
+  -webkit-transition: all .3s;
+     -moz-transition: all .3s;
+      -ms-transition: all .3s;
+       -o-transition: all .3s;
+          transition: all .3s;
+           color:#fff;
+}
+
+.cstm_input {
+  background-color:#ebedf8;
+  outline: none;
+  border: none !important;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+  box-shadow: none !important;
+}
+
+.list_btn_container {
+  position: absolute;
+  cursor: pointer;
+  right:0%;
+  top:0;
+}
+.inside_close {  
+   position: relative;
+   padding: 10.5px 13.5px;
+   background-color:#999;
+}
+
+.ic_trash {
+   background-color:#ff9c1c !important;
+   color:#fff;
+}
+
+.ic_trash:hover {
+   background-color:#fca535 !important;
+   color:#fff;
+}
+
+.list-group-item:hover {
+  background-color:#b1d5ff !important;
+}
+
+
 </style>
 @endsection
 
@@ -124,112 +212,46 @@
 
 @section('content')
 <div class="row clearfix" ng-controller="reminder_controller" ng-click="clear()"><br>
-
-
-    @if (session()->has('reminder_updated'))
     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-        <div class="alert bg-light-blue alert-dismissible" role="alert">
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-             <p>{!! session('reminder_updated') !!}</p>
-        </div>
-    </div>
-    @endif
-    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+
         <div class="card">
-            <div class="header">
-                <h2>
-                    Edit reminder
-                </h2>
-                <div>
-                   <div class="preloader pull-right pl-size-xs preload_custm_loc ng-hide" ng-show="search_preloader">
-                      <div class="spinner-layer pl-blue">
-                          <div class="circle-clipper left">
-                              <div class="circle"></div>
-                          </div>
-                          <div class="circle-clipper right">
-                              <div class="circle"></div>
-                          </div>
-                      </div>
-                  </div>
-                </div>
-            </div>
-
+           
             <div class="body">
 
-                <form enctype="multipart/form-data" name="reminderForm"  ng-submit="updateReminder(); $event.preventDefault();">
+                <form enctype="multipart/form-data" name="reminderForm" >
+                    <!-- REMINDER TITLE -->
                     <div class="form-group">
                         <div class="form-line">
-                            <input type="text"
-                            name="reminder_document"
-                            ng-model="reminders.reminder_document"
-                            ng-init="reminders.reminder_document='{{$reminder->doc_ocr}}'"
-                            ng-value="'{{$reminder->doc_ocr}}'"
-                            ng-model-options='{ debounce: 500 }'
-                            ng-change="attachDocument()"
-                            class="form-control"
-                            placeholder="Attach document.(optional)..search name here.">
-                        </div>
-                         <div class="row">
-                          <div class="col-md-12 col-sm-12 col-xs-12 col-lg-12 list-group-autocomplete " >
-                              <div class="list-group ">
-                                 <a  class="list-group-item d_ac_list" ng-click="selectAttach(doc.doc_id,doc.doc_ocr)" ng-repeat="doc in documents track by $index" ng-show="documents!=null && documents.length>0">
-                                      <# doc.doc_ocr #>
-                                </a>
-                                 <a  class="list-group-item d_ac_list ng-hide" ng-show="no_doc_found">
-                                      No document found..
-                                </a>
-                             </div>
-                          </div>
-                      </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="form-line">
-                            <input type="text"
-                            name="reminder_title"
-                            ng-model="reminders.reminder_title"
-                            ng-init="reminders.reminder_title='{{$reminder->reminder_title}}'"
-                            ng-value="'{{$reminder->reminder_title}}'"
-                            class="form-control"
-                            placeholder="Reminder Title."
-                            required>
+                            <input type="text" name="reminder_title" ng-model="reminder.rm_title"  class="form-control" placeholder="Reminder title." required>
                         </div>
                     </div>
-
-                     <div class="form-group">
-                        <div class="form-line">
-                            <textarea
-                            rows="1"
-                            class="form-control no-resize auto-growth"
-                            name="reminder_message"
-                            ng-model="reminders.reminder_message"
-                            ng-init="reminders.reminder_message='{{$reminder->reminder_message}}'"
-                            ng-value="'{{$reminder->reminder_message}}'"
-                            id="notification_message"
-                            placeholder="Enter notification message...press ENTER to create new line."
-                            required></textarea>
-                        </div>
+                    <div class="list-group">
+                         <a  class="list-group-item" ng-repeat="task in reminder.task_list track by $index" style=" word-wrap: break-word; margin-top:10px">
+                            <span style="padding-right:30px"><b style="margin-right:10px"><# $index+1#></b><# task.task_name #></span>
+                            <span class="list_btn_container" ng-click="removeTask($index,task.task_id)">
+                                  <span class="inside_close ic_trash waves-effect"><i class="fa fa-trash"></i></span>
+                            </span>
+                         </a>
+                    </div>  
+                    <!-- NEW TASK INPUT -->
+                     <div class="input-group">
+                         <div class="form-line">
+                            <input type="text" name="new_task" ng-model="reminder.new_task"  class="form-control" placeholder="New task.." ng-keydown="keypressNewTask($event)">
+                         </div>
+                         <span class="input-group-addon">
+                              <button class="btn btn-primary active-red" type="button" style="margin-top:-7px" ng-click="addTask()"><i class="fa fa-plus" style="margin-bottom:6px"></i></button>
+                         </span>
+                         <br>
                     </div>
-
-                    <div class="form-group">
-                        <div class="form-line">
-                            <input type="text"
-                            name="reminder_time"
-                            ng-model="reminders.reminder_time"
-                            ng-init="reminders.reminder_time='{{$reminder->reminder_schedule}}'"
-                            ng-value="'{{$reminder->reminder_schedule}}'"
-                            class="datetimepicker form-control"
-                            placeholder="Schedule this reminder."
-                            required>
-                        </div>
-                    </div>
+                    <!-- SUBMIT BUTTOn -->
                      <div class="form-group">
                         <div class="pull-right">
-                            <button class="btn-flat btn_color main_color waves-effect lg-btn_x2 ng-hide" type="submit" ng-show="save_rm_btn"><span class="lg-btn-tx">Update reminder</span></button>
+                             <button class="btn-flat btn_color main_color waves-effect lg-btn_x2 ng-hide" type="button" ng-show="save_rm_btn" ng-click="check_saveReminder(); "><span class="lg-btn-tx">Update reminder</span></button>
                          </div>
                          <br>
                     </div>
-                </form>
 
+                </form>
             </div>
 
         </div>
@@ -239,117 +261,127 @@
 
 @section('scripts')
 <script src="{{ asset('static/js/reminders.js') }}"></script>
-<script src="{{ asset('static/js/bootstrap-material-datetimepicker.js') }}"></script>
 <script type="text/javascript">
 
-$(function () {
-    //Textare auto growth
-    autosize($('textarea.auto-growth'));
-
-    //Datetimepicker plugin
-    $('.datetimepicker').bootstrapMaterialDatePicker({
-        format: 'YYYY-MM-DD HH:mm:ss',
-        clearButton: true,
-        shortTime: true,
-        weekStart: 1
-    });
-
-});
 
 //inject this app to rootApp
 var app = angular.module('app', []);
 
+app.filter('default', function(){
+   return function(data){
+       if(data==null){
+           data = "N/D";
+           return data;
+       }
+       return data;
+   }
+});
+
+
 app.controller('reminder_controller', function($scope, $http, $timeout, $q) {
 
-$scope.canceler = $q.defer();
-$scope.reminders = [];
-$scope.search_preloader = false;
-$scope.no_doc_found = false;
+//save button model, true = show.
 $scope.save_rm_btn = true;
-$scope.attach_doc_id = '{{$reminder->reminder_document_id or null }}';
 
-console.log($scope.attach_doc_id);
 
-$scope.updateReminder = function(){
+$scope.reminder = [];
+//selected documents datas
+$scope.reminder.selectedDocument = [];
+//array where reminder task list stored
+$scope.reminder.task_list = [];
+$scope.reminder.task_delete = [];
 
-    $scope.wait();
-    $scope.save_rm_btn = false;
 
-    data = {
-        update_reminder:true,
-        rm_id:'{{$reminder->reminder_id}}',
-        rm_title:$scope.reminders.reminder_title,
-        rm_message:$scope.reminders.reminder_message,
-        rm_time:$scope.reminders.reminder_time
-    }
+//create reminder==================================
 
-    if($scope.attach_doc_id != '' && $scope.attach_doc_id != null && $scope.attach_doc_id != undefined){
-        data.attach_doc_id = $scope.attach_doc_id;
-    }
 
-    $http.post('/reminder_save_update', data).success(function(data){
-           window.location.reload();
-    });
-
+//add new task
+$scope.addTask = function(){
+  if($scope.reminder.new_task!=null && $scope.reminder.new_task!="")
+  {
+    $scope.reminder.task_list.push({'task_name':$scope.reminder.new_task});
+    $scope.reminder.new_task = null;
+  }
+  else{
+    swal("eror", "Please add a task", "error");
+  }
 }
 
-$scope.attachDocument = function(){
-    // cancel all previous http request
-    $scope.canceler.resolve();
-    // reinit canceler. new request can be made.
-    $scope.canceler = $q.defer();
-    $scope.clearAttach();
-    $scope.search_preloader = true;
+//remove created task
+$scope.removeTask = function(index, task_id){
+   $scope.reminder.task_list.splice(index, 1);
+   if(task_id!=undefined){
+        $scope.reminder.task_delete.push(task_id);
+   }
+   console.log($scope.reminder.task_delete);
+}
+
+
+$scope.getToEditDocument = function(){
+  data = {
+     rm_id:'{{$rm_id->rm_id}}'
+  }
+  $http.post('/reminders/get_to_edit', data).success(function(data){
+        $scope.reminder.rm_title = data.reminder_title;
+        $scope.reminder.rm_id = data.reminder_id;
+        $scope.reminder.task_list = data.task_list;
+        console.log(data);
+  });
+}
+
+$scope.getToEditDocument();
+
+//save new reminder
+$scope.saveReminder = function(){
+
     data = {
-         doc_keyword: $scope.reminders.reminder_document
+       reminder_title  : $scope.reminder.rm_title,
+       reminder_id     : $scope.reminder.rm_id,
+       reminder_tasks  : $scope.reminder.task_list,
+       reminder_tasks_delete : $scope.reminder.task_delete
     }
-    $http({method:'POST',url:'/reminder_documents', data, timeout: $scope.canceler.promise}).success(function(data){
-         $scope.documents = data;
-         $scope.search_preloader = false;
-         if(data.length<=0){
-            $scope.no_doc_found = true;
-         }
+    $http({method:'POST',url:'/reminders/update', data}).success(function(data){
+       swal("Success", "Reminder updated", "success");
     });
 }
+
+// check if all required field filled.
+$scope.check_saveReminder = function(){
+
+
+    //user must add task for the reminder
+    if($scope.reminder.task_list.length==0){
+       swal("eror", "Please add a task", "error");
+    }
+    //all good, save reminder
+    else{
+       $scope.saveReminder();
+    }
+}
+
+// on keypress check key
+$scope.keypressNewTask = function(keyEvent) {
+  //if key == 13 == ENTER  search document.
+  if (keyEvent.which === 13){
+      $scope.addTask();
+  }
+
+};
+
+
 
 $scope.wait = function(){
-
     $('.card').waitMe({
         effect: 'win8_linear',
         text: 'Please wait...',
         bg: 'rgba(255,255,255,0.90)',
         color: '#555'
     });
-
 }
 
-$scope.selectAttach = function(doc_id, doc_name){
-   $scope.reminders.reminder_document = doc_name;
-   $scope.attach_doc_id = doc_id;
-   $scope.clearAttach();
-}
-
-$scope.clear = function(){
-   if($scope.search_preloader==false){
-      $scope.clearAttach();
-   }
-}
-
-$scope.clearAttach = function(){
-   $scope.documents = null;
-   $scope.no_doc_found = false;
-}
-
-// on keypress check key
-$scope.searchKeyPress = function(keyEvent) {
-  //if key === 8 === backspace. clear autocomplete
-  if (keyEvent.which === 8){
-     $scope.clearAttach();
-  }
-}; // end searchKeyPress..
 
 
-});
+}); //end controller
 
 </script>
 @endsection

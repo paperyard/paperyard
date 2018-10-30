@@ -12,6 +12,12 @@
                 width: 100% !important;
             }
         }
+
+
+        .strikethrough {
+            text-decoration: #017cff line-through; 
+            color: #017cff;
+        }
     </style>
 </head>
 
@@ -57,6 +63,7 @@ $style = [
     'button--green' => 'background-color: #22BC66;',
     'button--red' => 'background-color: #dc4d2f;',
     'button--blue' => 'background-color: #3869D4;',
+
 ];
 ?>
 
@@ -87,17 +94,20 @@ $style = [
                                                 Hello {{ $rmDatas['user_name'] }}
                                             </h1>
 
+
                                             <p style="{{ $style['paragraph'] }}">
-                                                You have a reminder from {{ config('app.name') }}. <br>
-                                                @if($rmDatas['reminder_document']!=null)
-                                                    regarding on document: "{{ $rmDatas['reminder_document'] }}"
+                                                This email was generated because you have a due reminder with title <br>"{{ $rmDatas['reminder_title'] }}".<br>
+                                                Tasks needed to be accomplish are listed bellow.
+                                            </p>
+
+                                            @foreach($rmDatas['reminder_task_list'] as $key=>$task)
+                                                @if($task->task_complete==0)
+                                                   <label><span style="margin-right:10px">{{ $key+1 }}</span> {{ $task->task_name }}</label><br>
+                                                @else
+                                                   <label class="strikethrough"><span style="margin-right:10px">{{ $key+1 }}</span> {{$task->task_name }}</label><br>
                                                 @endif
-                                            </p>
-
-                                            <p style="{{ $style['paragraph'] }}">
-                                                {!! nl2br($rmDatas['reminder_message']) !!}
-                                            </p>
-
+                                            @endforeach
+                                            <br>
                                         <!-- Salutation -->
                                         <p style="{{ $style['paragraph'] }}">
                                             Regards,<br>{{ config('app.name') }}
