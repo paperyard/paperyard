@@ -8,7 +8,7 @@ labels:
 **Summary**
 _Briefly explain the problem._
 
-**Discription**
+**Description**
 _If necessary, the problem can be described in more detail here, e.g. with error messages. If the summary is sufficient, omit this part._
 
 **Expected Behavior**
