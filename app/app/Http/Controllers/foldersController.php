@@ -23,6 +23,11 @@ use Spatie\PdfToImage\Pdf;
 use Webklex\IMAP\Client;
 use Illuminate\Support\Facades\Crypt;
 
+# WEBDAV
+use Sabre\DAV\Client as sabre_client;
+use League\Flysystem\WebDAV\WebDAVAdapter;
+use League\Flysystem\Filesystem;
+
 
 // cache controller composer dump-autoload
 class foldersController extends Controller
@@ -212,12 +217,10 @@ class foldersController extends Controller
     // return documents from specific folder
     public function folderDocuments(Request $req){
 
-        // return folder for this user.
+        // return folders for this user.
+        // will be used to move documents to other existing folders
         $folders = DB::table('folders')->where('folder_user_id', Auth::user()->id)->select('folders.folder_id','folders.folder_name')->get();
-        //return documents finished editing.
-        if(count($folders)<=0){
-        $folders = '';
-        }
+
         $archive_docs = DB::table('documents')->where([
          ['doc_user_id','=',Auth::user()->id],
          ['process_status','=','ocred_final'],
@@ -226,7 +229,10 @@ class foldersController extends Controller
         ])->get();
 
         $archive_docs = $this->generateDownloadFormat($archive_docs);
-        $json_response = json_encode(array('archive_docs' => $archive_docs,'folders'=>$folders));
+        $json_response = json_encode(array(
+            'archive_docs' =>   $archive_docs,
+            'folders'      =>   count($folders) != 0 ? $folders : '' 
+        ));
         // # Return the response
         return $json_response;
 
@@ -234,8 +240,8 @@ class foldersController extends Controller
 
     public function generateDownloadFormat($datas){
         $format = "";
-        $ext = ".pdf";
-        $dash = "-";
+        $ext    = ".pdf";
+        $dash   = "-";
         $d_date = new \DateTime();
         $date   = date_format($d_date, "ymd");
 
@@ -258,6 +264,7 @@ class foldersController extends Controller
             $d->download_format = substr($format, 0, -1).$ext;
             $format = "";
 
+            //format date
             if($d->date!=null){
               $n_date = new \DateTime($d->date);
               $short_date = date_format($n_date,"d.m.Y");
@@ -267,81 +274,9 @@ class foldersController extends Controller
         return $datas;  
     }
 
+    // WEBDAV TESTING
     public function serverTest(){
         
-       try { 
-           $ftp = Storage::createFtpDriver([
-                  'host' => 'ftp.dlptest.com',
-                  'username' => 'dlpuser@dlptest.com',
-                  'password' => 'e73jzTRTNqCN9PYAAjjn',
-                  'port' => 21,
-                  'timeout' => 3600
-           ]);
-
-           #file_put_contents(storage_path('app/documents_new/' . 'downloaded_porn2.pdf'), $ftp->get('porn1.pdf'));
-
-           // $ftp->put('/binary.pdf', storage_path('app/documents_new/paperyard_test_07_binary_junk.pdf'));
-           // $ftp->put('/sample.pdf', storage_path('app/documents_new/paperyard_test_02_image_only_english-jBwlG-org.pdf'));
-            
-
-           // directory
-           $ftp->makeDirectory('Paperyard_test_folder_01/Papeyard_test_folder_02');
-           $ftp->makeDirectory('Folder_01');
-           $ftp->makeDirectory('Folder_02');
-
-
-           // UPLOAD FILES TO SERVER NOT CORRUPTED
-           $localFile = File::get(storage_path('app/documents_new/paperyard_test_02_image_only_english.pdf'));
-
-           $localFile1 = File::get(storage_path('app/documents_new/35-algorithm-types.ppt'));
-           $localFile2 = File::get(storage_path('app/documents_new/semi_blank.jpg'));
-
-
-           $ftp->put('Paperyard_test_folder_01/Papeyard_test_folder_02/sample_pdf.pdf', $localFile);
-           $ftp->put('Paperyard_test_folder_01/Papeyard_test_folder_02/35-algorithm-types.ppt', $localFile1);
-           $ftp->put('Paperyard_test_folder_01/Papeyard_test_folder_02/semi_blank.jpg', $localFile2);
-
-           $ftp->put('paperyard_sample_pdf_01.pdf', $localFile);
-           $ftp->put('paperyard_sample_pdf_02.pdf', $localFile);
-           $ftp->put('paperyard_sample_pdf_03.pdf', $localFile);
-
-           $ftp->put('35-algorithm-types.ppt', $localFile1);
-           $ftp->put('semi_blank.jpg', $localFile2);
-
-
-
-           // @var path string, recursive bool.
-           $directories = $ftp->listContents('/', true);
-
-
-           echo "<pre>". json_encode($directories, JSON_PRETTY_PRINT) ."</pre>";
-
-
-
-
-           // //detel all shit
-           
-
-           // // @var path string, recursive bool.
-           // $directories = $ftp->listContents('/', true);
-           // // $directories = $ftp->allFiles('/', 1);
-
-           // foreach($directories as $key=>$dir){
-           //      $ftp->delete($dir["path"]);
-           // } 
-
-
-
-
-
-       }
-       catch(\Exception $err){
-          echo "something is not right";
-       }  
-         
-
-
-
 
     }   
 

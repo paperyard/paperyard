@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page_title', 'FTP')
+@section('page_title', 'WEBDAV')
 
 @section('custom_style')
 <link href="{{ asset('static/css/imap.css') }}" rel="stylesheet">
@@ -100,17 +100,17 @@
 @section('breadcrumb_nav')
  <ul class="arrows">
      <li class="li1"><a href="#">Home</a></li>
-     <li class="li2"><a href="#">FTP</a></li>
+     <li class="li2"><a href="#">WEBDAV</a></li>
   </ul>
 @endsection
 
 @section('content')
 <!-- Hover Rows -->
-<div class="row" ng-controller="ftp_controller">
+<div class="row" ng-controller="webdav_controller">
 	<div class="col-md-12 col-sm-12 col-xs-12">
 		<div class="block-header">
 			<h2>
-			1. Creating new FTP credentials.
+			1. Creating new WEBDAV credentials.
 			<small>System will do a <span style="color:#017cff">test connect</span> before saving your credentials, please make sure you have inputed correct information.</small>
 			</h2>
 		</div>
@@ -120,33 +120,33 @@
 			<div class="body" >
 				<!-- Nav tabs -->
 				<ul class="nav nav-tabs tab-nav-right" role="tablist">
-					<li role="presentation" class="active"><a href="#new_ftp" data-toggle="tab">NEW FTP CREDENTIALS</a></li>
-					<li role="presentation"><a href="#list_ftp" data-toggle="tab">FTP CREDENTIALS</a></li>
+					<li role="presentation" class="active"><a href="#new_ftp" data-toggle="tab">NEW WEBDAV CREDENTIALS</a></li>
+					<li role="presentation"><a href="#list_ftp" data-toggle="tab">WEBDAV CREDENTIALS</a></li>
 				</ul>
 				<!-- Tab panes -->
 				<div class="tab-content">
 					<div role="tabpanel" class="tab-pane fade in active" id="new_ftp"  style="margin-bottom:-50px"><br><br>
 						<div class="row">
-							<form enctype="multipart/form-data"  id="ftp_credentials_form" name="ftp_credentials_form"  ng-submit="newFtpCredentials(); $event.preventDefault();">
-								<!--  HOST -->
+							<form enctype="multipart/form-data"  id="webdav_credentials_form" name="webdav_credentials_form"  ng-submit="newWebdavCredentials(); $event.preventDefault();">
+								<!--  BASEURI -->
 								<div class="col-md-12 col-sm-12 col-xs-12 ftp_input">
 									<div class="input-group " >
 										<span class="input-group-addon ">
 											<i class="material-icons">dns</i>
 										</span>
 										<div class="form-line">
-											<input type="text" class="form-control" placeholder="Host" name="ftp_host" ng-model="ftp_form['host']"  required>
+											<input type="text" class="form-control" placeholder="Base Uri eg. https://app.koofr.net" name="webdav_baseuri" ng-model="webdav_form['host']"  required>
 										</div>
 									</div>
 								</div>
-								<!--  USERNAME -->
+								<!--  USERNAME / EMAIL-->
 								<div class="col-md-12 col-sm-12 col-xs-12 ftp_input">
 									<div class="input-group " >
 										<span class="input-group-addon ">
 											<i class="material-icons">person</i>
 										</span>
 										<div class="form-line">
-											<input type="text" class="form-control" placeholder="Username" name="ftp_username"  ng-model="ftp_form['email']" required>
+											<input type="text" class="form-control" placeholder="Username / Email" name="webdav_username"  ng-model="webdav_form['email']" required>
 										</div>
 									</div>
 								</div>
@@ -157,18 +157,18 @@
 											<i class="material-icons">lock</i>
 										</span>
 										<div class="form-line">
-											<input type="password" class="form-control" placeholder="Password" name="ftp_password" ng-model="ftp_form['password']" required>
+											<input type="password" class="form-control" placeholder="Password" name="webdav_password" ng-model="webdav_form['password']" required>
 										</div>
 									</div>
 								</div>
-								<!--  PORT -->
+								<!--  PATH PREFIX -->
 								<div class="col-md-12 col-sm-12 col-xs-12 ftp_input">
 									<div class="input-group " >
 										<span class="input-group-addon ">
-											<i class="material-icons">swap_vertical_circle</i>
+											<i class="material-icons">subdirectory_arrow_right</i>
 										</span>
 										<div class="form-line">
-											<input type="text" class="form-control" placeholder="Port" name="ftp_port"  ng-model="ftp_form['port']" required>
+											<input type="text" class="form-control" placeholder="Path Prefix eg. dav/Koofr" name="webdav_pathprefix"  ng-model="webdav_form['port']" required>
 										</div>
 									</div>
 								</div>
@@ -181,18 +181,18 @@
 						</div>
 					</div>
 					<div role="tabpanel" class="tab-pane fade" id="list_ftp">
-						<div class="card" ng-repeat="data in ftp_cred_list track by $index" style="margin-bottom:20px;">
+						<div class="card" ng-repeat="data in webdav_cred_list track by $index" style="margin-bottom:20px;">
 							<div class="header" style="z-index:5">
-								<label><span style="color:#017cff">Host &nbsp&nbsp:</span> <# data.ftp_host #></label><br>
-								<label><span style="color:#017cff">Email :</span> <# data.ftp_username #></label><br>
-								<label><span style="color:#017cff">Port &nbsp&nbsp&nbsp:</span> <# data.ftp_port #></label>
+								<label><span style="color:#017cff">Base URI &nbsp&nbsp:</span> <# data.webdav_baseuri #></label><br>
+								<label><span style="color:#017cff">Username :</span> <# data.webdav_username #></label><br>
+								<label><span style="color:#017cff">Path Prefix &nbsp&nbsp&nbsp:</span> <# data.webdav_pathprefix #></label>
 								<ul class="header-dropdown m-r--5">
 									<li class="dropdown">
 										<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
 											<i class="material-icons">more_vert</i>
 										</a>
 										<ul class="dropdown-menu pull-right">
-											<li><a ng-click="deleteFTPCredential(data.ftp_id)">Delete </a></li>
+											<li><a ng-click="deleteWEBDAVCredential(data.webdav_id)">Delete </a></li>
 										</ul>
 									</li>
 								</ul>
@@ -200,7 +200,7 @@
 							<div class="body" style="height:70px">
 								<div class="row"  >
 									<div class="col-md-12" >
-										<a href="/ftp_connect/<#data.ftp_id#>"><button type="button" class="btn btn-primary waves-effect">Connect</button></a>
+										<a href="/webdav_connect/<#data.webdav_id#>"><button type="button" class="btn btn-primary waves-effect">Connect</button></a>
 									</div>
 								</div>
 							</div>
@@ -222,15 +222,15 @@ var app = angular.module('app', []);
 
 
 
-app.controller('ftp_controller', function($scope, $http, $timeout) {
+app.controller('webdav_controller', function($scope, $http, $timeout) {
 
-$scope.ftp_form = [];
-$scope.ftp_cred_list = [];
+$scope.webdav_form = [];
+$scope.webdav_cred_list = [];
 
 //get list of imap credentials
 $scope.listOfCredentials = function(){
-    $http.get('/ftp_create_credentials/list_of_credentials').success(function(data){
-    	 $scope.ftp_cred_list = data;
+    $http.get('/webdav_create_credentials/list_of_credentials').success(function(data){
+    	 $scope.webdav_cred_list = data;
     	 console.log(data);
     });
 }
@@ -246,17 +246,17 @@ $scope.wait = function(){
 }
 
 //save ftp credentials
-$scope.newFtpCredentials = function(){
+$scope.newWebdavCredentials = function(){
 
 	$scope.wait();
-    var form = $('#ftp_credentials_form');
+    var form = $('#webdav_credentials_form');
     var formdata = false;
 	if (window.FormData) {
 	  formdata = new FormData(form[0]);
 	}
 
 	$.ajax({
-	  url: '/ftp_create_credentails/new_credential',
+	  url: '/webdav_create_credentails/new_credential',
 	  data: formdata ? formdata : form.serialize(),
 	  cache: false,
 	  contentType: false,
@@ -266,9 +266,9 @@ $scope.newFtpCredentials = function(){
 
 	  	   $('.card').waitMe("hide");
 	  	   if(data=="success"){
-	  	   	  $scope.ftp_form = [];
+	  	   	  $scope.webdav_form = [];
 	  	   	  $scope.listOfCredentials();
-	  	   	  swal("Success", "New FTP credentials added", "success");
+	  	   	  swal("Success", "New WEBDAV credentials added", "success");
 	  	   }else{
 	  	   	  swal("Error", "Cannot connect to server", "error");
 	  	   }
@@ -276,11 +276,11 @@ $scope.newFtpCredentials = function(){
 	}); //end ajax
 }
 
-$scope.deleteFTPCredential = function(ftp_id){
-	data = { ftp_id:ftp_id }
-    $http({method:'POST',url:'/ftp_create_credentails/delete', data}).success(function(data){
+$scope.deleteWEBDAVCredential = function(webdav_id){
+	data = { webdav_id:webdav_id }
+    $http({method:'POST',url:'/webdav_create_credentials/delete', data}).success(function(data){
     	$scope.listOfCredentials();
-        swal("Success", "FTP credentials deleted", "success");
+        swal("Success", "WEBDAV credentials deleted", "success");
     });
 }
 

@@ -4,10 +4,10 @@
 # else volume is mounted. getting source code locally.
 
 if [ ! -d '/var/www/html/routes' ]; then 
-# clone paperyard app inside container.
+# clone paperyard app inside container. 
 git clone https://github.com/paperyard/paperyard.git
 rm -rf /var/www/html
-ln -s /ppyrd_test_dply/app/ /var/www/html
+ln -s /paperyard/app/ /var/www/html
 fi
 
 # set installing pages while installing dependencies
@@ -51,6 +51,11 @@ composer install
 ### migrate databae tables
 php artisan migrate
 
+# set orgin index after installing
+cp /config/init_pages/original_index/index.php /var/www/html/public/index.php
+
+
+
 # initiate cronjobs
 if [ ! -e '/var/www/html/cronjobs_paperyard' ]; then
    echo "* * * * * php /var/www/html/artisan schedule:run >> /dev/null 2>&1" >>  cronjobs_paperyard
@@ -63,8 +68,7 @@ crontab cronjobs_paperyard
 service cron start
 
 
-# set orgin index after installing
-cp /config/init_pages/original_index/index.php /var/www/html/public/index.php
+
 
 
 

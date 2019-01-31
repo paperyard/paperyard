@@ -69,4 +69,8 @@ class settingsController extends Controller
         $json_response = json_encode($labelDatas);
         return $json_response;
     }
+
+    public function resetFilenameFormat(Request $req){
+       DB::table('users')->where('id',Auth::user()->id)->update(['download_filename_format'=>'YYMMDD,sender,category,receiver,tags,doc_ocr']);
+    }
 }

@@ -30,15 +30,43 @@ color: #757575;
 }
 </style>
 
+</div>
+  
+<!--  JQUERY  -->
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous">
+</script>
+<!--  PREFIX -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prefixfree/1.0.7/prefixfree.min.js"></script>
 
 </head>
 
-<body>
-  <div class="container">
+<body onload="checkForInstallationStatus()">
+
+
+<div class="container">
   <div class="text"></div>
 </div>
+
+
+<script type="text/javascript">
   
+    function checkForInstallationStatus(){
+
+      setInterval(function()
+      {  
+          // create post request if app is installed.
+          // current fix. auto reload page per interval 
+          window.location.reload();
+      }, 8000); //setInterval    
+
+    };//functionCheckForInstallationStatus
+
+    checkForInstallationStatus();
+
+</script>
 
 
 <script type="text/javascript">

@@ -181,8 +181,9 @@
 }
 .inside_close {  
    position: relative;
-   padding: 10.5px 13.5px;
+   padding: 10.5px 10.5px;
    background-color:#999;
+
 }
 
 .ic_trash {
@@ -240,7 +241,7 @@
                 </div>
             </div>
 
-            <div class="body">
+            <div class="body" id="fix_update">
                 <!-- Search input  -->
                 <input type="text" class="form-control search_inp cstm_input" placeholder="Search document."  ng-model-options='{ debounce: 1000 }' ng-change="onChangeInput()" ng-model="doc_keyword" ng-keydown="searchKeyPress($event)">
                 <div class="row cleafix" >
@@ -338,9 +339,10 @@
                     <div class="list-group">
                          <a  class="list-group-item" ng-repeat="task in reminder.taskList track by $index" style=" word-wrap: break-word; margin-top:10px">
                             <span style="padding-right:30px"><b style="margin-right:10px"><# $index+1#></b><# task.task_name #></span>
-                            <span class="list_btn_container" ng-click="removeTask($index)">
-                                  <span class="inside_close ic_trash waves-effect"><i class="fa fa-trash"></i></span>
-                            </span>
+                            <div class="list_btn_container" >
+                                  <span class="inside_close ic_trash waves-effect"  ng-click="editTask(task.t_id,task.task_name)" style="margin-right:-2px"><i class="fa fa-edit"></i></span>
+                                  <span class="inside_close ic_trash waves-effect"  ng-click="removeTask($index)"><i class="fa fa-trash" ></i></span>
+                            </div>
                          </a>
                     </div>  
 
@@ -427,12 +429,26 @@ $scope.selectThisDocument = function(doc_id){
 //add new task
 $scope.addTask = function(){
   if($scope.reminder.new_task!=null && $scope.reminder.new_task!="")
-  {
-    $scope.reminder.taskList.push({'task_name':$scope.reminder.new_task});
-    $scope.reminder.new_task = null;
+  { 
+
+    var _task_exist = 0;
+    angular.forEach($scope.reminder.taskList, function(data) {
+        if(data.task_name.toUpperCase()==$scope.reminder.new_task.toUpperCase()){
+            swal("Error","Task exist","error");
+            _task_exist = 1;
+        }
+    }); 
+    
+    if(_task_exist==0){
+      var task_id = $scope.reminder.taskList;
+      task_id = task_id.length+1;
+      $scope.reminder.taskList.push({'task_name':$scope.reminder.new_task,'t_id':task_id});
+      $scope.reminder.new_task = null;
+      console.log($scope.reminder.taskList);
+    }
   }
   else{
-    swal("eror", "Please add a task", "error");
+    swal("Error", "Please add a task", "error");
   }
 }
 
@@ -445,17 +461,25 @@ $scope.removeTask = function(index){
 $scope.saveReminder = function(){
     
     $scope.wait();
+    var rm_task = [];
+    // store task_name to rm_task array.
+    angular.forEach($scope.reminder.taskList, function(data) {
+        rm_task.push({'task_name':data.task_name });
+    });  
+
     data = {
        reminder_title  : $scope.reminder.reminder_title,
        reminder_doc_id : $scope.reminder.selectedDocument.doc_id,
-       reminder_tasks  : $scope.reminder.taskList
+       reminder_tasks  : rm_task
     }
     $http({method:'POST',url:'/reminders/create', data}).success(function(data){
+        console.log(data);
         if(data=="success_task_saved"){
           window.location.replace('/reminders');          
-        }else{
-          //something went wrong
-          window.location.reload();
+        }
+        if(data=="doc_has_reminder"){
+          $('.card').waitMe("hide");
+          swal("Error", "Selected document have a reminder already", "error");
         }
     });
 }
@@ -465,11 +489,15 @@ $scope.check_saveReminder = function(){
 
     //user must search and select document
     if($scope.reminder.selectedDocument.length==0){
-       swal("eror", "Please search and select a document with a date reminder", "error");
+       swal("Error", "Please search and select a document with a date reminder", "error");
     }
     //user must add task for the reminder
     else if($scope.reminder.taskList.length==0){
-       swal("eror", "Please add a task", "error");
+       swal("Error", "Please add a task", "error");
+    }
+    //user must add title
+    else if($scope.reminder.reminder_title==undefined){
+       swal("Error", "Please add a title", "error");
     }
     //all good, save reminder
     else{
@@ -613,6 +641,38 @@ $scope.searchDocuments = function(keyword,filter){
        console.log(data);
     });
 }
+
+$scope.editTask = function(t_id,t_name){
+
+    swal({
+        title: "Rename task",
+        text: "New task name",
+        type: "input",
+        input: 'task_name',
+        inputValue: t_name,
+        showCancelButton: true,
+        closeOnConfirm: false,
+        animation: "slide-from-top",
+        inputPlaceholder: "New task name"
+    }, function (task_name) {
+        if (task_name === false) return false;
+        if (task_name === "") {
+            swal.showInputError("You need to write something!"); return false;
+        }
+        // check for matched task names
+        angular.forEach($scope.reminder.taskList, function(data) {
+            if(data.task_name.toUpperCase()==task_name.toUpperCase()){
+                swal.showInputError("Task name exist"); return false;
+            }else if(data.t_id==t_id){
+               data.task_name = task_name; 
+               swal("Success","Taskname changed","success");
+               angular.element('#fix_update').trigger('click');
+            }
+        }); 
+    });
+
+}
+
 
 //---------------------------------------------------------------------------------------------------------------------------
 

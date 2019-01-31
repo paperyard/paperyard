@@ -169,6 +169,8 @@ class ocr_new extends Command
         echo "success\n";
     }
 
+
+
     // process img =================================================================================================
     public function ocr_img($prc_ocr,$prc_img,$doc_org,$doc_ocr){
 

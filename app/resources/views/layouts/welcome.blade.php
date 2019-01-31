@@ -1,8 +1,14 @@
 <!DOCTYPE html>
 <html >
 <head>
-  <meta charset="UTF-8">
-  <title>Welcome</title>
+<meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="shortcut icon" href="{{{ asset('static/img/paperyard_logo.png') }}}">
+    <title>Welcome</title>
+
+
 <style type="text/css" media="screen">
 @import url("https://fonts.googleapis.com/css?family=Open+Sans:300,400");
 .text-js {
@@ -143,7 +149,7 @@ $(document).ready(function(){
 });
 
  function start(){
-    window.location.reload();
+    window.location.replace('/register');
  }
 
 </script>

@@ -8,15 +8,13 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="shortcut icon" href="{{{ asset('static/img/paperyard_logo.png') }}}">
     <title>{{ config('app.name', 'Paperyard') }}</title>
-
     <!-- Scripts -->
     <script src="{{ asset('static/js/app.js') }}" defer></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&subset=latin,cyrillic-ext" rel="stylesheet" type="text/css">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" type="text/css">
     <!-- Styles -->
     <link href="{{ asset('static/css/core_mix.css') }}" rel="stylesheet">
-
+    <!-- Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+   
     <style type="text/css" media="screen">
          .main_color {
             color:#017cff;
@@ -123,7 +121,7 @@
          <p class="pull-left"><a href="http://www.consider-it.de/impressum" class="imprint">@lang('auth.footer_txt')</a></p>
       </div>
       <div class="col-md-6 col-md-12 col-xs-12">   
-        <label class="pull-right">v 0.3.7</label>
+        <label class="pull-right">v 0.5.2</label>
       </div>
     </div>
   </div>

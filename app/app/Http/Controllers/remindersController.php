@@ -38,7 +38,7 @@ class remindersController extends Controller
          $reminder = DB::table('reminders')
          ->where('rm_user_id', Auth::user()->id)
          ->join('documents','reminders.rm_doc_id','=','documents.doc_id')
-         ->select('reminders.*','documents.reminder')
+         ->select('reminders.*','documents.reminder','documents.doc_ocr')
          ->orderBy('reminders.rm_id', 'desc')
          ->get();
 
@@ -67,18 +67,21 @@ class remindersController extends Controller
         $reminder = DB::table('reminders')
         ->where('rm_user_id', Auth::user()->id)
         ->where('rm_id', (int)$req->rm_id)
+        ->join('documents','reminders.rm_doc_id','=','documents.doc_id')
+        ->select('reminders.*','documents.doc_ocr')
         ->first();
 
         $get_tasks = DB::table('reminders_tasks')
         ->where('reminder_id',$reminder->rm_id)
         ->get();
 
+        // doc view
         foreach($get_tasks as $task){
             $task_status  = $task->task_complete==1? true:false;
             $task->select = $task_status;
         }
 
-        $json_response = json_encode(array('reminder_id'=>$reminder->rm_id,'reminder_title'=>$reminder->rm_title,'task_list'=>$get_tasks));
+        $json_response = json_encode(array('reminder_id'=>$reminder->rm_id,'reminder_title'=>$reminder->rm_title,'task_list'=>$get_tasks,'doc_ocr'=>$reminder->doc_ocr));
         return  $json_response;
     }
 
@@ -89,17 +92,19 @@ class remindersController extends Controller
         ->where('rm_doc_id', $req->rm_id)
         ->first();
 
-        $get_tasks = DB::table('reminders_tasks')
-        ->where('reminder_id',$reminder->rm_id)
-        ->get();
+        if(count($reminder)>0){
+            $get_tasks = DB::table('reminders_tasks')
+            ->where('reminder_id',$reminder->rm_id)
+            ->get();
 
-        foreach($get_tasks as $task){
-            $task_status  = $task->task_complete==1? true:false;
-            $task->select = $task_status;
-        }
+            foreach($get_tasks as $task){
+                $task_status  = $task->task_complete==1? true:false;
+                $task->select = $task_status;
+            }
 
-        $json_response = json_encode(array('reminder_id'=>$reminder->rm_id,'reminder_title'=>$reminder->rm_title,'task_list'=>$get_tasks));
-        return  $json_response;
+            $json_response = json_encode(array('reminder_id'=>$reminder->rm_id,'reminder_title'=>$reminder->rm_title,'task_list'=>$get_tasks));
+            return  $json_response;
+        }    
     }
 
     // return create reminder page
@@ -109,8 +114,15 @@ class remindersController extends Controller
 
     // save reminder
     public function makeReminder(Request $req){
+
         //save reminder
-        try {
+        try {        
+            //check if document has reminder
+            $check = DB::table('reminders')->where('rm_doc_id',$req->reminder_doc_id)->first();
+            if(count($check)>0){
+                return "doc_has_reminder";
+            }
+
             date_default_timezone_set(Auth::user()->user_timezone);
             $save_reminder = DB::table('reminders')
             ->insertGetId([

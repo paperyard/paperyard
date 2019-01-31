@@ -11,12 +11,10 @@
     <title>{{ config('app.name', 'Paperyard') }}</title>
     <!-- Scripts -->
     <script src="{{ asset('static/js/app.js') }}" defer></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&subset=latin,cyrillic-ext" rel="stylesheet" type="text/css">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" type="text/css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <!-- Styles -->
     <link href="{{ asset('static/css/core_mix.css') }}" rel="stylesheet">
+    <!-- Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
     <style type="text/css" media="screen">
 
@@ -28,7 +26,9 @@
         margin-top:-10px;
         height: 100%;
     }
+
     @media screen and (max-width:500px) {
+
         .x_1 { margin-left: 10px !important; }
         .navbar-collapse {
             border-top:1px solid #ccc;
@@ -37,6 +37,15 @@
         .m-drop-menu {
             border:1px solid #ccc !important;
         }
+
+        #custom_doc_uploader {
+            position: relative !important;
+            visibility: hidden;
+            z-index:9999;
+            width:100% !important;
+
+        }
+
     }
 
     @media handheld and (min-width: 1200px), 
@@ -116,10 +125,8 @@ html {
 
 body {
   position: relative;
-  min-height: 89%;
+  min-height: 89.5%;
 }
-
-
 
 .footer {
   position: absolute;
@@ -132,6 +139,41 @@ body {
   padding-right:30px;
   border-top:1px solid #ccc;
 }
+
+
+.upload-success {
+    visibility: hidden;
+}
+
+.uploader-box {
+    position: absolute;
+    right: 0 !important;
+    bottom: 0 !important;
+    visibility: hidden;
+    z-index:9999;
+    width:400px;
+    margin-right:30px;
+    margin-bottom:30px;
+
+}
+
+.borderless tr, .borderless td, .borderless th {
+    border: none !important;
+}
+
+.uploader-box-body {
+    max-height:450px;
+    overflow: auto;
+
+    transition-property: all;
+    transition-duration: .5s;
+    transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
+}
+
+.uploader-box-body.closed {
+    max-height: 0;
+}
+
 
 </style>
 @yield('custom_style')
@@ -276,7 +318,7 @@ body {
                     </a>
                 </li>
                 <li data-toggle="tooltip" data-placement="right" title="" data-original-title="Upload Documents">
-                    <a href="/upload_documents" class="waves-effect waves-blue @yield('active_upload')">
+                    <a href="#" class="waves-effect waves-blue fileinput-button dz-clickable" data-close="true">
                         <span class="fa fa fa-upload router_link_icon"></span>
                     </a>
                 </li>
@@ -309,9 +351,74 @@ body {
         </div>
         <!-- Footer -->
         <div class="footer">
-            <label>v 0.3.7</label>
+            <label>v 0.5.2</label>
         </div>
     </section>
+
+     <!-- Uploader -->
+    <div class="uploader-box dropzone_container" id="custom_doc_uploader" s>
+        @csrf
+        <div class="card card_uploader">
+            <div class="header" style="height:70px">
+                <h2>
+                <b>Uploading Files</b>
+                <!-- HTML heavily inspired by https://blueimp.github.io/jQuery-File-Upload/ -->
+                <div id="actions">
+                    <!-- The global file processing state -->
+                    <span class="fileupload-process">
+                        <div id="total-progress" class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" style="height:10px; margin-top:5px">
+                            <div class="progress-bar progress-bar-primary" style="width:0%;" data-dz-uploadprogress=""></div>
+                        </div>
+                    </span>
+                    
+                </div>
+                </h2>
+                 <ul class="header-dropdown ">
+                        <li id="toggleUploadList" title="Hide/Show Files">
+                            <a href="javascript:void(0);">
+                                <i class="material-icons" style="font-size:25px">expand_more</i>
+                                <!-- expand_less -->
+                            </a>
+                        </li>
+                        <li id="closeUploadList" title="Close">
+                            <a href="javascript:void(0);">
+                                <i class="material-icons" style="font-size:25px">close</i>
+                            </a>
+                        </li>
+                    </ul>
+            </div>
+            <div class="body uploader-box-body">
+                
+                <div class="files" id="previews">
+                    <div id="template" class="file-row dz-image-preview">
+                        <div>
+                            <table class="table table-condensed table-hover borderless table-upload" style="border-bottom: 2px solid #017cff">
+                                <tr>
+                                    <td colspan="2">
+                                        <label class="name" data-dz-name></label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <strong class="error text-danger" data-dz-errormessage></strong>
+                                </tr>
+                                <tr class="upload-success" style="height:20px; margin-top:-10px;">
+                                    <td><span class="size" data-dz-size></span></td>
+                                    <td><i class="fa fa-check-square pull-right" style="color:#017cff; font-size:20px"></i></td>
+                                </tr>
+                            </table>
+                            <div class="progress progress-striped active indi_progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" style="margin-top:-60px; height:10px">
+                                <div class="progress-bar progress-bar-info" style="width:0%;" data-dz-uploadprogress></div>
+                            </div>
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     </div> <!-- /app -->
 
 
@@ -344,7 +451,107 @@ body {
         });
 
     </script>
+
+    
     @yield('scripts')
+
+    <script type="text/javascript" > 
+
+    $(function() {
+
+
+        // FILE UPLOADER ----------------------------------------------------------------------------------------------------------
+
+        document.querySelector('#closeUploadList').style.visibility = 'hidden';
+
+        // Get the template HTML and remove it from the document template HTML and remove it from the document
+        var previewNode = document.querySelector("#template");
+        previewNode.id  = "";
+        var previewTemplate = previewNode.parentNode.innerHTML;
+        previewNode.parentNode.removeChild(previewNode);
+
+        document.querySelector("#total-progress").style.visibility = 'hidden';
+
+        var myDropzone = new Dropzone(".dropzone_container", { // Make the whole body a dropzone
+            url: "/upload_documents", // Set the url
+            paramName: "file", // The name that will be used to transfer the file
+            maxFilesize: 100, // MB
+            timeout: 0,
+            acceptedFiles: ".png,.jpg,.bmp,.jpeg,.pdf",
+            parallelUploads: 20,
+            previewTemplate: previewTemplate,
+            autoQueue: true, // Make sure the files aren't queued until manually added
+            previewsContainer: "#previews", // Define the container to display the previews
+            clickable: ".fileinput-button", // Define the element that should be used as click trigger to select files.
+            success:function(file, response)
+                {
+                    // Do what you want to do with your response
+                    // This return statement is necessary to remove progress bar after uploading.
+                    // return file.previewElement.removeClass("indi_progress");
+                    file.previewElement.querySelector(".indi_progress").remove();
+                    file.previewElement.querySelector(".upload-success").style.visibility = "visible";
+                },
+            init: function() {
+                 this.on("addedfile", function(file) {
+                        document.querySelector('.uploader-box').style.visibility = 'visible';
+                        // prevent user from changing page while upload in progress
+                        window.onbeforeunload = function(e) {
+                          return 'Uploading Files in progress, are you sure you want cancel uploading files?';
+                        };
+                 });
+              }    
+        });
+
+        // Update the total progress bar
+        myDropzone.on("totaluploadprogress", function(progress) {
+
+           document.querySelector("#total-progress .progress-bar").style.width = progress + "%";
+        });
+
+        myDropzone.on("sending", function(file, xhr, formData) {
+            // Now, find your CSRF token
+            var token = $(".dropzone_container input[name='_token']").val();
+            // Append the token to the formData Dropzone is going to POST
+            formData.append('_token', token);
+            // Show the total progress bar when upload starts
+            document.querySelector("#total-progress").style.visibility  = "visible";
+        });
+
+        // Hide the total progress bar when nothing's uploading anymore
+        myDropzone.on("queuecomplete", function(progress) {
+           // hide total progress bar
+           document.querySelector("#total-progress").style.visibility = "hidden";
+           // show close button 
+           document.querySelector('#closeUploadList').style.visibility = 'visible';
+           // disable onbeforeunload
+           window.onbeforeunload = null;
+        });
+
+        //show / hide upload list
+        $('#toggleUploadList').on('click', function(){
+            $('.uploader-box-body').toggle('closed');
+        });
+
+        //close uploader popup
+        $('#closeUploadList').on('click', function(){
+
+
+            $( ".table-upload" ).remove();
+
+            document.querySelector('#custom_doc_uploader').style.visibility = "hidden";
+           
+            $( ".upload-success" ).css( "visibility",'hidden');
+
+            this.style.visibility = "hidden";
+        })
+
+    // FILE UPLOADER ---------------------------------------------------------------------------------------------------------- 
+
+
+
+    });
+
+    </script>
 </body>
 
 </html>

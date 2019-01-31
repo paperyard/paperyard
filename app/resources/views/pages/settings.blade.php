@@ -5,6 +5,7 @@
 @section('active_settings', 'p_active_nav')
 
 @section('custom_style')
+<link href="{{ asset('static/css/settings.css') }}" rel="stylesheet">
 <style type="text/css" media="screen">
 
 /*---------paperyard custom button ----------------------*/
@@ -136,6 +137,8 @@
     margin-right: 10px;
     padding: 10px;
     text-align: center;
+    width:120px;
+    margin-top:5px;
 }
 
 .advancedDemo .dropzone .itemlist > li:hover {
@@ -143,7 +146,6 @@
 }
 
 .advancedDemo .dropzone .container-element {
-    margin: 19px;
     background-color:#fff !important;
 }
 
@@ -151,6 +153,14 @@
     background-color:#fff !important;
 }
 
+.trashcan ul{
+    list-style: none;
+    padding-left: 0px;
+}
+
+.trashcan .dndPlaceholder {
+    display: none;
+}
 
 </style>
 @endsection
@@ -1077,7 +1087,7 @@
 			<div class="body">
 				<div class="row clearfix">
 					<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
-						<label>FTP Import files</label>
+						<label>FTP Import documents</label>
 						<P>
 							Access / Download PDF files using FTP.
 						</P>
@@ -1094,14 +1104,37 @@
 		</div>
 	</div>
 
+    <!-- WEBDAV -->
+	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+		<div class="card">
+			<div class="body">
+				<div class="row clearfix">
+					<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+						<label>WEBDAV Import documents</label>
+						<P>
+							Access / Download PDF files using Webdav.
+						</P>
+					</div>
+					<a href="/webdav_create_credentials">
+						<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+							<span class="pull-right text-right">
+								<i class="material-icons" style="font-size:50px; position:absolute; top:0; right:0">keyboard_arrow_right</i>
+							</span><br>
+						</div>
+					</a>	
+				</div>
+			</div>
+		</div>
+	</div>
+
 		
 
 	 <!-- FILENAME FORMAT FOR DOWNLOADING -->
 	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
 
-		<div class="card">
-		    <div class="advancedDemo">	
-			    <div ng-repeat="containers in model">
+		<div class="card card_filename">
+	
+			    <div class="advancedDemo" ng-repeat="containers in model">
 			        <div class="dropzone box box-yellow">
 			        	
 						<ul dnd-list="containers"
@@ -1117,14 +1150,22 @@
 						                <li ng-repeat="item in container.items"
 						                    dnd-draggable="item"
 						                    dnd-type="'item'"
-						                    dnd-moved="container.items.splice($index, 1)">
+						                    dnd-moved="container.items.splice($index, 1)"
+						                    dnd-dragstart="logEvent()"
+						                    >
 						                    <# item.label #>
 						                </li>
 						            </ul>
 						            <div class="clearfix"></div>
 						            <hr>
+	
+					            	{{-- save filename format --}}
 					            	<button class="btn-flat btn_color main_color waves-effect lg-btn_x2 btn_no_folders" ng-click="saveFilenameFormat()">
 					            		<span class="lg-btn-tx">Save filename format</span>
+					            	</button>
+					            	{{-- reset filename items --}}
+					                <button class="btn-flat btn_color main_color waves-effect lg-btn_x2 btn_no_folders" ng-click="resetFilenameItems()">
+					            		<span class="lg-btn-tx">Reset Filename</span>
 					            	</button>
 						        </div>
 						    </li>
@@ -1132,10 +1173,14 @@
 
 			        </div>
 			    </div>
-			</div>    
-		</div>
+				<div class="alert bg-grey trashcan" style="background-color:#ccc !important" role="alert" dnd-list="[]" dnd-disable-if="filenameCount==1">
+					<label>Drag here to delete</label>
+				</div>
+		</div>    
+
 
 	</div>
+
 
 
 </div>
@@ -1151,8 +1196,23 @@ var app = angular.module('app', ['dndLists']);
 
 app.controller('settingsController', function($scope, $http, $timeout) {
 
-     
+    
+	$scope.filenameCount = 0;
+
+	$scope.wait = function(){
+	    $('.card_filename').waitMe({
+	        effect: 'win8_linear',
+	        text: 'Please wait...',
+	        bg: 'rgba(255,255,255,0.90)',
+	        color: '#555'
+	    });
+	}
+
     $scope.saveFilenameFormat = function(){
+
+
+    	$scope.wait();
+
     	angular.forEach($scope.model, function(e){
              angular.forEach(e, function(a){
                  console.log(a.items);
@@ -1168,26 +1228,58 @@ app.controller('settingsController', function($scope, $http, $timeout) {
 	         }else{
 	         	 swal("Error", "Something went wrong", "error");
 	         }
+
+	         $('.card_filename').waitMe("hide");
 	    });
 
     } 
 
 	$scope.getFilenameFormat = function(){
+
+		$scope.wait();
 	  
 	    $http.get('/settings/get_d_filename_format').success(function(data){
            // Initialize model
 		    $scope.model = [[]];
-		    angular.forEach(['move'], function() {
 		      var container = 
 		      {
 		      	items: data
 		      };
 		      $scope.model[0].push(container);
-		    });
+		      console.log($scope.model[0]);
+		      
+		      $scope.logEvent();
+
+		      console.log("filename count:" + $scope.filenameCount);
+
+		       $('.card_filename').waitMe("hide");
+
 	    }); //end httpget
+
 	}
 
 	$scope.getFilenameFormat(); 
+
+	$scope.logEvent = function(){
+		console.log('dragged');
+
+	    angular.forEach($scope.model, function(e){
+  		   angular.forEach(e, function(a){
+  		   		 console.log(a.items.length);
+  		   		 $scope.filenameCount = a.items.length;
+  		   });
+	    });
+	}
+
+	$scope.resetFilenameItems = function(){
+
+		data = { reset:'reset' }
+		$http.post('/settings/reset_filename_format', data).success(function(data){
+			$scope.getFilenameFormat();
+	    });
+
+	};
+
 	    
 });
 

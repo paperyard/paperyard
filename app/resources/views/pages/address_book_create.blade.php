@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page_title', 'New address book')
+@section('page_title', 'New record')
 
 @section('custom_style')
 <link href="{{ asset('static/css/address_book.css') }}" rel="stylesheet">
@@ -96,7 +96,7 @@
 .ad_input {
    margin-top:-25px;
 }
-.input-group-addo,i {
+.input-group-addon, i {
    color: #017cff !important;
 }
 </style>
@@ -105,7 +105,7 @@
 @section('breadcrumb_nav')
  <ul class="arrows">
      <li class="li1"><a href="#">Home</a></li>
-     <li class="li2"><a href="#" >Address book</a></li>
+     <li class="li2"><a href="#" >New Record</a></li>
   </ul>
 @endsection
 
@@ -510,7 +510,7 @@
           </div>
           <div class="col-md-12 ng-hide" ng-show="submit_notify">
             <div class="form-group">
-              <button class="btn-flat btn_color main_color waves-effect lg-btn_x2" type="submit"><span class="lg-btn-tx">Create Address book</span></button>
+              <button class="btn-flat btn_color main_color waves-effect lg-btn_x2" type="submit"><span class="lg-btn-tx">Create  Record</span></button>
             </div>
           </div>
         </form>
@@ -546,24 +546,24 @@ $scope.wait = function(){
 //save address book
 $scope.saveAddressBook = function(){
 
-      var form = $('#address_book_form');
-      var formdata = false;
-      if (window.FormData) {
-          formdata = new FormData(form[0]);
+    var form = $('#address_book_form');
+    var formdata = false;
+    if (window.FormData) {
+      formdata = new FormData(form[0]);
+    }
+
+    $scope.wait();
+    $.ajax({
+      url: '/address_book/save',
+      data: formdata ? formdata : form.serialize(),
+      cache: false,
+      contentType: false,
+      processData: false,
+      type: 'POST',
+      success: function(data) {
+           window.location.replace('/address_book');
       }
-      
-      $scope.wait();
-      $.ajax({
-          url: '/address_book/save',
-          data: formdata ? formdata : form.serialize(),
-          cache: false,
-          contentType: false,
-          processData: false,
-          type: 'POST',
-          success: function(data) {
-               window.location.replace('/address_book');
-          }
-      }); //end ajax
+    }); //end ajax
 
 }
 

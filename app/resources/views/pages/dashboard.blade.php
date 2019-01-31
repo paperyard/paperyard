@@ -6,8 +6,10 @@
 
 @section('custom_style')
 <style type="text/css" media="screen">
+
 .dashboard_card {
   height:150px;
+  z-index:1;
 }
 
 .mg-icon_1 {
@@ -26,7 +28,6 @@
        margin-left:-30px !important;
    }
 }
-
 .dashboard_card:hover {
   -webkit-box-shadow: 0px 1px 5px 1px rgba(145,177,214,1);
   -moz-box-shadow: 0px 1px 5px 1px rgba(145,177,214,1);
@@ -183,6 +184,21 @@
 .ocr_failed {
      color:red;
 }
+
+.dashboard-hide {
+  -webkit-transition:all linear 1s;
+  transition:all linear 1s;
+}
+
+.dashboard-hide.ng-hide {
+  opacity:0;
+}
+
+/*fix preloader being affected by ng-animate */
+.preloader.ng-animate { -webkit-animation: none 0s; }
+
+
+
 </style>
 @endsection
 
@@ -236,8 +252,9 @@
      <br>
   </div>
 
+
   <!-- Dashboard Cards -->
-  <div ng-show="dashboard_grid">
+  <div ng-show="dashboard_grid" class="dashboard-hide">
 
           <!-- DOCUMENTS TO EDIT / ARCHIVED -->
           <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
@@ -330,7 +347,7 @@
                         <th rowspan="2">
                           <input type="text" class="knob cstm_knob_div" data-linecap="round" value="{{$knob}}" data-min="0" data-max="200" data-width="130" data-height="130" data-thickness="0.25" data-angleoffset="-180" data-fgColor="#017cff" data-bgColor="#b1d5ff" readonly>
                         </th>
-                        <th height="5"><label class="pull-right">diese Woche</label></th>
+                        <th height="5" style="height:20px;"><label style="position:absolute; right:0; top:0; margin-top:13px; margin-right:17px;">diese Woche</label></th>
                       </tr>
                       <tr>
                         <td>
@@ -342,6 +359,7 @@
                 </div>
               </div>
             </div>
+
 
             <!-- LAST OPENED DOCUMENTS -->
             <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
@@ -401,7 +419,7 @@
                         <button type="button" class="list-group-item cstm_list_g waves-effect waves-blue"><label>Merge documents</label></button>
                       </a>
                       <a href="/address_book" style="text-decoration: none !important">
-                        <button type="button" class="list-group-item cstm_list_g waves-effect waves-blue"><label>Manage Address Books</label></button>
+                        <button type="button" class="list-group-item cstm_list_g waves-effect waves-blue"><label>Manage Records</label></button>
                       </a>
                     </ul>
                 </div>
@@ -422,6 +440,7 @@
 
     <!-- Documents table search result -->
     <div class="col-md-12" ng-click="clear_autocomplete()">
+     <div class="table-responsive"> 
       <table class="table table-hover ng-hide table-striped" ng-show="documents_table">
         <thead style="background-color:#ebedf8; color:#000; font-size:13px; ">
           <th>#</th>
@@ -481,6 +500,7 @@
           </tr>
         </tbody>
       </table>
+    </div>  
       <center>
         <div class="preloader ng-hide center-block" ng-show="dashboard_preloader" style="margin-top:100px">
           <div class="spinner-layer pl-blue">
@@ -509,7 +529,7 @@
 <script type="text/javascript">
 
 //inject this app to rootApp
-var app = angular.module('app', ['ngSanitize']);
+var app = angular.module('app', ['ngSanitize','ngAnimate']);
 
 app.directive('tooltipTop', function() {
       return function(scope, element, attrs) {
@@ -613,41 +633,67 @@ $scope.doc_not_found = function(){
 
 // get request to get numbers of documents to edit and archived documents.
 $scope.getNumToEditArchive = function(){
+
   $http.get('/get_docs_edit_archive').success(function(data){
+
        //set number of documents to be edit
-       $scope.num_edit = data.num_to_edit;
-       $scope.num_data_preloader = false;
-       $scope.num_to_edit = true;
+       $scope.num_edit           =  data.num_to_edit;
+
+       $scope.num_data_preloader =  false;
+
+       $scope.num_to_edit        =  true;
+
        //set number of archive documents.
-       $scope.archive =  data.num_archived;
-       $scope.num_to_archive = true;
+       $scope.archive            =  data.num_archived;
+
+       $scope.num_to_archive     =  true;
+
        //set num of queue docs.
-       $scope.queueDocs = data.num_queue;
+       $scope.queueDocs          =  data.num_queue;
+
        //set num of failed docs.
-       $scope.failedDocs = data.num_failed_docs;
+       $scope.failedDocs         =  data.num_failed_docs;
+
        //set oldest doc id, when user click documents to edit, user will be redirected to edit documents
        //with the oldest doc needed to be edit.
-       $scope.oldest_doc = data.oldest_doc;
-       //
-       $scope.doc_failed = data.oldest_doc_failed;
-       //set week days for barchart
-       $scope.weekDays = data.week;
-       //set docs count each week days.
-       $scope.docCounts  =  data.bar_datas;
+       $scope.oldest_doc         =  data.oldest_doc;
+  
+       $scope.doc_failed         =  data.oldest_doc_failed;
 
-       $scope.makeBarChart();
+
   });
+
 }
 // run getNumToEditArchive on page load.
 $scope.getNumToEditArchive();
 
-// run getNumToEditArchive every specified interval 20000 = 2 seconds.
+
+$scope.getBarKnob = function(){
+  
+  $http.get('/getBarKnob').success(function(data){
+
+      //set week days for barchart
+      $scope.weekDays     =  data.week;
+
+      //set docs count each week days.
+      $scope.docCounts    =  data.bar_datas;   
+
+      $scope.makeBarChart();
+  });   
+
+}
+
+$scope.getBarKnob();
+
+// run getNumToEditArchive every specified interval 1000 = 1 seconds.
 angular.element(document).ready(function () {
     //check for document status
     setInterval(function() {
          // method to be executed;
          $scope.getNumToEditArchive();
-    },20000);
+
+    },5000);
+
 });
 
 
@@ -660,13 +706,13 @@ $scope.searchKeyPress = function(keyEvent) {
       $timeout( function()
       {
         // method to be executed;
-            $scope.searchDocuments($scope.doc_keyword,'no_filter')
+            $scope.searchDocuments($scope.doc_keyword,'no_filter');
       }, 1000); //end timeout.
   }
   // key 8 = backspace. clear autocomplete
   if (keyEvent.which === 8){
     $scope.clear_autocomplete();
-    if($scope.doc_keyword==""){
+    if($scope.doc_keyword=="" || $scope.doc_keyword ==null || $scope.doc_keyword == undefined){
         $scope.hide_preloader();
     }
 
@@ -776,7 +822,6 @@ $scope.deleteDocument = function(doc_id){
          //ajax send post delete with id.
          $('.doc-upd-btn').attr("disabled", "disabled");
 
-
          $.ajax({
             url: '/document/delete',
             data: {
@@ -784,14 +829,20 @@ $scope.deleteDocument = function(doc_id){
             },
             type: 'POST',
             success: function(data) {
+
                 swal("Deleted!", "Document has been deleted.", "success");
-                $scope.searchDocuments();
+
+                $scope.searchDocuments($scope.doc_keyword,'no_filter');
+
                 $('.doc-upd-btn').removeAttr('disabled');
+
             }
         }); //end ajax
-      }else{
+      }
+      else{
         swal("Cancelled", "Your document is safe :)", "error");
       }
+
     });
 }
 
@@ -822,7 +873,9 @@ $scope.approveDocument = function(doc_id,doc_org){
               type: 'POST',
               success: function(data) {
                   swal("Success!", "Document has been approved.", "success");
-                  $scope.searchDocuments();
+                  
+                  $scope.searchDocuments($scope.doc_keyword,'no_filter')
+                  
                   $('.doc-upd-btn').removeAttr('disabled');
               }
           }); //end ajax

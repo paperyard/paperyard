@@ -121,7 +121,11 @@
 			<h2>
 			3. Notes.
 			<small>IMAP will start importing your emails attachments from the date you created the credentials.</small>
-			</h2>
+			</h2><br>
+		    <h2>
+			4. IMAP Folders.
+			   <small>After you connect your IMAP credentials, select which folder do you want to import emails.</small>
+			</h2>	
 		</div>
 	</div>
 	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -178,22 +182,45 @@
 							</form>
 						</div>
 					</div>
-					<div role="tabpanel" class="tab-pane fade" id="list_imap">
-						<div class="card" ng-repeat="data in imap_cred_list track by $index">
-							<div class="header" style="z-index:5">
-								<label><span style="color:#017cff">Host &nbsp&nbsp:</span> <# data.imap_host #></label><br>
-								<label><span style="color:#017cff">Email :</span> <# data.imap_username #></label>
-								<ul class="header-dropdown m-r--5">
-									<li class="dropdown">
-										<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-											<i class="material-icons">more_vert</i>
-										</a>
-										<ul class="dropdown-menu pull-right">
-											<li><a ng-click="deleteImapCredential(data.imap_id)">Delete </a></li>
-										</ul>
-									</li>
-								</ul>
-							</div>
+						<div role="tabpanel" class="tab-pane fade" id="list_imap">
+							<div class="card" ng-repeat="data in imap_cred_list track by $index">
+								<div class="header" style="z-index:5" data-toggle="collapse" href="#collapseImap<#$index#>">
+									<label><span style="color:#017cff">Host &nbsp&nbsp:</span> <# data.imap_host #></label><br>
+									<label><span style="color:#017cff">Email :</span> <# data.imap_username #></label>
+									<ul class="header-dropdown m-r--5">
+										<li class="dropdown">
+											<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+												<i class="material-icons">more_vert</i>
+											</a>
+											<ul class="dropdown-menu pull-right">
+												<li><a ng-click="deleteImapCredential(data.imap_id)">Delete </a></li>
+											    <li><a ng-click="refresh_credentials(data.imap_id)"> Refresh connection</a></li>	
+											</ul>
+										</li>
+									</ul>
+								</div>
+								<div class="body collapse" id="collapseImap<#$index#>">
+									<label>Select which folder you want to import documents.</label>
+									<ul class="list-unstyled" >
+										<li class="" ng-repeat="(key, folder) in data.imap_folders" style="word-wrap: break-word; margin-top:10px">
+											<div ng-if="!folder.childrens">
+												<input type="checkbox" id="folder<#key#>" class="filled-in chk-col-blue"  ng-model="folder.selected" ng-click="folderSelected(folder.selected,folder.folder_fullname,data.imap_id)"/>
+												<label for="folder<#key#>">
+													<# folder.folder_name #> 
+												</label>
+											</div>
+											<div class="" ng-repeat="(key2, child_folder) in folder.childrens" style="word-wrap: break-word; margin-top:10px">
+											  	<div>
+													<input type="checkbox" id="child_folder<#key2#>" class="filled-in chk-col-blue"  ng-model="child_folder.selected" 
+													 ng-click="folderSelected(child_folder.selected, child_folder.child_folder_fullname, data.imap_id)"/>
+													<label for="child_folder<#key2#>">
+														<# child_folder.child_folder_name #> 
+													</label>
+												</div>
+											</div>
+										</li>
+									</ul>
+								</div>
 							</div> <!-- card -->
 						</div>
 					</div>
@@ -210,74 +237,111 @@
 //inject this app to rootApp
 var app = angular.module('app', []);
 
-
-
 app.controller('imap_controller', function($scope, $http, $timeout) {
 
-$scope.imap_form = [];
-$scope.imap_cred_list = [];
-
-//get list of imap credentials
-$scope.listOfCredentials = function(){
-    $http.get('/imap/list_of_credentials').success(function(data){
-    	 $scope.imap_cred_list = data;
-    	 console.log(data);
-    });
-}
-// run function
-$scope.listOfCredentials();
+	$scope.imap_form = [];
+	$scope.imap_cred_list = [];
+	$scope.selected_folders = [];
 
 
-$scope.wait = function(){
-    $('.card').waitMe({
-        effect: 'win8_linear',
-        text: 'Please wait...',
-        bg: 'rgba(255,255,255,0.90)',
-        color: '#555'
-    });
-}
-
-//save imap credentials
-$scope.newImapCredentials = function(){
-
-	$scope.wait();
-
-    var form = $('#imap_credentials_form');
-    var formdata = false;
-	if (window.FormData) {
-	  formdata = new FormData(form[0]);
+	//get list of imap credentials
+	$scope.listOfCredentials = function(){
+	    $http.get('/imap/list_of_credentials').success(function(data){
+	    	 $scope.imap_cred_list = data;
+	    	 console.log(data);
+	    });
 	}
 
-	$.ajax({
-	  url: '/imap/save_new_credentials',
-	  data: formdata ? formdata : form.serialize(),
-	  cache: false,
-	  contentType: false,
-	  processData: false,
-	  type: 'POST',
-	  success: function(data) {
+	// run function
+	$scope.listOfCredentials();
 
-	  	   $('.card').waitMe("hide");
-	  	   if(data=="success"){
-	  	   	  //clear form input
-	  	   	  $scope.imap_form = [];
-	  	   	  $scope.listOfCredentials();
-	  	   	  swal("Success", "New credentials added and connected", "success");
-	  	   }else{
-	  	   	  swal("Error", "Please check inputed information and mail provider configuration.", "error");
-	  	   }
-	  }
-	}); //end ajax
-}
 
-$scope.deleteImapCredential = function(imap_id){
-	
-	data = { imap_id:imap_id }
-    $http({method:'POST',url:'/imap/delete_credentials', data}).success(function(data){
-    	$scope.listOfCredentials();
-        swal("Success", "IMAP credentials deleted", "success");
-    });
-}
+
+
+	$scope.wait = function(){
+	    $('.card').waitMe({
+	        effect: 'win8_linear',
+	        text: 'Please wait...',
+	        bg: 'rgba(255,255,255,0.90)',
+	        color: '#555'
+	    });
+	}
+
+
+
+	//save imap credentials
+	$scope.newImapCredentials = function(){
+
+		$scope.wait();
+
+	    var form = $('#imap_credentials_form');
+	    var formdata = false;
+		if (window.FormData) {
+		  formdata = new FormData(form[0]);
+		}
+
+		$.ajax({
+		  url: '/imap/save_new_credentials',
+		  data: formdata ? formdata : form.serialize(),
+		  cache: false,
+		  contentType: false,
+		  processData: false,
+		  type: 'POST',
+		  success: function(data) {
+
+		  	   $('.card').waitMe("hide");
+
+		  	   if(data=="success"){
+		  	   	  //clear form input
+		  	   	  $scope.imap_form = [];
+		  	   	  $scope.listOfCredentials();
+		  	   	  swal("Success", "New credentials added and connected", "success");
+		  	   }else if(data=="email_taken"){
+		  	      swal("Error", "Email exist", "error");
+		  	   }
+		  	   else{
+		  	   	  swal("Error", "Please check inputed information and mail provider configuration.", "error");
+		  	   }
+		  }
+		}); //end ajax
+	}
+
+
+
+	$scope.deleteImapCredential = function(imap_id){
+		
+		data = { imap_id:imap_id }
+	    $http({method:'POST',url:'/imap/delete_credentials', data}).success(function(data){
+	    	$scope.listOfCredentials();
+	        swal("Success", "IMAP credentials deleted", "success");
+	    });
+	}
+
+
+	$scope.folderSelected = function(selected, fullname, imap_id){
+
+	    data = {
+	       'selected'        : selected,
+	       'folder_fullname' : fullname,
+	       'imap_id'         : imap_id
+	    }
+	    
+	    $http({method:'POST',url:'/imap/folder_select', data}).success(function(data){
+	        console.log(data);
+	    });
+
+	}
+
+
+	$scope.refresh_credentials = function(imap_id){
+
+		data = { imap_id:imap_id }
+	    $http({method:'POST',url:'/imap/refresh_credentials', data}).success(function(data){
+	    	$scope.listOfCredentials();	
+	        swal("Success", "IMAP credentials refreshed", "success");
+	        console.log(data);
+	    });
+	}
 
 
 

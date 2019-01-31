@@ -11,10 +11,10 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Hash;
 use DB;
 
-
-class addressBookController extends Controller
+class recordsController extends Controller
 {
-    // show create address book page
+    //
+     // show create address book page
     public function create_index(){
     	return view('pages/address_book_create');
     }
@@ -29,11 +29,8 @@ class addressBookController extends Controller
 
     }
 
-
-
     // save address book
     public function saveAddressBook(Request $request){
-
 	        // set user time zone.
             date_default_timezone_set(Auth::user()->user_timezone);
 
@@ -58,26 +55,15 @@ class addressBookController extends Controller
 	    	]);
 
 	    	if(count($save_address_book)>0){
-	    		
-                if($request->for=="doc_view"){
-                    return "new_record_created";
-                }
-                else{
-                    session()->flash('address_book_created', 'New record successfully created!');
-                    return "success";
-                } 
-
+	    		 session()->flash('address_book_created', 'New address book successfully created!');
+	    		 return "success";
 	    	}	
     }//end function
-
-
 
     public function addressBook(){
     	$address_books = DB::table('address_book')->where('ab_user_id', Auth::user()->id)->count();
     	return view('pages/address_book_list')->with(compact('address_books'));
     }
-
-
 
     // return list of users address book
     public function addressBookList(){
@@ -89,9 +75,6 @@ class addressBookController extends Controller
         }
     	return json_encode($addressBooks);
     }
-
-
-
     // update bool possible recipient
     public function updatePossibleRecipient(Request $request){
     	
@@ -101,9 +84,6 @@ class addressBookController extends Controller
     	->update(['ab_possible_recipient'=>$request->ab_status]);
 
     }
-
-
-
     // return edit page for address book
     public function editAddressBook($ab_id){
 
@@ -118,7 +98,6 @@ class addressBookController extends Controller
     		return redirect('error_404');
     	}
     }
-
 
     //update edited address book
     public function updateAddressBook(Request $request){
@@ -149,8 +128,6 @@ class addressBookController extends Controller
 
     }
 
-
-
     // save created child address book
     public function saveCreatedChild(Request $request){
 
@@ -179,13 +156,10 @@ class addressBookController extends Controller
         ]);
 
         if(count($save_address_book)>0){
-
-             session()->flash('chil_address_created', 'New child record created.');
+             session()->flash('chil_address_created', 'New child address created.');
              return "success";
         }   
     }
-
-
 
     // delete address book
 
@@ -198,8 +172,6 @@ class addressBookController extends Controller
         ->orWhere('ab_parent_id', $request->ab_id)
         ->delete();
     }
-
-
 
     //====================================================================================================================
 
@@ -273,9 +245,6 @@ class addressBookController extends Controller
         }
     }
 
-
-    
-
     public function searchAddress(Request $request){
 
         $addressBook = DB::table('address_book')
@@ -288,4 +257,5 @@ class addressBookController extends Controller
         }
     }
 
+    
 }

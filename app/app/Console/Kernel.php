@@ -41,17 +41,28 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
+        
         // un ocrmypdf to new documents added
         $schedule->command('ocr:new')->everyMinute();
+
+
         // erun failed ocred documents
         $schedule->command('ocr:force')->everyMinute();
+
+
         // make image preview and get text from documents for searching.
         $schedule->command('ocr:txt_img')->everyMinute();
+
+
         // shedule reminder
         $schedule->command('ocr:reminder')->everyMinute();
+
+
         // IMAP
         $schedule->command('imap:import')->everyMinute();
+
     }
+
 
     /**
      * Register the commands for the application.

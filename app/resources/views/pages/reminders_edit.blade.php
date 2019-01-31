@@ -214,7 +214,21 @@
 <div class="row clearfix" ng-controller="reminder_controller" ng-click="clear()"><br>
     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
 
-        <div class="card">
+        <div class="card" id="fix_update">
+
+           <div class="header">
+                <h2><i class="fa fa-edit"></i></h2>
+                <ul class="header-dropdown m-r--5" >
+                    <li class="dropdown">
+                        <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" >
+                            <i class="material-icons">more_vert</i>
+                        </a>
+                        <ul class="dropdown-menu pull-right">
+                            <li><a ng-href="/files/ocr/<#reminder.doc_ocr#>" style="text-decoration: none" target="_blank"">View Document</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
            
             <div class="body">
 
@@ -228,9 +242,14 @@
                     <div class="list-group">
                          <a  class="list-group-item" ng-repeat="task in reminder.task_list track by $index" style=" word-wrap: break-word; margin-top:10px">
                             <span style="padding-right:30px"><b style="margin-right:10px"><# $index+1#></b><# task.task_name #></span>
-                            <span class="list_btn_container" ng-click="removeTask($index,task.task_id)">
+{{--                             <span class="list_btn_container" ng-click="removeTask($index,task.task_id)">
                                   <span class="inside_close ic_trash waves-effect"><i class="fa fa-trash"></i></span>
-                            </span>
+                            </span> --}}
+
+                            <div class="list_btn_container" >
+                              <span class="inside_close ic_trash waves-effect"  ng-click="editTask(task.task_id,task.task_name)" style="margin-right:-2px"><i class="fa fa-edit"></i></span>
+                              <span class="inside_close ic_trash waves-effect"  ng-click="removeTask($index,task.task_id)"><i class="fa fa-trash" ></i></span>
+                            </div>
                          </a>
                     </div>  
                     <!-- NEW TASK INPUT -->
@@ -294,16 +313,15 @@ $scope.reminder.task_delete = [];
 
 //create reminder==================================
 
-
 //add new task
 $scope.addTask = function(){
-  if($scope.reminder.new_task!=null && $scope.reminder.new_task!="")
+  if($scope.reminder.new_task!=null && $scope.reminder.new_task!=undefined)
   {
     $scope.reminder.task_list.push({'task_name':$scope.reminder.new_task});
     $scope.reminder.new_task = null;
   }
   else{
-    swal("eror", "Please add a task", "error");
+     swal("Error", "Please add a task", "error");
   }
 }
 
@@ -322,9 +340,10 @@ $scope.getToEditDocument = function(){
      rm_id:'{{$rm_id->rm_id}}'
   }
   $http.post('/reminders/get_to_edit', data).success(function(data){
-        $scope.reminder.rm_title = data.reminder_title;
-        $scope.reminder.rm_id = data.reminder_id;
-        $scope.reminder.task_list = data.task_list;
+        $scope.reminder.rm_title  =  data.reminder_title;
+        $scope.reminder.rm_id     =  data.reminder_id;
+        $scope.reminder.task_list =  data.task_list;
+        $scope.reminder.doc_ocr   =  data.doc_ocr;
         console.log(data);
   });
 }
@@ -367,6 +386,38 @@ $scope.keypressNewTask = function(keyEvent) {
   }
 
 };
+
+
+$scope.editTask = function(t_id,t_name){
+
+    swal({
+        title: "Rename task",
+        text: "New task name",
+        type: "input",
+        input: 'task_name',
+        inputValue: t_name,
+        showCancelButton: true,
+        closeOnConfirm: false,
+        animation: "slide-from-top",
+        inputPlaceholder: "New task name"
+    }, function (task_name) {
+        if (task_name === false) return false;
+        if (task_name === "") {
+            swal.showInputError("You need to write something!"); return false;
+        }
+        // check for matched task names
+        angular.forEach($scope.reminder.task_list, function(data) {
+            if(data.task_name.toUpperCase()==task_name.toUpperCase()){
+                swal.showInputError("Task name exist"); return false;
+            }else if(data.task_id==t_id){
+               data.task_name = task_name; 
+               swal("Success","Taskname changed","success");
+               angular.element('#fix_update').trigger('click');
+            }
+        }); 
+    });
+
+}
 
 
 

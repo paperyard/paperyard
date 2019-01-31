@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page_title', 'FTP connect')
+@section('page_title', 'WEBDAV connect')
 
 @section('custom_style')
 <link href="{{ asset('static/css/imap.css') }}" rel="stylesheet">
@@ -137,17 +137,17 @@
 @section('breadcrumb_nav')
  <ul class="arrows">
      <li class="li1"><a href="#">Home</a></li>
-     <li class="li2"><a href="#">FTP</a></li>
+     <li class="li2"><a href="#">WEBDAV</a></li>
   </ul>
 @endsection
 
 @section('content')
 <!-- Hover Rows -->
-<div class="row" ng-controller="ftp_controller">
+<div class="row" ng-controller="webdav_controller">
     <div class="col-md-12 col-sm-12 col-xs-12">
         <div class="block-header">
             <h2>
-            FTP connected to: {{$ftp->ftp_host }}
+            WEBDAV connected to: {{ $webd->webdav_baseuri }}
             </h2>
             <br>
             <label style="color:orange">Select path here.</label>
@@ -167,18 +167,18 @@
             <table class="table table-hover">
                 <thead style="background-color:#ebedf8; color:#000; font-size:13px; ">
                     <th style="width:40px">
-                        <input type="checkbox" id="ftpSelectAll" class="filled-in chk-col-blue"  ng-model="selectAll" ng-click="checkAll()" />
-                        <label for="ftpSelectAll" style="margin-bottom:-12px" ></label>
+                        <input type="checkbox" id="webdavSelectAll" class="filled-in chk-col-blue"  ng-model="selectAll" ng-click="checkAll()" />
+                        <label for="webdavSelectAll" style="margin-bottom:-12px" ></label>
                     </th>
                     <th>Filename</th>
                     <th style="width:150px">File size</th>
                 </thead>
                 <tbody style="font-size:13px;" >
-                    <tr ng-repeat="data in ftp_datas track by $index">
+                    <tr ng-repeat="data in webdav_datas track by $index">
                         <td >
                             <span ng-if="data.extension=='pdf'">
-                                <input type="checkbox" id="ftp<#$index#>" class="filled-in chk-col-blue"  ng-model="data.select" ng-click="selectSingleFile()">
-                                <label for="ftp<#$index#>" style="height:10px"></label>
+                                <input type="checkbox" id="webdav<#$index#>" class="filled-in chk-col-blue"  ng-model="data.select" ng-click="selectSingleFile()">
+                                <label for="webdav<#$index#>" style="height:10px"></label>
                             </span>
                             <span ng-if="data.extension!='pdf'">
                                 <i class="fa fa-hashtag" style="color:#ccc; font-size:20px;"></i>
@@ -204,7 +204,7 @@
                     </tr>
                 </tbody>
             </table>
-            <div class="ng-hide" ng-show="ftp_datas.length==0 && init_empty==1" style="margin-top:20px">
+            <div class="ng-hide" ng-show="webdav_datas.length==0 && init_empty==1" style="margin-top:20px">
                 <label style="color:red; margin-left:10px">Empty Directory</label>
             </div>
             </div><!-- table-responsive-->
@@ -219,7 +219,7 @@
 //inject this app to rootApp
 var app = angular.module('app', []);
 
-app.controller('ftp_controller', function($scope, $http, $timeout) {
+app.controller('webdav_controller', function($scope, $http, $timeout) {
 
 $scope.wait = function(){
     $('.waitme').waitMe({
@@ -230,21 +230,21 @@ $scope.wait = function(){
     });
 }
 
-$scope.ftp_datas = [];
-$scope.ftp_id = '{{$ftp->ftp_id}}';
+$scope.webdav_datas = [];
+$scope.webdav_id  = '{{$webd->webdav_id}}';
 $scope.init_empty = 0;
-$scope.currentDir = [];
+$scope.currentDir = ['{{$webd->webdav_pathprefix}}'];
 $scope.displayDir = ['root'];
 
 //------------------------------------------------------------------------------------
-$scope.connectFTP = function(dir){
+$scope.connectWEBDAV = function(dir){
     $scope.wait();
 	data = { 
-		 ftp_id:$scope.ftp_id,
+		 webdav_id:$scope.webdav_id,
 		 dir:dir
     }
-    $http({method:'POST',url:'/ftp_connect/ftp_files', data}).success(function(data){
-    	$scope.ftp_datas = data;
+    $http({method:'POST',url:'/webdav_connect/webdav_files', data}).success(function(data){
+    	$scope.webdav_datas = data;
     	$('.waitme').waitMe("hide");
     	$scope.init_empty = 1;
 
@@ -259,10 +259,10 @@ $scope.getFiles = function(dir){
     	$scope.displayDir = ['root'];
 		$scope.displayDir = $scope.displayDir.concat(dir.split('/'));
     }
-	$scope.connectFTP(dir);
+	$scope.connectWEBDAV(dir);
 
 }
-$scope.getFiles('/');
+$scope.getFiles('{{$webd->webdav_pathprefix}}');
 //------------------------------------------------------------------------------------
 // change directory by selecting breadcrumb.
 $scope.gotoSelectedDir = function(index){
@@ -278,7 +278,7 @@ $scope.gotoSelectedDir = function(index){
 	    	$scope.displayDir = ['root'];
 			$scope.displayDir = $scope.displayDir.concat(goto.split('/'));
 	   }
-	   $scope.connectFTP(goto);	
+	   $scope.connectWEBDAV(goto);	
 }
 //------------------------------------------------------------------------------------
 
@@ -289,7 +289,7 @@ $scope.selectedDocs = [];
 $scope.checkAll = function() {
     //re init array of select doc.
     $scope.selectedDocs = [];
-    angular.forEach($scope.ftp_datas, function(data) {
+    angular.forEach($scope.webdav_datas, function(data) {
 	      data.select = $scope.selectAll;
 	      if(data.select==true && data.extension=="pdf"){
 	           $scope.selectedDocs.push({'path':data.path,'filename':data.basename});
@@ -302,7 +302,7 @@ $scope.checkAll = function() {
 $scope.selectSingleFile = function(){
    
     $scope.selectedDocs = [];
-    angular.forEach($scope.ftp_datas, function(data) {
+    angular.forEach($scope.webdav_datas, function(data) {
         if(data.select==true && data.extension=="pdf"){
             $scope.selectedDocs.push({'path':data.path,'filename':data.basename});
         }
@@ -317,10 +317,10 @@ $scope.downloadFiles = function(){
     if($scope.selectedDocs.length>0){
         $scope.wait();
     	data = { 
-    		ftp_id : $scope.ftp_id,
-    		files  : $scope.selectedDocs
+    		webdav_id : $scope.webdav_id,
+    		files     : $scope.selectedDocs
         }
-        $http({method:'POST',url:'/ftp_connect/download_files', data}).success(function(data){
+        $http({method:'POST',url:'/webdav_connect/download_files', data}).success(function(data){
         	$('.waitme').waitMe("hide");
 
         	$scope.showNotification("Files successfully imported.","bg-blue")

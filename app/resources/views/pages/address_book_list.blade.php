@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page_title', 'Address book')
+@section('page_title', 'Records')
 
 @section('custom_style')
 <link href="{{ asset('static/css/address_book.css') }}" rel="stylesheet">
@@ -154,7 +154,7 @@ box-shadow:         0px 1px 3px 0px rgba(0, 154, 255, 0.75);
 @section('breadcrumb_nav')
  <ul class="arrows">
      <li class="li1"><a href="#">Home</a></li>
-     <li class="li2"><a href="#" >Address book</a></li>
+     <li class="li2"><a href="#" >Records</a></li>
   </ul>
 @endsection
 
@@ -178,94 +178,182 @@ box-shadow:         0px 1px 3px 0px rgba(0, 154, 255, 0.75);
     </div>
     @endif
     <!-- search filter -->
-    <div class="col-md-3">Search Address book
+    <div class="col-md-3">Search records
         <input type="text" ng-model="search" ng-change="filter()" placeholder="Enter keyword" class="form-control" />
     </div>
     <!-- show total rows -->
-    <div class="col-md-2" >Number of rows
+    <div class="col-md-2" >Number of records
         <select ng-model="entryLimit" class="form-control">
-            <option>5</option>
+            <option>6</option>
             <option>10</option>
             <option>20</option>
             <option>50</option>
             <option>100</option>
         </select>
     </div>
-    <div class="col-md-12"><br></div>
-    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 card-hvr" ng-repeat="data in filtered = (addressBookList | filter:search | orderBy : sort )  | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit track by $index">
-        <div class="card">
-            <div class="header" style="height:61px; z-index:5">
-                <input type="checkbox" id="ab<#data.ab_id#>" class="filled-in chk-col-blue" ng-click="possibleRecipient(data.select,data.ab_id)" ng-model="data.select"/>
-                <label for="ab<#data.ab_id#>">
-                    <span style="font-size:15px">Possible recipient</span>
-                </label>
-                <ul class="header-dropdown m-r--5">
-                    <li class="dropdown">
-                        <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                            <i class="material-icons">more_vert</i>
-                        </a>
-                        <ul class="dropdown-menu pull-right">
-                            <li><a href="/address_book/create_child/<# data.ab_id #>">Create child address </a></li>
-                            <li><a href="/address_book/edit/<# data.ab_id #>">Edit</a></li>
-                            <li><a ng-click="deleteAddressBook(data.ab_id)">Delete </a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-            <div class="body">
-                <div class="row">
-                    <div class="col-md-6 col-sm-12 col-xs-12 ab_details"> <label>Shortname         : &nbsp</label><span><# data.ab_shortname      | default_nd #></span></div>
-                    <div class="col-md-6 col-sm-12 col-xs-12 ab_details"> <label>Salutation        : &nbsp</label><span><# data.ab_salutation     | default_nd #></span></div>
-                    <div class="col-md-4 col-sm-12 col-xs-12 ab_details"> <label>First name        : &nbsp</label><span><# data.ab_firstname      | default_nd #></span></div>
-                    <div class="col-md-4 col-sm-12 col-xs-12 ab_details"> <label>Last name         : &nbsp</label><span><# data.ab_lastname       | default_nd #></span></div>
-                    <div class="col-md-4 col-sm-12 col-xs-12 ab_details"> <label>Company           : &nbsp</label><span><# data.ab_company        | default_nd #></span></div>
-                    <div class="col-md-12 col-sm-12 col-xs-12 ab_details"><label>Address line 1    : &nbsp</label><span><# data.ab_address_line1  | default_nd #></span></div>
-                    <div class="col-md-12 col-sm-12 col-xs-12 ab_details"><label>Address line 2    : &nbsp</label><span><# data.ab_address_line2  | default_nd #></span></div>
-                    <div class="col-md-4 col-sm-12 col-xs-12 ab_details"> <label>ZIPCODE           : &nbsp</label><span><# data.ab_zipcode        | default_nd #></span></div>
-                    <div class="col-md-4 col-sm-12 col-xs-12 ab_details"> <label>Town              : &nbsp</label><span><# data.ab_town           | default_nd #></span></div>
-                    <div class="col-md-4 col-sm-12 col-xs-12 ab_details"> <label>Country           : &nbsp</label><span><# data.ab_country        | default_nd #></span></div>
-                    <div class="col-md-6 col-sm-12 col-xs-12 ab_details"> <label>Telephone         : &nbsp</label><span><# data.ab_telephone      | default_nd #></span></div>
-                    <div class="col-md-6 col-sm-12 col-xs-12 ab_details"> <label>Email             : &nbsp</label><span><# data.ab_email          | default_nd #></span></div>
-                    <div class="col-md-12 col-sm-12 col-xs-12 ab_details"><label>Notes             : &nbsp</label><span><# data.ab_notes          | default_nd #></span></div>
-                </div>
-                </div> <!-- body -->
-                </div> <!-- card -->
-                </div> <!-- col -->
-                <!-- show if document does not exist -->
-                <div class="col-md-12" ng-show="filteredItems == 0">
-                    <div class="col-md-12">
-                        <h4>No address book found</h4>
-                    </div>
-                </div>
-                <!-- Pagination -->
-                <div class="col-md-6 ng-hide" ng-show="filteredItems > 0" style="margin-top:-20px">
-                    <div pagination="" page="currentPage" on-select-page="setPage(page)" boundary-links="true" total-items="filteredItems" items-per-page="entryLimit" class="pagination-small" previous-text="&laquo;" next-text="&raquo;"></div>
-                </div>
-                <!-- show total number of found row -->
-                <div class="col-md-6 ng-hide" ng-show="filteredItems > 0">
-                    <p style="color:#999" class="pull-right">Filtered <# filtered.length #> of <# totalItems #> Address books</p>
-                </div>
-                <!-- FAB -->
-            <nav mfb-menu position="br" resting-icon="fa fa-plus"  active-icon="fa fa-plus" onclick="window.location='{{ url('/address_book/create') }}'"></nav>
-            @else
-            <div>
-                <center>
-                <div class="notify_pos">
-                    <div><i class="fa fa-address-book notify_ico"></i></div><br>
-                    <div>
-                        <p class="notify_w_tx">
-                            You don't have any address book<br>
-                            but you are free to create some
-                        </p>
-                    </div><br>
-                    <div>
-                        <button onclick="window.location='{{ url('address_book/create') }}'" class="btn-flat btn_color main_color waves-effect lg-btn_x2" type="submit"><span class="lg-btn-tx">Create Address book</span></button>
-                    </div>
-                </div>
-                </center>
-            </div>
-            @endif
+
+    <div class="col-md-12"><br>
+        <!-- COLOR CODE -->
+        <ul class="list-unstyled list-inline">
+            <li><i class="fa fa-square" style="color:#2196F3"></i> Firstname</li>
+            <li><i class="fa fa-square" style="color:#00BCD4"></i> Lastname</li>
+            <li><i class="fa fa-square" style="color:#009688"></i> Shortname</li>
+            <li><i class="fa fa-square" style="color:#FF9800"></i> Company</li>
+            <li><i class="fa fa-square" style="color:#4CAF50"></i> Salutation</li>
+
+        </ul>
+    </div>
+
+<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12 card-hvr" ng-repeat="data in filtered = (addressBookList | filter:search | orderBy : sort )  | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit track by $index">
+    <div class="card">
+        <div class="header" style="height:61px; z-index:6">
+            <input type="checkbox" id="ab<#data.ab_id#>" class="filled-in chk-col-blue" ng-click="possibleRecipient(data.select,data.ab_id)" ng-model="data.select"/>
+            <label for="ab<#data.ab_id#>">
+                <span style="font-size:15px">Possible recipient</span>
+            </label>
+            <ul class="header-dropdown m-r--5" >
+                <li class="dropdown">
+                    <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                        <i class="material-icons">more_vert</i>
+                    </a>
+                    <ul class="dropdown-menu pull-right">
+                        <li><a href="/address_book/create_child/<# data.ab_id #>">Create child record </a></li>
+                        <li><a href="/address_book/edit/<# data.ab_id #>">Edit</a></li>
+                        <li><a ng-click="deleteAddressBook(data.ab_id)">Delete </a></li>
+                    </ul>
+                </li>
+            </ul>
         </div>
+        <div class="header waves-effect waves-blue"  data-toggle="collapse" href="#address_book<#$index#>" style="width:100%; border:0px; height:61px; z-index:5" >
+            <div class="">
+                <span class="badge bg-blue"   ng-show="data.ab_firstname">  <# data.ab_firstname  #> </span>
+                <span class="badge bg-cyan"   ng-show="data.ab_lastname">   <# data.ab_lastname   #> </span>
+                <span class="badge bg-teal"   ng-show="data.ab_shortname">  <# data.ab_shortname  #> </span>
+                <span class="badge bg-orange" ng-show="data.ab_company ">   <# data.ab_company    #> </span>
+                <span class="badge bg-green"  ng-show="data.ab_salutation"> <# data.ab_salutation #> </span>
+            </div>
+        </div>
+        <div class="body collapse" id="address_book<#$index#>">
+            <div class="row">
+                
+                <div
+                    class="ab_details"
+                    ng-show  = " data.ab_shortname "
+                    ng-class = " data.ab_salutation ? 'col-md-6' : 'col-md-12'; ">
+                    <label>Shortname         : &nbsp</label>
+                    <span><# data.ab_shortname #></span>
+                </div>
+                <div
+                    class="ab_details"
+                    ng-show  = " data.ab_salutation "
+                    ng-class = " data.ab_shortname  ? 'col-md-6' : 'col-md-12' ">
+                    <label>Salutation        : &nbsp</label>
+                    <span><# data.ab_salutation     #></span>
+                </div>
+                
+                
+                <div class="ab_details"
+                    ng-show  = " data.ab_firstname "
+                    ng-class = " data.ab_lastname ? 'col-md-6' : 'col-md-12'; ">
+                    <label>First name        : &nbsp</label>
+                    <span> <# data.ab_firstname #></span>
+                </div>
+                <div class="ab_details"
+                    ng-show  = " data.ab_lastname "
+                    ng-class = " data.ab_firstname ? 'col-md-6' : 'col-md-12'; ">
+                    <label>Last name         : &nbsp</label>
+                    <span><# data.ab_lastname       #></span>
+                </div>
+                <div class="ab_details"
+                    ng-show  = " data.ab_email "
+                    ng-class = " data.ab_company ? 'col-md-6' : 'col-md-12'; ">
+                    <label>Email             : &nbsp</label>
+                    <span><# data.ab_email          #></span>
+                </div>
+                
+                <div class="ab_details"
+                    ng-show  = " data.ab_company "
+                    ng-class = " data.ab_email ? 'col-md-6' : 'col-md-12'; ">
+                    <label>Company           : &nbsp</label>
+                    <span><# data.ab_company        #></span>
+                </div>
+                <div class="col-md-12 col-sm-12 col-xs-12 ab_details"  ng-show  = " data.ab_address_line1" ><label>Address line 1    : &nbsp</label><span><# data.ab_address_line1  #></span></div>
+                <div class="col-md-12 col-sm-12 col-xs-12 ab_details"  ng-show  = " data.ab_address_line2" ><label>Address line 2    : &nbsp</label><span><# data.ab_address_line2  #></span></div>
+                <div class="ab_details"
+                    ng-show  = " data.ab_town "
+                    ng-class = " data.ab_zipcode ? 'col-md-6' : 'col-md-12'; ">
+                    <label>Town              : &nbsp</label>
+                    <span><# data.ab_town           #></span>
+                </div>
+                <div class="ab_details"
+                    ng-show  = " data.ab_zipcode"
+                    ng-class = " data.ab_town ? 'col-md-6' : 'col-md-12'; ">
+                    <label>ZIPCODE           : &nbsp</label>
+                    <span><# data.ab_zipcode        #></span>
+                </div>
+                <div class="ab_details"
+                    ng-show  = " data.ab_country"
+                    ng-class = " data.ab_telephone ? 'col-md-6' : 'col-md-12'; ">
+                    <label>Country           : &nbsp</label>
+                    <span><# data.ab_country        #></span>
+                </div>
+                <div class="ab_details"
+                    ng-show  = " data.ab_telephone"
+                    ng-class = " data.ab_country ? 'col-md-6' : 'col-md-12'; ">
+                    <label>Telephone         : &nbsp</label>
+                    <span><# data.ab_telephone      #></span>
+                </div>
+                <div class="col-md-12 col-sm-12 col-xs-12 ab_details"  ng-show  = " data.ab_notes" ><label>Notes             : &nbsp</label><span><# data.ab_notes          #></span></div>
+                
+            </div>
+        </div> <!-- body -->
+        
+    </div> <!-- card -->
+</div> <!-- col -->
+
+<!-- show if document does not exist -->
+<div class="col-md-12" ng-show="filteredItems == 0">
+    <div class="col-md-12">
+        <h4>No record found</h4>
+    </div>
+</div>
+
+<div class="col-md-12 col-lg-12">
+    <div class="row">
+        <!-- Pagination -->
+        <div class="col-md-6 ng-hide" ng-show="filteredItems > 0" style="margin-top:-20px">
+            <div pagination="" page="currentPage" on-select-page="setPage(page)" boundary-links="true" total-items="filteredItems" items-per-page="entryLimit" class="pagination-small" previous-text="&laquo;" next-text="&raquo;"></div>
+        </div>
+        <!-- show total number of found row -->
+        <div class="col-md-6 ng-hide" ng-show="filteredItems > 0">
+            <p style="color:#999" class="pull-right">Filtered <# filtered.length #> of <# totalItems #> Records</p>
+        </div>
+    </div>
+</div>
+
+            <!-- FAB -->
+<nav mfb-menu position="br" resting-icon="fa fa-plus"  active-icon="fa fa-plus" onclick="window.location='{{ url('/address_book/create') }}'"></nav>
+@else
+<div>
+    <center>
+        <div class="notify_pos">
+            <div><i class="fa fa-address-book notify_ico"></i></div><br>
+            <div>
+                <p class="notify_w_tx">
+                    You don't have any record<br>
+                    but you are free to create some
+                </p>
+            </div><br>
+            <div>
+                <button onclick="window.location='{{ url('address_book/create') }}'" class="btn-flat btn_color main_color waves-effect lg-btn_x2" type="submit"><span class="lg-btn-tx">Create record</span></button>
+            </div>
+        </div>
+    </center>
+</div>
+@endif
+
+
+</div>
 @endsection
 
 @section('scripts')
@@ -305,7 +393,7 @@ app.controller('address_book_controller', function($scope, $http, $timeout, $q) 
             console.log(data);
             $scope.addressBookList = data;
             $scope.currentPage = 1; //current page
-            $scope.entryLimit = 5; //max no of items to display in a page
+            $scope.entryLimit = 10; //max no of items to display in a page
             $scope.filteredItems = $scope.addressBookList.length; //Initially for no filter
             $scope.totalItems = $scope.addressBookList.length;
 
@@ -339,7 +427,7 @@ app.controller('address_book_controller', function($scope, $http, $timeout, $q) 
         data = { ab_id:ab_id }
         $http({method:'POST',url:'/address_book/delete', data}).success(function(data){
               $scope.addressBooks();
-              $scope.showNotification("Address book deleted","bg-red");
+              $scope.showNotification("Record deleted","bg-red");
         });
     }
 

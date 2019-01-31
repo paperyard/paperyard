@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page_title', 'Child address book')
+@section('page_title', 'Child record')
 
 @section('custom_style')
 <link href="{{ asset('static/css/address_book.css') }}" rel="stylesheet">
@@ -105,7 +105,7 @@
 @section('breadcrumb_nav')
  <ul class="arrows">
      <li class="li1"><a href="#">Home</a></li>
-     <li class="li2"><a href="#" >Address book</a></li>
+     <li class="li2"><a href="#" >Child record</a></li>
   </ul>
 @endsection
 
@@ -514,7 +514,7 @@
           </div>
           <div class="col-md-12 ng-hide" ng-show="submit_notify">
             <div class="form-group">
-              <button class="btn-flat btn_color main_color waves-effect lg-btn_x2" type="submit"><span class="lg-btn-tx">Create child address</span></button>
+              <button class="btn-flat btn_color main_color waves-effect lg-btn_x2" type="submit"><span class="lg-btn-tx">Create child record</span></button>
             </div>
           </div>
         </form>

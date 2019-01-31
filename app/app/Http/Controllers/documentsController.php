@@ -147,9 +147,6 @@ class documentsController extends Controller
     // UPDATE DOCUMENTS DATAS.
     public function updateDocument(Request $req){
 
-          // return $req->all();
-
-
         try {
           // set user time zone.
           date_default_timezone_set(Auth::user()->user_timezone);
@@ -172,7 +169,23 @@ class documentsController extends Controller
               'sender_address_id'=>$req->sender_address_id,
               'receiver_address_id'=>$req->receiver_address_id,
               'updated_at' => \Carbon\Carbon::now(),  # \Datetime()
-            ]);
+          ]);
+
+          if($req->doc_reminder!=null){
+              //check if document has a reminder
+              $check = DB::table('reminders')->where('rm_doc_id',$req->doc_id)->first();
+              if(empty($check)){
+                //create reminder for this document
+                $save_reminder = DB::table('reminders')
+                ->insert([
+                     'rm_user_id'=>Auth::user()->id,
+                     'rm_doc_id'=>$req->doc_id,
+                     'created_at' =>  \Carbon\Carbon::now(), # \Datetime()
+                     'updated_at' =>  \Carbon\Carbon::now(),  # \Datetime()
+                ]);
+              }
+          }
+
           //if update is succes check if there is still doc to edit.
           if($update>0){
               //check if documents is ocred or ocred_failed

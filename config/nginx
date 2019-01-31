@@ -4,7 +4,7 @@ server {
     #windows  docker-toolbox
     192.168.99.100
     192.168.98.100
-    #Unix, Linux, Docker for windows with hyper-V
+    #Unix, Linux, Docker for windows
     localhost;
     root /var/www;
     index index.php;

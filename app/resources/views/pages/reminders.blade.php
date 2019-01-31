@@ -155,7 +155,7 @@
     <div class="card">
         <div class="header"  >
             <h2 data-toggle="collapse" href="#collapseTask<#$index#>" aria-expanded="false">
-                <# rm.rm_title #> <small>Due on <# rm.reminder #></small>
+                <# rm.rm_title | rm_untitled #> <small>Due on <# rm.reminder #></small>
             </h2>
             <ul class="header-dropdown m-r--5">
                 <li class="dropdown">
@@ -163,6 +163,7 @@
                         <i class="material-icons">more_vert</i>
                     </a>
                     <ul class="dropdown-menu pull-right">
+                        <li><a ng-href="/files/ocr/<#rm.doc_ocr#>" style="text-decoration: none" target="_blank"">View Document</a></li>
                         <li><a href="/reminder/edit/<#rm.rm_id#>">Edit</a></li>
                         <li><a ng-click="deleteReminder(rm.rm_id)">Delete </a></li>
                     </ul>
@@ -179,7 +180,8 @@
                                 </label>
                          </div>
                     </li>
-              </ul>   
+              </ul> 
+              <label ng-show="rm.task_list.length==0 && rm.task_list!=null">No Task added.</label>
         </div>
     </div>
 </div>
@@ -236,6 +238,17 @@
 //inject this app to rootApp
 var app = angular.module('app', ['ng-mfb']);
 
+
+app.filter('rm_untitled', function(){
+   return function(data){
+       if(data==""){
+           data = "Untitled reminder";
+       }
+       return data;
+   }
+});
+
+
 app.controller('reminders_controller', function($scope, $http, $timeout, $rootScope) {
 
 //scope to root app.
@@ -259,6 +272,7 @@ $scope.getReminders = function(){
     $http.get('/get_reminders').success(function(data){
            $scope.hide_preloader();
            $scope.reminders_list = data;
+           console.log( $scope.reminders_list );
     });
 }
 //show preloader while loading reminders

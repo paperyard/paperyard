@@ -11,6 +11,11 @@ use DB;
 class userController extends Controller
 {
     
+    public function checkForInstallationStatus(){
+
+
+    }
+
     public function welcome(){
         $wc = DB::table('app_status')->select('app_installed')->first();
         if(count($wc)>0){

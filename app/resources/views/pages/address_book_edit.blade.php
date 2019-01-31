@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page_title', 'Edit address book')
+@section('page_title', 'Edit record')
 
 @section('custom_style')
 <link href="{{ asset('static/css/address_book.css') }}" rel="stylesheet">
@@ -105,7 +105,7 @@
 @section('breadcrumb_nav')
  <ul class="arrows">
      <li class="li1"><a href="#">Home</a></li>
-     <li class="li2"><a href="#" >Address book</a></li>
+     <li class="li2"><a href="#" >Edit record</a></li>
   </ul>
 @endsection
 
@@ -543,7 +543,7 @@
 
                         <div class="col-md-12 ng-hide" ng-show="submit_notify">
                               <div class="form-group">
-                                    <button class="btn-flat btn_color main_color waves-effect lg-btn_x2" type="submit"><span class="lg-btn-tx">Update address book</span></button>
+                                    <button class="btn-flat btn_color main_color waves-effect lg-btn_x2" type="submit"><span class="lg-btn-tx">Update record</span></button>
                              </div>
                         </div>
                         
@@ -607,7 +607,7 @@ $scope.showNotification = function(){
     var colorName      = "bg-blue";
     var placementAlign = "right";
     var placementFrom  = "bottom";
-    var text           = "Address book updated";
+    var text           = "Record updated";
     var animateEnter   = "animated fadeInDown";
     var animateExit    = "animated fadeOutUp";
     var allowDismiss   = true;

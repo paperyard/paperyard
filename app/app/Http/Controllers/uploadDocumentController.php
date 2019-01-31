@@ -15,11 +15,6 @@ use DB;
 
 class uploadDocumentController extends Controller
 {
-    //
-    public function index(){
-         return view('pages/user_upload_documents');
-    }
-
     public function fileUpload(Request $req){
 
           $documentDatas = [];

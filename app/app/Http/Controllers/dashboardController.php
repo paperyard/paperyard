@@ -52,6 +52,9 @@ class dashboardController extends Controller
          //set user timezone -------------------------------------------------------------------------------------
          date_default_timezone_set(Auth::user()->user_timezone);
 
+         $prs_stat = ["ocred_final","ocred_final_failed"];
+ 
+
          //return recent document to be edit ---------------------------------------------------------------------
          $doc = DB::table('documents')->where([
              ['doc_user_id','=',Auth::user()->id],
@@ -77,7 +80,6 @@ class dashboardController extends Controller
              ['is_archive','=',0]
          ])->count();
         
-         $prs_stat = ["ocred_final","ocred_final_failed"];
 
          //return no of archived docs --------------------------------------------------------------------------------
          $num_archive_docs = DB::table('documents')->where([
@@ -106,22 +108,43 @@ class dashboardController extends Controller
          ->whereIn('process_status', $failedProcess)
          ->count();
 
-         //return doc datas for knob and barchart -----------------------------------------------------------------------
-         $bar_datas = [];
-         $week      = [];
+         //============================================================================================================
+         $json_response = json_encode(array(
 
-         $docs_this_week  = DB::table('documents')
-         ->select(
+             'num_to_edit'          =>      $num_pending_docs,
+             'num_archived'         =>      $num_archive_docs,
+             'num_queue'            =>      $queueDocs,
+             'num_failed_docs'      =>      $failedDocs,
+             'oldest_doc'           =>      $doc,
+             'oldest_doc_failed'    =>      $doc_failed
+
+         ));
+         // # Return the response
+         return $json_response;
+
+    }
+
+
+    public function returnBarKnobDatas(){
+
+        $prs_stat = ["ocred_final","ocred_final_failed"];
+
+         //return doc datas for knob and barchart ----------------
+        $bar_datas = [];
+        $week      = [];
+
+        $docs_this_week  = DB::table('documents')
+        ->select(
            'documents.created_at',
             DB::raw('count(`doc_id`) as documents'),
             DB::raw('DAYNAME(`created_at`) as day')
          )
-         ->where('doc_user_id', Auth::user()->id)
-         ->where('is_archive', 1)
-         ->whereIn('process_status', $prs_stat)
-         ->whereBetween('created_at', [\Carbon\Carbon::now()->startOfWeek(),\Carbon\Carbon::now()->endOfWeek()])
-         ->groupBy(DB::raw('WEEKDAY(created_at)'))
-         ->get();
+        ->where('doc_user_id', Auth::user()->id)
+        ->where('is_archive', 1)
+        ->whereIn('process_status', $prs_stat)
+        ->whereBetween('created_at', [\Carbon\Carbon::now()->startOfWeek(),\Carbon\Carbon::now()->endOfWeek()])
+        ->groupBy(DB::raw('WEEKDAY(created_at)'))
+        ->get();
 
          if(count($docs_this_week)>0){
              foreach($docs_this_week as $docs)
@@ -134,19 +157,16 @@ class dashboardController extends Controller
              $week      = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
          }
 
-         //=========================================================================================================================
-         $json_response = json_encode(array(
-             'num_to_edit' => $num_pending_docs,
-             'num_archived'=>$num_archive_docs,
-             'num_queue'=>$queueDocs,
-             'num_failed_docs'=>$failedDocs,
-             'oldest_doc'=>$doc,
-             'oldest_doc_failed'=>$doc_failed,
+
+        $json_response = json_encode(array(
+
              'bar_datas'=>$bar_datas,
              'week'=>$week
+         
          ));
          // # Return the response
          return $json_response;
+
 
     }
 
