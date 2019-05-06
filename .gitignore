@@ -17,4 +17,4 @@
 /app/storage/app/documents_processing/
 /app/storage/app/symfony_process_error_logs/
 .phpintel
-
+.idea
