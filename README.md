@@ -18,9 +18,6 @@ Paperyard is an online application easing the process as it will keep a digital 
 @ for development run
 - docker-compose up --build
 
-@ for production run
-- docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --force-recreate --build
-
 # Start paperyard.
 
 <h4> Windows using Docker-toolbox.</h4>
@@ -31,8 +28,4 @@ Paperyard is an online application easing the process as it will keep a digital 
 <h4> Windows using Docker for windows, Linux, Mac.</h4>
 - open preferred browser
 - access http://localhost
-
-# To access Database.
-- go to http://localhost/phpmyadmin
-- user=root password=
 

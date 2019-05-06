@@ -70,18 +70,13 @@ RUN apt-get -y install pdftk
 # set working directory
 WORKDIR /
 
+# adding source
+ADD app /var/www/html
 
 # adding config inside ubuntu.
 ADD config /config
 # moving configuration for webserver
 RUN cp config/nginx /etc/nginx/sites-enabled/default
-
-
-# install phpmyadmin
-RUN DEBIAN_FRONTEND=noninteractive apt-get -y install phpmyadmin
-RUN ln -s /usr/share/phpmyadmin /var/www/phpmyadmin
-RUN cp config/config.inc.php /etc/phpmyadmin/config.inc.php
-RUN cp config/config-db.php /etc/phpmyadmin/config-db.php
 
 
 # enable access to container by exposing port.

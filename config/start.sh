@@ -1,15 +1,5 @@
 #!/bin/bash
 
-# if routes folder doesn't exist, clone repo to get app source code.
-# else volume is mounted. getting source code locally.
-
-if [ ! -d '/var/www/html/routes' ]; then 
-# clone paperyard app inside container. 
-git clone https://github.com/paperyard/paperyard.git
-rm -rf /var/www/html
-ln -s /paperyard/app/ /var/www/html
-fi
-
 # set installing pages while installing dependencies
 cp config/init_pages/installing_index/index.php var/www/html/public/index.php
 
