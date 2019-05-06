@@ -7,18 +7,17 @@ cp config/init_pages/installing_index/index.php var/www/html/public/index.php
 service php7.1-fpm start
 #start NGINX
 /usr/sbin/nginx
-# start MariaDB
-/etc/init.d/mysql start
 
+# TODO: APP KEY Generation
 
 ### phpmyadmin disable plugin usage for root.
-mysql -u root <<MY_QUERY
-CREATE DATABASE paperyard_db;
-use mysql;
-update user set plugin='' where User='root';
-flush privileges;
-\q
-MY_QUERY
+#mysql -u root <<MY_QUERY
+#CREATE DATABASE paperyard_db;
+#use mysql;
+#update user set plugin='' where User='root';
+#flush privileges;
+#\q
+#MY_QUERY
 
 ### cd to laravel application root.
 cd /var/www/html
@@ -37,6 +36,15 @@ chmod -R ug+rwx storage bootstrap/cache
 
 # insall laravel dependencies
 composer install
+
+
+echo "Waiting for mysql"
+until mysqladmin ping -h"db" &> /dev/null
+do
+  sleep 1
+done
+
+echo -e "\nmysql ready"
 
 ### migrate databae tables
 php artisan migrate

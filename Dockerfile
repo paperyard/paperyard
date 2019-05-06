@@ -17,16 +17,12 @@ ENV LC_ALL en_US.UTF8
 RUN apt-get -y install nginx
 
 # install php with necessary extensions
-RUN apt-get -y install php7.1-cli php7.1-cgi php7.1-fpm php7.1-mbstring php7.1-xml php7.1-zip php7.1-imagick
+RUN apt-get -y install php7.1-cli php7.1-cgi php7.1-fpm php7.1-mbstring php7.1-xml php7.1-zip php7.1-imagick php7.1-mysql
 # php-fpm php-common php-mbstring php-xmlrpc php-soap php-gd php-xml php-mysql php-cli php-mcrypt php-zip
 
 
 # Install extensions for IMAP
 RUN apt-get -y install php*-imap php*-mcrypt
-
-
-# install mariadb
-RUN apt-get -y install mariadb-server mariadb-client
 
 
 # install tools
@@ -66,6 +62,9 @@ RUN apt-get -y install tesseract-ocr-deu
 # install pdftk -> for removing and rotating pdf pages.
 RUN apt-get -y install pdftk
 
+
+# install php-mysql
+RUN apt-get -y install mariadb-client
 
 # set working directory
 WORKDIR /
