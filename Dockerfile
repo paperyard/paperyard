@@ -2,8 +2,8 @@ FROM composer:1.8.5 as composer
 
 # install imap extension (to support composer script "post-autoload-dump")
 RUN set -xe \
-    && apk add --update imap-dev openssl-dev \
-    && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS krb5-dev imap-dev openssl-dev \
+    && apk add --no-cache imap-dev openssl-dev \
+    && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS krb5-dev \
     && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
     && docker-php-ext-install imap \
     && apk del .build-deps
@@ -29,8 +29,8 @@ STOPSIGNAL SIGINT
 
 # install imap extension
 RUN set -xe \
-    && apk add --update imap-dev openssl-dev \
-    && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS krb5-dev imap-dev openssl-dev \
+    && apk add --no-cache imap-dev openssl-dev \
+    && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS krb5-dev \
     && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
     && docker-php-ext-install imap \
     && apk del .build-deps
