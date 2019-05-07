@@ -40,6 +40,12 @@ RUN	set -xe \
     && apk add --no-cache mariadb-client \
     && docker-php-ext-install pdo_mysql
 
+RUN set -xe \
+    && apk add --no-cache ocrmypdf
+
+RUN set -xe \
+    && apk add --no-cache qpdf
+
 # copy source from first stage
 COPY --from=composer app /var/www/html/
 
