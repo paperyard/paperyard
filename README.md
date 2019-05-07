@@ -1,19 +1,26 @@
-<h1>Paperyard</h1>
-<h3>
-Paperyard is an online application easing the process as it will keep a digital copy of every document, make it searchable and PDF exportable. In foreseeable future it will be able to automatically determine the sender, recipient, date and subject of a document automatically.</h3>
+# Paperyard
 
-# Requirements
-- Docker, Docker compose
-- Git
+> This is a beta branch of Paperyard.
 
-# Configuration
-- Paperyard has functions to send mail notifications, reminders, forgot password etc.
-- If you want the emailing function to work, add your mail credentials at app/.env.
+The goal of this branch is to clean up the image and make it ready for production. Many versions of this branch will most likely not work. Many dependencies must first be embedded in the new structure.
 
-# Installation
+# try the "beta"
 - git clone https://github.com/paperyard/paperyard.git
 - cd paperyard
 - ./set-sql-pwd.sh
 - docker-compose up -d --build
 
-Go to localhost
+Go to http://localhost:8080.
+
+# "Roadmap"
+
+A lot has to be added, readded, changed and moved around. See whats still to go or what should work at the moment:
+
+- move mariadb out of container :white_check_mark:
+- make 7.3 ready :x:
+- mail pulling (imap) :white_check_mark:
+- blank page removal (imagemagick) :x:
+- ocr (tesseract & ocrmypdf) :x:
+- image to pdf (img2pdf) :x:
+- barcode reading (zbar) :x:
+- removing & rotating pdf pages (pdftk) :x:

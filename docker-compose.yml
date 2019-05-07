@@ -3,18 +3,21 @@ version: "3.3"
 services:
 
   paperyard:
-    depends_on:
-      - db
-    restart: always
     build: .
-    container_name: paperyard
-    tty: true
+    container_name: paperyard_web
     ports:
-     - "80:80"
+      - "8080:8080"
+    #volumes:
+    #  - "./app:/var/www/html/"
 
   db:
     image: mariadb
-    restart: always
     environment:
       MYSQL_ROOT_PASSWORD:
       MYSQL_DATABASE: paperyard_db
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8081:8080"
