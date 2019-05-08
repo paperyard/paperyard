@@ -18,3 +18,4 @@
 /app/storage/app/symfony_process_error_logs/
 .phpintel
 .idea
+.env
